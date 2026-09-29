@@ -1,0 +1,3506 @@
+{
+ "modules": [
+  {
+   "id": "bricks",
+   "title": "1 · The Bricks",
+   "groups": [
+    {
+     "id": "compute",
+     "label": "Compute — the Workers",
+     "color": "orange"
+    },
+    {
+     "id": "storage",
+     "label": "Storage & Databases — the Memory",
+     "color": "blue"
+    },
+    {
+     "id": "networking",
+     "label": "Networking & Routing — the Connectors",
+     "color": "green"
+    },
+    {
+     "id": "integration",
+     "label": "Integration & Communication — the Glue",
+     "color": "purple"
+    }
+   ]
+  },
+  {
+   "id": "rules",
+   "title": "2 · Building Rules",
+   "groups": [
+    {
+     "id": "scale",
+     "label": "Scaling the Structure",
+     "color": "teal"
+    },
+    {
+     "id": "data",
+     "label": "Data & Consistency",
+     "color": "indigo"
+    },
+    {
+     "id": "reliability",
+     "label": "Reliability & Flow Control",
+     "color": "red"
+    },
+    {
+     "id": "numbers",
+     "label": "Numbers & Targets",
+     "color": "brown"
+    }
+   ]
+  },
+  {
+   "id": "assemblies",
+   "title": "3 · Assemblies",
+   "groups": [
+    {
+     "id": "worked",
+     "label": "Worked Examples",
+     "color": "yellow"
+    },
+    {
+     "id": "classic",
+     "label": "Classic Builds",
+     "color": "pink"
+    }
+   ]
+  },
+  {
+   "id": "path",
+   "title": "4 · Master Builder Path",
+   "groups": [
+    {
+     "id": "blueprints",
+     "label": "Step 1 · Trace the Blueprints",
+     "color": "blue"
+    },
+    {
+     "id": "papers",
+     "label": "Step 1 · Foundational Papers",
+     "color": "indigo"
+    },
+    {
+     "id": "cad",
+     "label": "Step 2 · Virtual CAD Tools",
+     "color": "teal"
+    },
+    {
+     "id": "mocs",
+     "label": "Step 3 · Mini-MOCs (My Own Creations)",
+     "color": "green"
+    },
+    {
+     "id": "chaos",
+     "label": "Step 4 · Break Your Models",
+     "color": "red"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "id": "vm",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "compute",
+   "title": "Virtual Machines",
+   "subtitle": "AWS EC2 · Google Compute Engine · Azure VMs",
+   "lego": "The standard 2×4 rectangular brick: sturdy and fully customizable, but heavy. You own everything from the operating system up.",
+   "summary": "A hypervisor slices one physical server into isolated guests, each running its own kernel and operating system. You pick the CPU, memory, disk and image, and you are responsible for patching, configuring and scaling what runs inside.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "The software needs a full OS, a custom kernel module, GPUs, or licensed software tied to a machine.",
+      "You run long-lived, steady workloads where reserved or committed-use pricing beats paying per request.",
+      "You host your own databases, message brokers or Kubernetes worker nodes."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Boots in tens of seconds to minutes, so scaling reacts slowly to sudden spikes.",
+      "You patch the OS, rotate credentials and fight configuration drift between machines.",
+      "You pay for idle capacity unless an autoscaling group shrinks the fleet."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "The physical host fails and takes the VM with it. Spread instances across availability zones behind a load balancer.",
+      "Hand-patched 'pet' servers drift apart until one behaves differently in production. Build immutable images (Packer, AMIs) and replace instead of repair.",
+      "Noisy neighbours on shared hardware cause unpredictable latency."
+     ]
+    },
+    {
+     "title": "Remember",
+     "items": [
+      "Classic trio: machine image + autoscaling group + load balancer with health checks.",
+      "Treat servers as cattle, not pets."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Xen and the Art of Virtualization (SOSP 2003)",
+     "url": "https://www.cl.cam.ac.uk/research/srg/netos/papers/2003-xensosp.pdf",
+     "kind": "paper",
+     "note": "The paravirtualization paper behind early EC2"
+    },
+    {
+     "title": "AWS Nitro System",
+     "url": "https://aws.amazon.com/ec2/nitro/",
+     "kind": "docs",
+     "note": "How modern EC2 offloads virtualization to dedicated hardware"
+    },
+    {
+     "title": "Static stability using Availability Zones",
+     "url": "https://aws.amazon.com/builders-library/static-stability-using-availability-zones/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "containers",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "compute",
+   "title": "Containers",
+   "subtitle": "Docker · containerd · OCI images",
+   "lego": "Uniformly sized modular bricks that stack perfectly on any baseplate, because each brick carries its own dependencies inside.",
+   "summary": "A container is an ordinary process isolated with Linux namespaces and limited with cgroups. It shares the host kernel, so it starts in about a second and packs densely. The image bundles the app with its libraries, so the same artifact runs on a laptop, in CI and in production.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "You deploy stateless web services and microservices.",
+      "You want 'works on my machine' to mean 'works everywhere', with the same image in development, CI and production.",
+      "You want to pack many small services onto fewer machines."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Isolation is weaker than a VM because every container shares one kernel.",
+      "One container is easy; hundreds need an orchestrator for placement, networking, secrets and rollouts.",
+      "State must live outside the container, in a database, cache or volume."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "The container restarts and its local disk is gone. Never keep the only copy of data inside it.",
+      "It is OOM-killed when it exceeds its memory limit, often in a restart loop.",
+      "Bloated images slow down every deploy and scale-out."
+     ]
+    },
+    {
+     "title": "Remember",
+     "items": [
+      "Twelve-Factor rules: stateless processes, configuration in environment variables, logs to stdout.",
+      "Container = process + namespaces + cgroups + an image filesystem."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Docker overview",
+     "url": "https://docs.docker.com/get-started/docker-overview/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "The Twelve-Factor App: Processes",
+     "url": "https://12factor.net/processes",
+     "kind": "docs",
+     "note": "Why services should be stateless and share nothing"
+    },
+    {
+     "title": "The Twelve-Factor App",
+     "url": "https://12factor.net/",
+     "kind": "docs",
+     "note": "The whole checklist for container-friendly services"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "kubernetes",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "compute",
+   "title": "Container Orchestration",
+   "subtitle": "Kubernetes · Amazon ECS · Nomad",
+   "lego": "The baseplate plus a robot that reads the instructions. You declare what the finished model should look like, and it keeps rebuilding it whenever a piece falls off.",
+   "summary": "You declare the desired state: which images, how many replicas, how much CPU and memory. Controllers keep reconciling reality toward it. They restart crashed pods, reschedule them off failed nodes, roll out new versions gradually, give services stable DNS names, and autoscale on metrics.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "You run many services that need rolling deploys, service discovery and autoscaling.",
+      "You want to use machines efficiently by bin-packing many workloads onto shared nodes.",
+      "You need one deployment model across clouds or on-premises."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Operating it is a job in itself: networking, upgrades, RBAC and YAML sprawl.",
+      "For one or two services, a managed platform or serverless is usually cheaper and simpler."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "A misconfigured liveness probe restarts healthy pods, which can cascade across the service.",
+      "Missing resource requests and limits cause noisy neighbours and surprise evictions.",
+      "A control-plane outage leaves running pods serving (static stability) but blocks deploys and scaling."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Borg, Omega, and Kubernetes (ACM Queue)",
+     "url": "https://queue.acm.org/detail.cfm?id=2898444",
+     "kind": "paper",
+     "note": "Lessons from a decade of container management at Google"
+    },
+    {
+     "title": "Large-scale cluster management at Google with Borg (EuroSys 2015)",
+     "url": "https://research.google/pubs/large-scale-cluster-management-at-google-with-borg/",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Kubernetes overview",
+     "url": "https://kubernetes.io/docs/concepts/overview/",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "serverless",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "compute",
+   "title": "Serverless Functions",
+   "subtitle": "AWS Lambda · Cloudflare Workers · Google Cloud Run functions",
+   "lego": "Tiny micro-bricks that appear the instant two pieces need connecting, then disappear. You never store or maintain them.",
+   "summary": "You upload a function and choose what triggers it: an HTTP request, a queue message, an object landing in S3, or a schedule. The platform runs one instance per concurrent event, scales to zero when idle, and bills per millisecond. Lambda isolates each function in a Firecracker microVM; Cloudflare Workers use V8 isolates, which start in under a millisecond at the edge.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Traffic is spiky or rare, so paying for idle servers is wasteful.",
+      "You need glue between managed services, such as 'image uploaded to S3, so resize it'.",
+      "Event handlers, webhooks, scheduled jobs and edge logic (redirects, auth checks, A/B tests)."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Cold starts: the first request to a new instance can take from about 100 ms to several seconds, depending on runtime and package size.",
+      "Hard limits: Lambda runs at most 15 minutes and has memory, payload and concurrency caps.",
+      "Functions are stateless, harder to debug locally, and tie you to the vendor.",
+      "At steady high load, per-request billing can cost more than containers."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "A traffic spike launches thousands of instances that exhaust the database's connections. Put a queue or a connection proxy (such as RDS Proxy) in between.",
+      "Asynchronous invocations are retried, so side effects can run twice. Make handlers idempotent.",
+      "Account concurrency limits throttle unrelated functions that share them."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Firecracker: Lightweight Virtualization for Serverless Applications (NSDI 2020)",
+     "url": "https://www.usenix.org/conference/nsdi20/presentation/agache",
+     "kind": "paper",
+     "note": "How AWS Lambda isolates functions"
+    },
+    {
+     "title": "Cloud Computing without Containers",
+     "url": "https://blog.cloudflare.com/cloud-computing-without-containers/",
+     "kind": "blog",
+     "note": "Cloudflare on V8 isolates"
+    },
+    {
+     "title": "Serverless Computing: One Step Forward, Two Steps Back",
+     "url": "https://arxiv.org/abs/1812.03651",
+     "kind": "paper",
+     "note": "A sharp critique from Berkeley (CIDR 2019)"
+    },
+    {
+     "title": "Cloud Programming Simplified: A Berkeley View on Serverless Computing",
+     "url": "https://arxiv.org/abs/1902.03383",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "rdbms",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "storage",
+   "title": "Relational Databases",
+   "subtitle": "PostgreSQL · MySQL · Amazon Aurora",
+   "lego": "The rigid LEGO grid: every piece must click into clean rows and columns, and nothing that doesn't fit is allowed on the board.",
+   "summary": "Data lives in tables with a fixed schema. You query it with SQL, joining tables as needed. Indexes (usually B-trees) keep lookups fast, and constraints such as foreign keys and uniqueness protect integrity. ACID transactions (atomicity, consistency, isolation, durability) make a group of writes all-or-nothing, even with many concurrent users.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Money, orders, inventory and bookings: anything where a half-applied change is a bug.",
+      "You need ad-hoc queries, reports and joins across entities.",
+      "The shape of the data is known and relationships matter. This is the default choice until proven otherwise."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Writes scale vertically until you add sharding (Vitess, Citus) or move to distributed SQL (Spanner, CockroachDB).",
+      "Schema migrations on big tables need care: online migrations, backfills and dual writes.",
+      "Read replicas scale reads but serve slightly stale data (replication lag)."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "A burst of clients exhausts connections. Use a pooler such as PgBouncer and cap the size of the app's pool.",
+      "Hot rows, such as one inventory counter in a flash sale, serialize on locks.",
+      "A missing index turns a 1 ms lookup into a full table scan that drags down everything else.",
+      "Reading your own write from a lagging replica shows the user old data."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "A Relational Model of Data for Large Shared Data Banks (Codd, 1970)",
+     "url": "https://dl.acm.org/doi/10.1145/362384.362685",
+     "kind": "paper",
+     "note": "Where the grid came from"
+    },
+    {
+     "title": "Architecture of a Database System",
+     "url": "https://dsf.berkeley.edu/papers/fntdb07-architecture.pdf",
+     "kind": "paper",
+     "note": "Hellerstein, Stonebraker and Hamilton: how a database works inside"
+    },
+    {
+     "title": "PostgreSQL: Concurrency control and MVCC",
+     "url": "https://www.postgresql.org/docs/current/mvcc-intro.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Why Uber Engineering switched from Postgres to MySQL",
+     "url": "https://www.uber.com/blog/postgres-to-mysql-migration/",
+     "kind": "blog",
+     "note": "Replication and write amplification at scale"
+    },
+    {
+     "title": "How Figma's databases team lived to tell the scale",
+     "url": "https://www.figma.com/blog/how-figmas-databases-team-lived-to-tell-the-scale/",
+     "kind": "blog",
+     "note": "Horizontally sharding Postgres"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "nosql",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "storage",
+   "title": "NoSQL & Document Databases",
+   "subtitle": "DynamoDB · MongoDB · Cassandra · Bigtable",
+   "lego": "Flexible Bionicle pieces that morph into whatever shape you're storing, as long as you decide in advance how you'll pick them up.",
+   "summary": "There are four families: key-value (DynamoDB, Redis), document (MongoDB), wide-column (Cassandra, Bigtable) and graph (Neo4j). Most scale horizontally by hashing a partition key across many nodes and allow flexible, schema-on-read records. You model the data around your access patterns, not around entities, and usually denormalize.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "The scale is huge but access is simple and known: get by key, or a range inside one partition.",
+      "Write throughput is very high: messages, events, IoT readings, activity logs.",
+      "Records carry flexible, evolving attributes, such as product catalogs, user profiles, carts and sessions."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Joins and ad-hoc queries are weak or missing. Adding a new access pattern can mean a new index or a copy of the data.",
+      "Many are eventually consistent by default, and multi-item transactions are limited.",
+      "The partition key is the most important design decision and hard to change later."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "A hot partition, such as a celebrity's key or everything written under today's date, throttles while other nodes sit idle.",
+      "Full-table scans are slow and expensive.",
+      "Schema-on-read drift: old records in shapes the code no longer expects."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Dynamo: Amazon's Highly Available Key-value Store (SOSP 2007)",
+     "url": "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf",
+     "kind": "paper",
+     "note": "Consistent hashing, quorums, vector clocks"
+    },
+    {
+     "title": "Amazon DynamoDB: A Scalable, Predictably Performant, and Fully Managed NoSQL Database Service (USENIX ATC 2022)",
+     "url": "https://www.usenix.org/conference/atc22/presentation/elhemali",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "The What, Why, and When of Single-Table Design with DynamoDB",
+     "url": "https://www.alexdebrie.com/posts/dynamodb-single-table/",
+     "kind": "blog",
+     "note": "Alex DeBrie on access-pattern-first modeling"
+    },
+    {
+     "title": "How Discord Stores Trillions of Messages",
+     "url": "https://discord.com/blog/how-discord-stores-trillions-of-messages",
+     "kind": "blog",
+     "note": "Cassandra to ScyllaDB, hot partitions"
+    },
+    {
+     "title": "MongoDB data modeling",
+     "url": "https://www.mongodb.com/docs/manual/data-modeling/",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "objectstore",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "storage",
+   "title": "Object Storage",
+   "subtitle": "Amazon S3 · Google Cloud Storage · Azure Blob Storage",
+   "lego": "Huge storage bins where you dump media, raw text and massive static assets. Each bin has a label, and you fetch things by label.",
+   "summary": "A flat namespace of buckets and keys, each pointing to an immutable blob plus metadata, accessed over HTTP. Capacity is effectively unlimited and cheap, and S3 is designed for 11 nines of durability. It is not a filesystem: you replace whole objects rather than editing them in place.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Images, video, audio, documents, backups, logs, ML datasets, a data lake.",
+      "Static website assets served through a CDN.",
+      "Any large blob: put the bytes in object storage and keep only the key and metadata in your database."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Each request takes tens of milliseconds, far slower than local disk or a cache.",
+      "You cannot edit part of an object; you rewrite it. Listing huge buckets is slow.",
+      "There are request-rate limits per key prefix, so spread hot keys across prefixes."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "A misconfigured public bucket leaks data. Block public access by default.",
+      "Routing uploads through your servers wastes bandwidth and CPU. Hand clients presigned URLs so they upload directly.",
+      "Event notifications are at-least-once, so the same upload may trigger processing twice. Consumers must be idempotent."
+     ]
+    },
+    {
+     "title": "Remember",
+     "items": [
+      "S3 has provided strong read-after-write consistency since December 2020.",
+      "Lifecycle rules move old objects to cheaper tiers such as Glacier automatically."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Building and operating a pretty big storage system called S3",
+     "url": "https://www.allthingsdistributed.com/2023/07/building-and-operating-a-pretty-big-storage-system.html",
+     "kind": "blog",
+     "note": "Werner Vogels (Andy Warfield's keynote)"
+    },
+    {
+     "title": "Finding a needle in Haystack: Facebook's photo storage (OSDI 2010)",
+     "url": "https://www.usenix.org/conference/osdi10/finding-needle-haystack-facebooks-photo-storage",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "The Google File System (SOSP 2003)",
+     "url": "https://static.googleusercontent.com/media/research.google.com/en//archive/gfs-sosp2003.pdf",
+     "kind": "paper",
+     "note": "The ancestor of large-scale blob storage"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "dns",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "networking",
+   "title": "DNS & Global Traffic Routing",
+   "subtitle": "Amazon Route 53 · Cloudflare DNS · Google Cloud DNS",
+   "lego": "The address printed on the box lid. Before anyone can touch your model, they have to find which table it's sitting on.",
+   "summary": "DNS turns names into IP addresses through a hierarchy of cached lookups, and each record has a TTL. Managed DNS can also route: by latency or geography to the nearest region, by weight for canaries and blue/green deploys, and by failover when health checks fail.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "This is always the first hop: every request starts with a lookup.",
+      "Multi-region active-active or active-passive failover.",
+      "Weighted shifts of traffic between old and new stacks."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Caching makes changes slow to propagate. They take at least the TTL to spread, and some clients ignore TTLs.",
+      "Short TTLs mean faster failover but more lookups and more dependence on the DNS provider."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "An outage at the DNS provider makes healthy services unreachable, as in the 2016 Dyn attack.",
+      "A long TTL on a record pointing at a dead region keeps sending users there."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "What is DNS? (Cloudflare Learning Center)",
+     "url": "https://www.cloudflare.com/learning/dns/what-is-dns/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Route 53 routing policies",
+     "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html",
+     "kind": "docs",
+     "note": "Latency, geolocation, weighted, failover"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "loadbalancer",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "networking",
+   "title": "Load Balancers",
+   "subtitle": "AWS ALB/NLB · NGINX · HAProxy · Envoy",
+   "lego": "The traffic manager that splits an incoming stream of LEGO pegs evenly across many identical worker bricks, and stops feeding any brick that has cracked.",
+   "summary": "A load balancer spreads requests across a pool of healthy targets. Layer 4 balancers route raw TCP or UDP connections and are fast and simple. Layer 7 balancers understand HTTP: they route by path or header, terminate TLS, and retry. Common algorithms are round-robin, least-connections and consistent hashing (for stickiness). Health checks eject failing targets.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "You scale any stateless tier horizontally, whether web servers, APIs or workers behind RPC.",
+      "You want TLS termination in one place, zero-downtime deploys, and blue/green or canary releases."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "The balancer itself must be highly available: use a managed service, or a redundant pair with a floating IP or anycast.",
+      "Sticky sessions undermine even distribution and make scaling in painful. Prefer stateless servers."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "A health check that is too shallow keeps a server in rotation that returns 200 while its database is gone.",
+      "A health check that is too deep (it checks the database) means one database blip ejects every target and causes a total outage.",
+      "Long-lived connections (WebSockets, gRPC) stay pinned to old servers, so newly added servers get no load."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Maglev: A Fast and Reliable Software Network Load Balancer (NSDI 2016)",
+     "url": "https://www.usenix.org/conference/nsdi16/technical-sessions/presentation/eisenbud",
+     "kind": "paper",
+     "note": "Google's L4 balancer and consistent hashing"
+    },
+    {
+     "title": "Load Balancing in the Datacenter (Google SRE book)",
+     "url": "https://sre.google/sre-book/load-balancing-datacenter/",
+     "kind": "book",
+     "note": null
+    },
+    {
+     "title": "Implementing health checks",
+     "url": "https://aws.amazon.com/builders-library/implementing-health-checks/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library on shallow vs deep checks"
+    },
+    {
+     "title": "NGINX HTTP load balancing",
+     "url": "https://nginx.org/en/docs/http/load_balancing.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "What is Envoy",
+     "url": "https://www.envoyproxy.io/docs/envoy/latest/intro/what_is_envoy",
+     "kind": "docs",
+     "note": "The L7 proxy behind most service meshes"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "apigateway",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "networking",
+   "title": "API Gateway",
+   "subtitle": "Amazon API Gateway · Kong · Apigee · Envoy Gateway",
+   "lego": "The single front-door stud every piece must pass through. It checks your ticket, limits how fast you can push, and routes you to the right sub-assembly.",
+   "summary": "A single entry point in front of many backend services. It handles cross-cutting concerns in one place: authentication and authorization, rate limits and quotas, routing by path or version, request and response transformation, protocol translation (REST to gRPC), and metrics and tracing. A Backend-for-Frontend (BFF) is a gateway tailored to one client, such as mobile.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Mobile and web clients talk to many microservices, and you don't want each client to know about each service.",
+      "You expose public APIs that need keys, quotas and usage plans.",
+      "You want auth, throttling and observability configured once rather than in every service."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "It adds a network hop and a component that must scale and stay highly available.",
+      "Business logic tends to creep in. Keep the gateway thin."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "One bad routing or auth config change takes every API down at once. Roll out config gradually.",
+      "Without per-client limits, one noisy client starves everyone else."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Pattern: API Gateway / Backends for Frontends",
+     "url": "https://microservices.io/patterns/apigateway.html",
+     "kind": "docs",
+     "note": "Chris Richardson, microservices.io"
+    },
+    {
+     "title": "Scaling your API with rate limiters",
+     "url": "https://stripe.com/blog/rate-limiters",
+     "kind": "blog",
+     "note": "Stripe's four kinds of limiter"
+    },
+    {
+     "title": "What is Amazon API Gateway?",
+     "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "cdn",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "networking",
+   "title": "Content Delivery Network",
+   "subtitle": "Amazon CloudFront · Cloudflare · Akamai · Fastly",
+   "lego": "Small caching outposts built on every block of the city, so kids grab pieces from the corner shop instead of walking to the main warehouse.",
+   "summary": "A CDN is a global network of edge servers (points of presence, or PoPs) that cache content close to users. It cuts latency and offloads your origin. It serves static assets, video segments and downloads, can cache some dynamic responses, terminates TLS near the user, and absorbs DDoS attacks. Edge compute such as Workers or Lambda@Edge runs logic there.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Images, JS/CSS, fonts, video (HLS/DASH segments), software downloads.",
+      "You have a global audience, or you need DDoS protection and a web application firewall at the edge."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Invalidation is hard. Prefer versioned, content-hashed filenames (app.3f9a.js) with long TTLs.",
+      "Personalized or rapidly changing responses cache poorly."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "A global purge or a cold cache sends every miss to the origin at once. Add an origin shield or tiered cache.",
+      "Caching private responses (a missing Cache-Control: private) leaks one user's data to another.",
+      "Stale assets after a deploy break the page if HTML and JS versions mismatch."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "What is a CDN? (Cloudflare Learning Center)",
+     "url": "https://www.cloudflare.com/learning/cdn/what-is-a-cdn/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "The Akamai Network: A Platform for High-Performance Internet Applications",
+     "url": "https://dl.acm.org/doi/10.1145/1842733.1842736",
+     "kind": "paper",
+     "note": "ACM SIGOPS Operating Systems Review, 2010"
+    },
+    {
+     "title": "Netflix Open Connect",
+     "url": "https://openconnect.netflix.com/",
+     "kind": "docs",
+     "note": "Netflix's own CDN, placed inside ISPs"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "queue",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "integration",
+   "title": "Message Queues",
+   "subtitle": "Amazon SQS · RabbitMQ · Google Cloud Tasks",
+   "lego": "A buffer tray between two builders. When one passes pieces faster than the next can snap them in, the pieces wait safely in the tray instead of falling on the floor.",
+   "summary": "Producers put messages on a durable queue and consumers pull them, process them, and then acknowledge (delete) them. Each message goes to one consumer (point-to-point). The queue decouples the producer from the consumer's speed and availability, levels out bursts, and makes retries easy. Most queues deliver at least once, so a message can arrive more than once.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Background jobs: emails, video encoding, report generation, order fulfilment.",
+      "Load leveling: absorb a 10× spike and drain it at the rate the database can handle.",
+      "Spreading work across a pool of workers that you scale on queue depth."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Processing becomes asynchronous: the user sees 'processing…' and the result arrives later.",
+      "Ordering is not guaranteed unless you use FIFO queues or message groups, which limit throughput.",
+      "At-least-once delivery means duplicates, so handlers must be idempotent."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "A poison message fails forever and blocks or wastes workers. Move it to a dead-letter queue (DLQ) after N attempts.",
+      "If the visibility timeout is shorter than processing time, the message reappears and is processed twice.",
+      "If consumers are permanently slower than producers, the backlog grows without bound. Queues absorb bursts; they don't fix sustained overload."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Queues Don't Fix Overload",
+     "url": "https://ferd.ca/queues-don-t-fix-overload.html",
+     "kind": "blog",
+     "note": "Fred Hebert: a must-read before adding a queue"
+    },
+    {
+     "title": "Avoiding insurmountable queue backlogs",
+     "url": "https://aws.amazon.com/builders-library/avoiding-insurmountable-queue-backlogs/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "Amazon SQS visibility timeout",
+     "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Amazon SQS dead-letter queues",
+     "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "RabbitMQ tutorials",
+     "url": "https://www.rabbitmq.com/tutorials",
+     "kind": "docs",
+     "note": "Work queues, pub/sub, routing, RPC"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "stream",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "integration",
+   "title": "Event Streams",
+   "subtitle": "Apache Kafka · Amazon Kinesis · Redpanda · Google Pub/Sub",
+   "lego": "A central conveyor belt that constantly carries every change past every station. Each station takes what it needs, and the belt remembers what went by so a station can rewind.",
+   "summary": "A stream is an append-only log, split into partitions and replicated across brokers. Consumers track their own offsets, so many independent consumer groups can read the same events at their own pace. Retention lets you replay history. Order is guaranteed within a partition, and all events with the same key land in the same partition.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Fan-out: one event (OrderPlaced, DriverMoved) feeds many services such as billing, analytics, search and notifications.",
+      "Change data capture from a database, real-time analytics, activity and telemetry pipelines.",
+      "Event sourcing, or rebuilding a read model by replaying history."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Clusters, partitions and schemas are heavy to operate.",
+      "Order holds only within a partition, and consumer parallelism is capped at the partition count.",
+      "Exactly-once processing needs idempotent producers plus transactions or idempotent sinks."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Consumer lag grows until data ages out of retention before a slow consumer reads it.",
+      "A skewed key (one busy city, one mega-customer) creates a hot partition.",
+      "Rebalancing storms pause every consumer in the group while partitions are reassigned."
+     ]
+    },
+    {
+     "title": "Queue vs stream",
+     "items": [
+      "Queue: a message is consumed once, then deleted. Good for work distribution.",
+      "Stream: an event is retained, read by many, and can be replayed. Good for broadcasting facts."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "The Log: What every software engineer should know about real-time data's unifying abstraction",
+     "url": "https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying",
+     "kind": "blog",
+     "note": "Jay Kreps, the essay behind Kafka"
+    },
+    {
+     "title": "Apache Kafka design",
+     "url": "https://kafka.apache.org/documentation/#design",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Exactly-once Semantics Are Possible: Here's How Kafka Does It",
+     "url": "https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/",
+     "kind": "blog",
+     "note": "Confluent"
+    },
+    {
+     "title": "What do you mean by 'Event-Driven'?",
+     "url": "https://martinfowler.com/articles/201701-event-driven.html",
+     "kind": "blog",
+     "note": "Martin Fowler: four different patterns under one name"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "cache",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "integration",
+   "title": "Caches",
+   "subtitle": "Redis · Memcached · Valkey · in-process caches",
+   "lego": "An ultra-fast shelf at arm's reach for the pieces you grab most, so you don't open the heavy bottom drawer (the database) every time.",
+   "summary": "A cache is an in-memory key-value store that answers in under a millisecond. The common patterns are cache-aside (the app reads the cache, and on a miss loads from the database and fills the cache), read-through, write-through and write-behind. Entries expire by TTL and are evicted by LRU or LFU. Redis adds data structures such as sorted sets for leaderboards, geo indexes, counters, streams and pub/sub.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Reads far outnumber writes and the same hot data is read over and over.",
+      "Sessions, rate-limit counters, leaderboards, feature flags, computed or aggregated results.",
+      "Fast geo lookups, such as nearby drivers, with Redis GEO."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Staleness: you choose how wrong the data is allowed to be, and for how long.",
+      "Invalidation adds complexity, and memory costs more than disk.",
+      "It is another system that can fail or disagree with the source of truth."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Stampede (thundering herd): a hot key expires and thousands of requests hit the database at once. Fix with request coalescing, locks or leases, or early refresh.",
+      "A cold cache after a restart or failover sends the full read load to the database.",
+      "Treating the cache as the source of truth loses data on eviction or restart."
+     ]
+    },
+    {
+     "title": "Remember",
+     "items": [
+      "Main memory ≈ 100 ns, SSD read ≈ 100 µs, a same-datacenter round trip ≈ 0.5 ms.",
+      "Track the hit ratio. Going from a 90% to a 99% hit rate cuts database load 10×."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Scaling Memcache at Facebook (NSDI 2013)",
+     "url": "https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala",
+     "kind": "paper",
+     "note": "Leases, stampedes and regional replication"
+    },
+    {
+     "title": "TAO: Facebook's Distributed Data Store for the Social Graph (USENIX ATC 2013)",
+     "url": "https://www.usenix.org/conference/atc13/technical-sessions/presentation/bronson",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Caching challenges and strategies",
+     "url": "https://aws.amazon.com/builders-library/caching-challenges-and-strategies/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "Redis documentation",
+     "url": "https://redis.io/docs/latest/",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "scaling",
+   "kind": "brick",
+   "module": "rules",
+   "group": "scale",
+   "title": "Vertical vs Horizontal Scaling",
+   "subtitle": "Scale up vs scale out",
+   "lego": "Swap a small brick for a giant brick (vertical), or add more identical bricks side by side (horizontal).",
+   "summary": "Vertical scaling gives one machine more CPU, RAM or disk. It is simple, needs no code changes, and hits a ceiling and a single point of failure. Horizontal scaling adds more machines behind a load balancer or partitioning scheme. It has almost no ceiling and survives a node failure, but requires stateless services or partitioned data.",
+   "sections": [
+    {
+     "title": "Rules of thumb",
+     "items": [
+      "Scale the stateless tiers horizontally first; it's cheap and easy.",
+      "Scale databases vertically as far as is sensible, then add read replicas, then shard.",
+      "Autoscale on a leading signal (queue depth, concurrency) rather than a lagging one (CPU at 90%)."
+     ]
+    },
+    {
+     "title": "Watch out",
+     "items": [
+      "Horizontal scale moves the bottleneck downstream. Fifty more app servers can open 5,000 more database connections."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "The System Design Primer: Scalability",
+     "url": "https://github.com/donnemartin/system-design-primer#performance-vs-scalability",
+     "kind": "course",
+     "note": null
+    },
+    {
+     "title": "Designs, Lessons and Advice from Building Large Distributed Systems",
+     "url": "https://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf",
+     "kind": "talk",
+     "note": "Jeff Dean, LADIS 2009 keynote"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "stateless",
+   "kind": "brick",
+   "module": "rules",
+   "group": "scale",
+   "title": "Stateless Services",
+   "subtitle": "Share-nothing application tiers",
+   "lego": "Every worker brick is identical and remembers nothing, so any brick can be swapped, added or thrown away without the model noticing.",
+   "summary": "A stateless server keeps no user data between requests in its own memory or disk. Sessions, uploads and job state live in shared stores: a database, a cache, object storage or a signed token (such as a JWT). Then the load balancer can send any request to any instance, and instances can be killed or added freely.",
+   "sections": [
+    {
+     "title": "Why it matters",
+     "items": [
+      "Enables autoscaling, rolling deploys, spot instances and serverless.",
+      "Removes the need for sticky sessions, and failover just works."
+     ]
+    },
+    {
+     "title": "Where the state goes",
+     "items": [
+      "Session data goes to Redis or a signed cookie or JWT.",
+      "Uploaded files go to object storage. Work in progress goes to a queue or database."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "The Twelve-Factor App: Processes",
+     "url": "https://12factor.net/processes",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "replication",
+   "kind": "brick",
+   "module": "rules",
+   "group": "scale",
+   "title": "Replication",
+   "subtitle": "Leader-follower · multi-leader · leaderless quorums",
+   "lego": "Build identical copies of the same model on different tables, so if one table collapses, the others still stand.",
+   "summary": "Replication keeps copies of the same data on several nodes, for availability, read scaling and locality. In leader-follower replication, one node takes writes and followers replay its log (Postgres, MySQL). In multi-leader replication, several regions accept writes and must resolve conflicts. Leaderless systems (Dynamo, Cassandra) write to W of N replicas and read from R of N; when R + W > N, a read overlaps the latest write.",
+   "sections": [
+    {
+     "title": "Key choices",
+     "items": [
+      "Synchronous replication means no data loss on failover but slower writes. Asynchronous means fast writes but possible loss and lag.",
+      "Automatic failover needs consensus (Raft, Paxos) or a coordinator to avoid split-brain, where two nodes both think they are leader."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Replication lag: a user writes, then reads from a follower and doesn't see the change. Fix with read-your-writes routing.",
+      "An asynchronous leader dies before shipping its last writes, and they are lost after failover."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Designing Data-Intensive Applications, Chapter 5: Replication",
+     "url": "https://dataintensive.net/",
+     "kind": "book",
+     "note": "Martin Kleppmann"
+    },
+    {
+     "title": "In Search of an Understandable Consensus Algorithm (Raft)",
+     "url": "https://raft.github.io/raft.pdf",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Dynamo: Amazon's Highly Available Key-value Store",
+     "url": "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf",
+     "kind": "paper",
+     "note": "Sloppy quorums and hinted handoff"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "sharding",
+   "kind": "brick",
+   "module": "rules",
+   "group": "scale",
+   "title": "Sharding (Partitioning)",
+   "subtitle": "Split one dataset across many databases",
+   "lego": "The model is too big for one table, so you split it into sections and give each table one section, using a rule everyone agrees on to know which section lives where.",
+   "summary": "Sharding splits data by a shard key so each node holds a subset. Range sharding (by date or by A–M) makes range scans easy but creates hot spots. Hash sharding spreads load evenly but loses range locality. Directory or lookup sharding maps keys to shards in a table, which is flexible but adds a lookup. Choose the key so most queries hit exactly one shard.",
+   "sections": [
+    {
+     "title": "Choosing a shard key",
+     "items": [
+      "Use what nearly every query filters by: tenant_id, user_id, channel_id.",
+      "It needs high cardinality and evenly spread traffic. Avoid time or other monotonically increasing keys for hash-less range shards."
+     ]
+    },
+    {
+     "title": "Costs",
+     "items": [
+      "Cross-shard joins and transactions become application problems.",
+      "Resharding is painful. Use many logical shards mapped onto fewer physical nodes so you can move them later.",
+      "Celebrity keys still create hot shards and need special handling."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Sharding & IDs at Instagram",
+     "url": "https://instagram-engineering.com/sharding-ids-at-instagram-1cf5a71e5a5c",
+     "kind": "blog",
+     "note": "Logical shards on Postgres, and time-sortable IDs"
+    },
+    {
+     "title": "Herding elephants: lessons learned from sharding Postgres at Notion",
+     "url": "https://www.notion.so/blog/sharding-postgres-at-notion",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "How Figma's databases team lived to tell the scale",
+     "url": "https://www.figma.com/blog/how-figmas-databases-team-lived-to-tell-the-scale/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Vitess documentation",
+     "url": "https://vitess.io/docs/",
+     "kind": "docs",
+     "note": "Sharding middleware for MySQL, from YouTube"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "consistenthashing",
+   "kind": "brick",
+   "module": "rules",
+   "group": "scale",
+   "title": "Consistent Hashing",
+   "subtitle": "Stable key placement as nodes come and go",
+   "lego": "Arrange the tables in a circle. Each piece goes to the next table clockwise, so adding a table only takes pieces from its one neighbour.",
+   "summary": "Nodes and keys are hashed onto the same ring, and each key belongs to the first node clockwise from it. Adding or removing a node moves only about 1/N of the keys, compared with nearly all of them under hash(key) mod N. Virtual nodes (many points per server) smooth out the load. It is used by Dynamo, Cassandra, CDNs, cache clusters and load balancers (Maglev).",
+   "sections": [
+    {
+     "title": "Remember",
+     "items": [
+      "Plain modulo hashing reshuffles almost every key when N changes, which is a cache-miss storm.",
+      "Replicate by storing each key on the next R distinct nodes around the ring."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Consistent Hashing and Random Trees (Karger et al., STOC 1997)",
+     "url": "https://dl.acm.org/doi/10.1145/258533.258660",
+     "kind": "paper",
+     "note": "The original paper, written for web caching"
+    },
+    {
+     "title": "Dynamo: Amazon's Highly Available Key-value Store",
+     "url": "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf",
+     "kind": "paper",
+     "note": "Section 4.2: partitioning"
+    },
+    {
+     "title": "Maglev: A Fast and Reliable Software Network Load Balancer",
+     "url": "https://www.usenix.org/conference/nsdi16/technical-sessions/presentation/eisenbud",
+     "kind": "paper",
+     "note": "Maglev hashing"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "cap",
+   "kind": "brick",
+   "module": "rules",
+   "group": "data",
+   "title": "CAP & PACELC",
+   "subtitle": "What you give up when the network splits, and when it doesn't",
+   "lego": "Two halves of the model are separated by a gap. Either both halves stop changing until they can talk again (consistency), or each keeps building on its own and you reconcile later (availability).",
+   "summary": "CAP says that during a network partition (P), a system must choose between consistency (C: every read sees the latest write, or gets an error) and availability (A: every request gets an answer, possibly stale). PACELC adds that Else, when there is no partition, you still trade latency (L) against consistency (C). For example, DynamoDB's default eventual reads favour latency, while Spanner favours consistency.",
+   "sections": [
+    {
+     "title": "Use it well",
+     "items": [
+      "Partitions aren't optional, so the real question is how each operation behaves when one happens.",
+      "Choose per operation, not per system: bank balances need C, like counts can take A.",
+      "Most real systems are neither pure CP nor pure AP. Describe the exact consistency guarantee instead."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "CAP Twelve Years Later: How the 'Rules' Have Changed",
+     "url": "https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/",
+     "kind": "paper",
+     "note": "Eric Brewer"
+    },
+    {
+     "title": "Please stop calling databases CP or AP",
+     "url": "https://martin.kleppmann.com/2015/05/11/please-stop-calling-databases-cp-or-ap.html",
+     "kind": "blog",
+     "note": "Martin Kleppmann"
+    },
+    {
+     "title": "Consistency Tradeoffs in Modern Distributed Database System Design (PACELC)",
+     "url": "https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf",
+     "kind": "paper",
+     "note": "Daniel Abadi, IEEE Computer 2012"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "consistency",
+   "kind": "brick",
+   "module": "rules",
+   "group": "data",
+   "title": "Consistency Models",
+   "subtitle": "Linearizable · read-your-writes · monotonic · eventual",
+   "lego": "How quickly does everyone around the table see the brick you just placed: instantly, only you, or eventually?",
+   "summary": "Consistency models range from strong to weak. Linearizable means the system behaves like a single copy, and every read sees the latest completed write. Sequential and causal consistency preserve order and cause-and-effect. Read-your-writes guarantees you always see your own updates. Monotonic reads guarantee you never go back in time. Eventual consistency only promises that replicas converge when writes stop.",
+   "sections": [
+    {
+     "title": "Pick per feature",
+     "items": [
+      "Payments, inventory, unique usernames and leader election need linearizable operations.",
+      "A profile edit needs read-your-writes: route that user's reads to the leader for a few seconds.",
+      "Feeds, like counts and analytics can be eventual."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Eventually Consistent: Revisited",
+     "url": "https://www.allthingsdistributed.com/2008/12/eventually_consistent.html",
+     "kind": "blog",
+     "note": "Werner Vogels"
+    },
+    {
+     "title": "Jepsen: Consistency Models",
+     "url": "https://jepsen.io/consistency",
+     "kind": "docs",
+     "note": "A clickable map of the hierarchy"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "cachingpatterns",
+   "kind": "brick",
+   "module": "rules",
+   "group": "data",
+   "title": "Caching Patterns & Invalidation",
+   "subtitle": "Cache-aside · write-through · write-behind · TTLs",
+   "lego": "Decide when the arm's-reach shelf is refilled, and when a piece on it is too old to trust.",
+   "summary": "Cache-aside (lazy loading) is the default: read the cache, on a miss read the database, then set the cache with a TTL. Write-through updates the cache and the database together. Write-behind writes the cache first and flushes to the database asynchronously, which is fast but can lose data. For invalidation, prefer deleting the key on write over updating it, always set a TTL as a safety net, and use versioned keys for immutable data.",
+   "sections": [
+    {
+     "title": "Stampede defences",
+     "items": [
+      "Request coalescing (single-flight): one request fetches while the others wait for its result.",
+      "Leases or locks per key, as in Facebook's memcache.",
+      "Refresh popular keys before they expire, and add jitter to TTLs so keys don't expire together."
+     ]
+    },
+    {
+     "title": "Gotchas",
+     "items": [
+      "A race between 'delete on write' and a concurrent cache fill can store stale data. Leases or short TTLs contain it.",
+      "Negative caching (remembering 'not found') prevents repeated misses for missing keys."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Caching challenges and strategies",
+     "url": "https://aws.amazon.com/builders-library/caching-challenges-and-strategies/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "Scaling Memcache at Facebook",
+     "url": "https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala",
+     "kind": "paper",
+     "note": "Section 3.2.1: leases"
+    },
+    {
+     "title": "Under the hood: Broadcasting live video to millions",
+     "url": "https://engineering.fb.com/2015/12/03/ios/under-the-hood-broadcasting-live-video-to-millions/",
+     "kind": "blog",
+     "note": "Request coalescing at the edge for Facebook Live"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "sagas",
+   "kind": "brick",
+   "module": "rules",
+   "group": "data",
+   "title": "Sagas & the Transactional Outbox",
+   "subtitle": "Consistency across services without distributed locks",
+   "lego": "A multi-builder assembly where each builder finishes their part and passes a note to the next. If a later step fails, each builder takes back their own part in reverse order.",
+   "summary": "Once data is spread across services, one ACID transaction can't cover it, and two-phase commit is fragile. A saga is a sequence of local transactions, each with a compensating action (for example, refund the payment and release the stock). The transactional outbox fixes the dual-write problem: write the business row and an 'event to publish' row in the same local transaction, and a relay publishes the outbox rows to the queue or stream.",
+   "sections": [
+    {
+     "title": "Why the outbox",
+     "items": [
+      "'Update the database, then publish to Kafka' can crash in between, and you get an order with no event.",
+      "The outbox plus at-least-once relay plus idempotent consumers gives an effectively-once outcome."
+     ]
+    },
+    {
+     "title": "Orchestration vs choreography",
+     "items": [
+      "Orchestration: a central coordinator tells each service what to do. Easier to follow and monitor.",
+      "Choreography: services react to each other's events. Looser coupling, but harder to see the whole flow."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Pattern: Saga",
+     "url": "https://microservices.io/patterns/data/saga.html",
+     "kind": "docs",
+     "note": "microservices.io"
+    },
+    {
+     "title": "Pattern: Transactional outbox",
+     "url": "https://microservices.io/patterns/data/transactional-outbox.html",
+     "kind": "docs",
+     "note": "microservices.io"
+    },
+    {
+     "title": "Life Beyond Distributed Transactions: An Apostate's Opinion",
+     "url": "https://queue.acm.org/detail.cfm?id=3025012",
+     "kind": "paper",
+     "note": "Pat Helland, ACM Queue"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "idgen",
+   "kind": "brick",
+   "module": "rules",
+   "group": "data",
+   "title": "Unique ID Generation",
+   "subtitle": "Auto-increment · UUID · Snowflake IDs",
+   "lego": "Every brick needs a serial number stamped on it, and thousands of factories must stamp numbers at the same time without ever printing the same one twice.",
+   "summary": "A single database auto-increment is simple but becomes a bottleneck and a single point of failure. UUIDv4 is random, needs no coordination, and fragments B-tree indexes. Snowflake-style IDs pack a timestamp, a machine ID and a per-millisecond sequence into 64 bits, so they are unique, roughly time-sortable and generated locally. UUIDv7 is a time-ordered UUID standard.",
+   "sections": [
+    {
+     "title": "Use it for",
+     "items": [
+      "URL shortener keys (encode the number in base62), tweet and post IDs, order numbers, shard-aware IDs (put the shard ID inside the ID)."
+     ]
+    },
+    {
+     "title": "Watch out",
+     "items": [
+      "If a clock moves backwards, a Snowflake generator can issue duplicates. Refuse to issue IDs until the clock catches up.",
+      "Sequential public IDs leak business volume and invite scraping."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Announcing Snowflake",
+     "url": "https://blog.x.com/engineering/en_us/a/2010/announcing-snowflake",
+     "kind": "blog",
+     "note": "Twitter Engineering, 2010"
+    },
+    {
+     "title": "twitter-archive/snowflake",
+     "url": "https://github.com/twitter-archive/snowflake",
+     "kind": "docs",
+     "note": "The original implementation and ID layout"
+    },
+    {
+     "title": "Sharding & IDs at Instagram",
+     "url": "https://instagram-engineering.com/sharding-ids-at-instagram-1cf5a71e5a5c",
+     "kind": "blog",
+     "note": "IDs generated inside Postgres"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "idempotency",
+   "kind": "brick",
+   "module": "rules",
+   "group": "reliability",
+   "title": "Idempotency",
+   "subtitle": "Idempotency keys make retries safe",
+   "lego": "Pressing the same brick onto the same stud twice leaves one brick, not two.",
+   "summary": "An operation is idempotent if doing it several times has the same effect as doing it once. The client sends a unique Idempotency-Key with each logical request (for example, one checkout attempt). The server stores the key with the result, and a retry with the same key returns the stored result instead of charging again. This is what makes at-least-once delivery and automatic retries safe.",
+   "sections": [
+    {
+     "title": "Implementation",
+     "items": [
+      "Enforce uniqueness on (client, key) in the database. Insert the key first; if the insert conflicts, return the saved response.",
+      "Keep keys for longer than the longest retry window, for example 24 hours.",
+      "Natural idempotency: PUT and DELETE, 'set status = shipped', upserts keyed by event ID."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Designing robust and predictable APIs with idempotency",
+     "url": "https://stripe.com/blog/idempotency",
+     "kind": "blog",
+     "note": "Stripe"
+    },
+    {
+     "title": "Making retries safe with idempotent APIs",
+     "url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "Stripe API: Idempotent requests",
+     "url": "https://docs.stripe.com/api/idempotent_requests",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "retries",
+   "kind": "brick",
+   "module": "rules",
+   "group": "reliability",
+   "title": "Timeouts, Retries, Backoff & Jitter",
+   "subtitle": "Fail fast, retry politely",
+   "lego": "If a builder doesn't answer, wait a bit before asking again, wait longer each time, and don't let the whole room shout at the same moment.",
+   "summary": "Every network call needs a timeout; without one, a slow dependency ties up your threads forever. Retry only transient errors, and only idempotent operations. Space retries out with exponential backoff (for example 100 ms, 200 ms, 400 ms…) plus random jitter so clients don't retry in sync. Cap the number of attempts, and use a retry budget so retries can't multiply load during an outage.",
+   "sections": [
+    {
+     "title": "How it breaks",
+     "items": [
+      "Retry storms: three layers each retrying three times turns one failure into 27 calls.",
+      "Retries without jitter synchronize into waves that knock the dependency down again."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Timeouts, retries, and backoff with jitter",
+     "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "Exponential Backoff And Jitter",
+     "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/",
+     "kind": "blog",
+     "note": "Marc Brooker, with simulations"
+    },
+    {
+     "title": "Addressing Cascading Failures (Google SRE book)",
+     "url": "https://sre.google/sre-book/addressing-cascading-failures/",
+     "kind": "book",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "circuitbreaker",
+   "kind": "brick",
+   "module": "rules",
+   "group": "reliability",
+   "title": "Circuit Breakers & Bulkheads",
+   "subtitle": "Contain failures before they cascade",
+   "lego": "A breaker switch between sub-assemblies that snaps open when one keeps failing, plus walls between sections so a collapse in one doesn't topple the rest.",
+   "summary": "A circuit breaker counts failures to a dependency. Past a threshold it opens and fails fast, often returning a fallback. After a cooldown it half-opens and lets a few trial calls through, closing again if they succeed. Bulkheads give each dependency its own thread pool or connection pool, so one slow dependency can't take every thread.",
+   "sections": [
+    {
+     "title": "Fallbacks",
+     "items": [
+      "Serve cached or default data, hide the feature (no recommendations row), or queue the request for later.",
+      "A fallback must be cheaper and more reliable than the thing it replaces."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "CircuitBreaker",
+     "url": "https://martinfowler.com/bliki/CircuitBreaker.html",
+     "kind": "blog",
+     "note": "Martin Fowler"
+    },
+    {
+     "title": "Hystrix: How it Works",
+     "url": "https://github.com/Netflix/Hystrix/wiki/How-it-Works",
+     "kind": "docs",
+     "note": "Netflix's breaker and bulkhead library, now in maintenance mode"
+    },
+    {
+     "title": "Addressing Cascading Failures (Google SRE book)",
+     "url": "https://sre.google/sre-book/addressing-cascading-failures/",
+     "kind": "book",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "ratelimiting",
+   "kind": "brick",
+   "module": "rules",
+   "group": "reliability",
+   "title": "Rate Limiting",
+   "subtitle": "Token bucket · leaky bucket · fixed and sliding windows",
+   "lego": "A turnstile on the front-door stud: each visitor gets a handful of tokens that refill slowly, and no tokens means no entry.",
+   "summary": "A rate limiter caps how many requests a client (by user, API key or IP) can make. A token bucket allows bursts up to the bucket size and a sustained refill rate. A sliding window gives smoother limits than fixed windows, which allow double bursts at window edges. In a distributed system, keep counters in Redis and update them atomically (INCR with EXPIRE, or a Lua script). Reject with HTTP 429 and a Retry-After header.",
+   "sections": [
+    {
+     "title": "Design choices",
+     "items": [
+      "Where: at the gateway, per service, or both.",
+      "Fail open or fail closed when the limiter's store is down.",
+      "Layer the limits: per-user limits, global load shedding, and reserved capacity for critical traffic."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Scaling your API with rate limiters",
+     "url": "https://stripe.com/blog/rate-limiters",
+     "kind": "blog",
+     "note": "Stripe"
+    },
+    {
+     "title": "How we built rate limiting capable of scaling to millions of domains",
+     "url": "https://blog.cloudflare.com/counting-things-a-lot-of-different-things/",
+     "kind": "blog",
+     "note": "Cloudflare's sliding-window approximation"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "backpressure",
+   "kind": "brick",
+   "module": "rules",
+   "group": "reliability",
+   "title": "Backpressure & Load Shedding",
+   "subtitle": "Say 'slow down' or 'no' before you fall over",
+   "lego": "When the builder's hands are full, they stop accepting pieces, or politely drop the least important ones, instead of letting everything crash to the floor.",
+   "summary": "Backpressure pushes the signal to slow down back upstream: bounded queues, blocking producers, HTTP 429 or 503. Load shedding deliberately rejects excess or low-priority work so the rest finishes in time. A server at 110% capacity that accepts everything often completes nothing, because every request times out after doing its work.",
+   "sections": [
+    {
+     "title": "Techniques",
+     "items": [
+      "Bounded queues and concurrency limits, which can adapt to measured latency.",
+      "Prioritize: checkout over recommendations, interactive over batch.",
+      "Drop requests whose client deadline has already passed."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Using load shedding to avoid overload",
+     "url": "https://aws.amazon.com/builders-library/using-load-shedding-to-avoid-overload/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "Handling Overload (Google SRE book)",
+     "url": "https://sre.google/sre-book/handling-overload/",
+     "kind": "book",
+     "note": null
+    },
+    {
+     "title": "Queues Don't Fix Overload",
+     "url": "https://ferd.ca/queues-don-t-fix-overload.html",
+     "kind": "blog",
+     "note": "Fred Hebert"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "delivery",
+   "kind": "brick",
+   "module": "rules",
+   "group": "reliability",
+   "title": "Delivery Semantics",
+   "subtitle": "At-most-once · at-least-once · exactly-once",
+   "lego": "Will each piece on the conveyor arrive zero or one time, one or more times, or exactly once?",
+   "summary": "At-most-once means acknowledging before processing: messages can be lost but never duplicated. At-least-once means acknowledging after processing: nothing is lost but duplicates happen, and it is the default for SQS, Kafka consumers and S3 events. Exactly-once delivery isn't possible over an unreliable network in general, but exactly-once effects are: combine at-least-once delivery with idempotent processing or transactional sinks (Kafka transactions, dedupe tables).",
+   "sections": [
+    {
+     "title": "Remember",
+     "items": [
+      "Design for at-least-once plus idempotency. It's the pragmatic answer in nearly every interview and production system."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Exactly-once Semantics Are Possible: Here's How Kafka Does It",
+     "url": "https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/",
+     "kind": "blog",
+     "note": "Confluent"
+    },
+    {
+     "title": "Challenges with distributed systems",
+     "url": "https://aws.amazon.com/builders-library/challenges-with-distributed-systems/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library: the eight failure points of one request"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "latency",
+   "kind": "brick",
+   "module": "rules",
+   "group": "numbers",
+   "title": "Latency Numbers & Tail Latency",
+   "subtitle": "Know the orders of magnitude",
+   "lego": "Know how far each drawer is from your hands before you decide where to keep a piece.",
+   "summary": "Rough orders of magnitude: L1 cache ≈ 1 ns, main memory ≈ 100 ns, SSD random read ≈ 100 µs, a round trip in the same datacenter ≈ 0.5 ms, a disk seek ≈ 10 ms, and a round trip across a continent ≈ 50–150 ms. Tail latency (p99, p999) dominates at scale. If a page fans out to 100 backends, a 1-in-100 slow response slows most page loads.",
+   "sections": [
+    {
+     "title": "Tail tolerance",
+     "items": [
+      "Hedged requests: after the p95 time, send a second copy of the request and use whichever answers first.",
+      "Measure percentiles, not averages. Set timeouts from the p99."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Latency Numbers Every Programmer Should Know",
+     "url": "https://gist.github.com/jboner/2841832",
+     "kind": "docs",
+     "note": "Based on Jeff Dean and Peter Norvig"
+    },
+    {
+     "title": "The Tail at Scale",
+     "url": "https://research.google/pubs/the-tail-at-scale/",
+     "kind": "paper",
+     "note": "Dean and Barroso, CACM 2013"
+    },
+    {
+     "title": "Designs, Lessons and Advice from Building Large Distributed Systems",
+     "url": "https://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf",
+     "kind": "talk",
+     "note": "Jeff Dean, LADIS 2009"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "estimation",
+   "kind": "build",
+   "module": "rules",
+   "group": "numbers",
+   "title": "Back-of-the-Envelope Estimation",
+   "subtitle": "Size it before you draw it",
+   "lego": "Count how many pieces you need before you pick the baseplate.",
+   "summary": "Estimate the load for a photo-sharing app with 100 million daily active users, where each user views 50 photos and uploads 0.5 photos per day, and an average photo is 500 KB. Work out the read QPS, write QPS, peak QPS, daily new storage and 5-year storage.",
+   "steps": [
+    "Seconds per day ≈ 86,400 ≈ 10^5. So 1 million requests a day ≈ 12 per second.",
+    "Reads: 100M × 50 = 5 billion per day, so about 58,000 QPS on average.",
+    "Writes: 100M × 0.5 = 50 million per day, so about 580 QPS. The read-to-write ratio is 100:1, which says read-heavy: cache and CDN.",
+    "Peak ≈ 2–3× average, so plan for about 150,000 read QPS and 1,500 write QPS.",
+    "Storage: 50M × 500 KB = 25 TB per day, about 9 PB per year, about 45 PB over 5 years before replication. That means object storage with lifecycle tiers.",
+    "Metadata: 50M rows per day × about 1 KB = 50 GB per day, which fits a sharded database or a NoSQL table."
+   ],
+   "uses": [
+    "objectstore",
+    "cdn",
+    "cache",
+    "sharding"
+   ],
+   "sections": [
+    {
+     "title": "Handy constants",
+     "items": [
+      "2^10 ≈ a thousand, 2^20 ≈ a million, 2^30 ≈ a billion, 2^40 ≈ a trillion (KB, MB, GB, TB).",
+      "One modern server handles very roughly 10k–100k simple requests per second. One Postgres primary, very roughly 10k–50k simple writes per second.",
+      "Round aggressively. The goal is the order of magnitude, not the decimal."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "ByteByteGo: System Design 101",
+     "url": "https://github.com/ByteByteGoHq/system-design-101",
+     "kind": "course",
+     "note": null
+    },
+    {
+     "title": "Latency Numbers Every Programmer Should Know",
+     "url": "https://gist.github.com/jboner/2841832",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "slo",
+   "kind": "brick",
+   "module": "rules",
+   "group": "numbers",
+   "title": "Availability, SLOs & Error Budgets",
+   "subtitle": "How many nines, and what they cost",
+   "lego": "Decide how often the model is allowed to have a missing brick, and spend that allowance on shipping new features.",
+   "summary": "An SLI is a measured indicator, such as the share of requests that succeed in under 300 ms. An SLO is the target for it, such as 99.9% over 30 days. An SLA is a contract with penalties. The error budget is 1 minus the SLO; while budget remains you ship faster, and when it runs out you focus on reliability. Components in series multiply their availabilities (99.9% × 99.9% ≈ 99.8%); redundant components in parallel raise it.",
+   "sections": [
+    {
+     "title": "The nines",
+     "items": [
+      "99% ≈ 3.65 days of downtime a year (7.3 hours a month).",
+      "99.9% ≈ 8.8 hours a year (43.8 minutes a month).",
+      "99.99% ≈ 52.6 minutes a year (4.4 minutes a month).",
+      "99.999% ≈ 5.3 minutes a year. Each extra nine costs roughly 10× more."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Service Level Objectives (Google SRE book)",
+     "url": "https://sre.google/sre-book/service-level-objectives/",
+     "kind": "book",
+     "note": null
+    },
+    {
+     "title": "Implementing SLOs (Google SRE workbook)",
+     "url": "https://sre.google/workbook/implementing-slos/",
+     "kind": "book",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "uber",
+   "kind": "build",
+   "module": "assemblies",
+   "group": "worked",
+   "title": "Uber-like Ride-Hailing",
+   "subtitle": "Example A · real-time geospatial matching",
+   "lego": "A city-sized model where hundreds of thousands of tiny car bricks keep moving, and every few seconds a passenger brick asks, 'which car is closest to me?'",
+   "summary": "Hundreds of thousands of drivers broadcast their location every few seconds. Passengers request rides and must be matched to a nearby available driver in real time, without two passengers getting the same driver.",
+   "steps": [
+    "An API Gateway authenticates the driver apps and receives a location ping (driver_id, lat, lng, status) every ~4 seconds.",
+    "Pings go straight onto an event stream (Kafka), keyed by geo cell (for example an H3 index) so each region's updates stay ordered. The gateway never writes to a database per ping.",
+    "A geospatial compute cluster (containers) consumes the stream and updates an in-memory cache (Redis GEO, or H3 cell → driver sets) with each driver's latest position and a short TTL, so drivers who go silent disappear on their own. Other consumers, such as ETA, surge pricing and analytics, read the same stream independently.",
+    "When a passenger requests a ride, a serverless function (or matching service) asks Redis for available drivers within a radius, ranks them by ETA, and claims one atomically (for example SET driver:lock NX with a TTL) to prevent double dispatch.",
+    "The match goes into a message queue, and a notifier sends the driver a push notification with retries and a timeout. If the driver declines or doesn't answer, the lock is released and the next candidate is offered.",
+    "The confirmed trip is written to a durable database (sharded by city or trip ID) as the system of record for billing and history."
+   ],
+   "uses": [
+    "apigateway",
+    "stream",
+    "containers",
+    "cache",
+    "serverless",
+    "queue",
+    "nosql",
+    "idempotency"
+   ],
+   "sections": [
+    {
+     "title": "Why these bricks",
+     "items": [
+      "Location is high-volume and short-lived. Keep only the latest position in memory; the stream holds history for replay and analytics.",
+      "The stream decouples ingestion from consumers, so a slow analytics job never delays matching.",
+      "Geo cells turn 'nearby' into a handful of key lookups instead of scanning every driver.",
+      "The queue makes notifications reliable and retryable without blocking the matcher."
+     ]
+    },
+    {
+     "title": "Numbers",
+     "items": [
+      "500,000 active drivers × 1 ping every 4 s ≈ 125,000 writes per second of ingest.",
+      "Each position ≈ 100 bytes, so all active drivers fit in well under 1 GB of RAM."
+     ]
+    },
+    {
+     "title": "Break it",
+     "items": [
+      "A Redis shard dies: its drivers vanish until their next ping (about 4 s) or until the cache is rebuilt from the stream. Is a few seconds of blindness acceptable?",
+      "Friday night downtown: one geo cell's partition runs hot. Split cells into finer resolution or sub-partitions.",
+      "Two matchers pick the same driver: without the atomic claim, both riders get a confirmation.",
+      "The push provider slows down: the queue backlog grows, so set a message TTL and re-match instead of sending stale offers."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "H3: Uber's Hexagonal Hierarchical Spatial Index",
+     "url": "https://www.uber.com/blog/h3/",
+     "kind": "blog",
+     "note": "Uber Engineering"
+    },
+    {
+     "title": "H3 documentation",
+     "url": "https://h3geo.org/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Redis geospatial indexes",
+     "url": "https://redis.io/docs/latest/develop/data-types/geospatial/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Introducing Domain-Oriented Microservice Architecture",
+     "url": "https://www.uber.com/blog/microservice-architecture/",
+     "kind": "blog",
+     "note": "How Uber reorganized about 2,200 microservices"
+    },
+    {
+     "title": "Uber Engineering blog",
+     "url": "https://www.uber.com/blog/engineering/",
+     "kind": "blog",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "checkout",
+   "kind": "build",
+   "module": "assemblies",
+   "group": "worked",
+   "title": "E-commerce Flash-Sale Checkout",
+   "subtitle": "Example B · surviving a purchase surge",
+   "lego": "Doors open on a toy-store sale. Instead of everyone rushing the one cash register (the database), customers drop numbered tickets in a slot, and a clerk processes them one by one.",
+   "summary": "During a flash sale, millions of shoppers try to buy at the same moment. Handle the surge without dropping orders, overselling limited stock, or charging anyone twice.",
+   "steps": [
+    "A CDN serves the product pages and static assets, and an API Gateway applies per-user rate limits (optionally a virtual waiting room) so the origin sees only real checkout attempts.",
+    "Load balancers spread millions of concurrent requests across hundreds of stateless checkout containers that autoscale.",
+    "Each checkout reserves stock atomically in a fast store (a Redis DECR, or a conditional UPDATE … WHERE stock > 0) and rejects immediately when stock is gone.",
+    "Instead of writing the full order to the database under peak load, the container drops an order message (with a client-generated idempotency key) onto a durable message queue.",
+    "The user instantly sees 'Your order is processing', and the page polls or receives a push when the order is confirmed.",
+    "Isolated order-processing workers pull jobs at a steady pace the database can handle. Each worker writes the order to the relational database in a transaction, calls the payment gateway with the same idempotency key, and acknowledges the message only after both succeed.",
+    "Messages that keep failing go to a dead-letter queue for inspection. An outbox table publishes OrderConfirmed events for email, fulfilment and analytics."
+   ],
+   "uses": [
+    "cdn",
+    "apigateway",
+    "ratelimiting",
+    "loadbalancer",
+    "containers",
+    "cache",
+    "queue",
+    "rdbms",
+    "idempotency",
+    "sagas"
+   ],
+   "sections": [
+    {
+     "title": "Why these bricks",
+     "items": [
+      "The queue turns a spike the database can't survive into a steady flow it can (load leveling).",
+      "Stateless containers scale out instantly; the database doesn't, so it is protected behind the queue.",
+      "Idempotency keys make every retry safe, whether from the browser, the queue or the payment call."
+     ]
+    },
+    {
+     "title": "Numbers",
+     "items": [
+      "1 million orders in 10 minutes ≈ 1,700 orders per second on average, with the first seconds at 10× that. Workers might drain 2,000 per second."
+     ]
+    },
+    {
+     "title": "Break it",
+     "items": [
+      "A worker crashes after charging but before acknowledging: the message reappears, and the idempotency key stops a second charge.",
+      "The payment gateway times out: retry with backoff and the same key. Never generate a new key on retry.",
+      "The queue backlog grows: autoscale workers on queue depth, but cap them at the database's safe concurrency and show an honest ETA.",
+      "The Redis stock count and the database disagree after a crash: reconcile, and choose reserve-then-confirm with expiring reservations."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Designing robust and predictable APIs with idempotency",
+     "url": "https://stripe.com/blog/idempotency",
+     "kind": "blog",
+     "note": "Stripe"
+    },
+    {
+     "title": "Surviving Flashes of High-Write Traffic Using Scriptable Load Balancers",
+     "url": "https://shopify.engineering/surviving-flashes-of-high-write-traffic-using-scriptable-load-balancers-part-i",
+     "kind": "blog",
+     "note": "Shopify Engineering"
+    },
+    {
+     "title": "A Pods Architecture To Allow Shopify To Scale",
+     "url": "https://shopify.engineering/a-pods-architecture-to-allow-shopify-to-scale",
+     "kind": "blog",
+     "note": "Shopify Engineering"
+    },
+    {
+     "title": "Pattern: Transactional outbox",
+     "url": "https://microservices.io/patterns/data/transactional-outbox.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Avoiding insurmountable queue backlogs",
+     "url": "https://aws.amazon.com/builders-library/avoiding-insurmountable-queue-backlogs/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    }
+   ]
+  },
+  {
+   "id": "urlshortener-design",
+   "kind": "build",
+   "module": "assemblies",
+   "group": "classic",
+   "title": "URL Shortener at Scale",
+   "subtitle": "Like bit.ly or TinyURL",
+   "lego": "A giant wall of tiny labelled drawers: each short label opens a drawer holding the long address.",
+   "summary": "Design a service that turns long URLs into 7-character short links and redirects about 100 million clicks a day with low latency. Reads outnumber writes about 100 to 1.",
+   "steps": [
+    "Write path: POST /links {longUrl}. Generate a unique ID (a Snowflake ID or a range-allocated counter), encode it in base62 (62^7 ≈ 3.5 trillion codes), and store code → longUrl, owner and expiry in a key-value store.",
+    "Read path: GET /{code} goes through the CDN or edge, then a load balancer to stateless services, then a Redis cache, then the key-value store on a miss. Answer with a 301 (cacheable, cheapest) or 302 (every click reaches you, so you can count it).",
+    "Publish click events asynchronously to a stream for analytics. Never do it inline on the redirect.",
+    "Rate-limit creation per user or IP to stop spam, and check URLs against a malware list."
+   ],
+   "uses": [
+    "loadbalancer",
+    "containers",
+    "cache",
+    "nosql",
+    "cdn",
+    "stream",
+    "idgen",
+    "ratelimiting"
+   ],
+   "sections": [
+    {
+     "title": "Trade-offs to discuss",
+     "items": [
+      "Hash of the URL plus a collision check makes duplicate URLs share one code, but costs a read on every write.",
+      "A counter per range (each server leases blocks of 1,000 IDs) needs no coordination per request.",
+      "Custom aliases require a uniqueness check, for example a conditional put."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "The System Design Primer",
+     "url": "https://github.com/donnemartin/system-design-primer",
+     "kind": "course",
+     "note": "See the Pastebin/Bit.ly solution"
+    },
+    {
+     "title": "Announcing Snowflake",
+     "url": "https://blog.x.com/engineering/en_us/a/2010/announcing-snowflake",
+     "kind": "blog",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "newsfeed",
+   "kind": "build",
+   "module": "assemblies",
+   "group": "classic",
+   "title": "News Feed / Timeline",
+   "subtitle": "Like Twitter/X, Instagram or Facebook",
+   "lego": "Every follower has a personal mailbox tray. Do you drop a copy of each new brick into every tray (push), or does each follower walk around collecting bricks when they look (pull)?",
+   "summary": "Users follow others and open their home timeline: the newest posts from everyone they follow, loaded in under 200 ms. Some accounts have 100 million followers.",
+   "steps": [
+    "Post service: store the post in a sharded store (by author) and media in object storage behind a CDN.",
+    "Publish PostCreated to a queue or stream.",
+    "Fan-out workers look up the author's followers and push the post ID into each follower's timeline list in Redis (fan-out on write), trimmed to the newest ~800 IDs.",
+    "For celebrity authors, skip fan-out. At read time, merge their recent posts into the follower's cached timeline (fan-out on read). This hybrid approach is the classic answer.",
+    "The timeline read fetches IDs from Redis, hydrates the post bodies from the post cache or store, and ranks them."
+   ],
+   "uses": [
+    "apigateway",
+    "containers",
+    "queue",
+    "cache",
+    "nosql",
+    "objectstore",
+    "cdn",
+    "sharding"
+   ],
+   "sections": [
+    {
+     "title": "Why",
+     "items": [
+      "Reads vastly outnumber writes, so precompute timelines to make reads cheap.",
+      "Pushing a celebrity's post to 100 million timelines would take far too long and cost too much, hence the hybrid."
+     ]
+    },
+    {
+     "title": "Break it",
+     "items": [
+      "The fan-out queue backs up after a viral post: timelines lag. Prioritize active users and skip fan-out to dormant ones.",
+      "The timeline cache is lost: rebuild on demand from the social graph plus recent posts, and protect the database with request coalescing."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Timelines at Scale",
+     "url": "https://www.infoq.com/presentations/Twitter-Timeline-Scalability/",
+     "kind": "talk",
+     "note": "Raffi Krikorian, Twitter (QCon 2012)"
+    },
+    {
+     "title": "TAO: Facebook's Distributed Data Store for the Social Graph",
+     "url": "https://www.usenix.org/conference/atc13/technical-sessions/presentation/bronson",
+     "kind": "paper",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "chat",
+   "kind": "build",
+   "module": "assemblies",
+   "group": "classic",
+   "title": "Real-Time Chat",
+   "subtitle": "Like WhatsApp, Slack or Discord",
+   "lego": "Each person keeps a walkie-talkie line open to a switchboard brick. The switchboard knows who's on which line and relays each message instantly.",
+   "summary": "One-to-one and group chat with messages delivered in under a second, online presence, message history, and delivery to offline users.",
+   "steps": [
+    "Clients hold a persistent WebSocket to a fleet of connection-gateway servers behind an L4 load balancer.",
+    "A session registry in Redis maps user_id to the gateway that holds their connection, and tracks presence with heartbeats and TTLs.",
+    "When a message is sent, the chat service assigns a per-channel sequence number and persists it to a wide-column store partitioned by (channel_id, time bucket).",
+    "The message is published to a stream or pub/sub topic. The gateways holding recipients' connections push it down their sockets.",
+    "Offline recipients get a push notification through a notification queue, and clients sync missed messages on reconnect using their last seen sequence number."
+   ],
+   "uses": [
+    "loadbalancer",
+    "containers",
+    "cache",
+    "nosql",
+    "stream",
+    "queue",
+    "sharding"
+   ],
+   "sections": [
+    {
+     "title": "Break it",
+     "items": [
+      "A gateway server dies: all its clients reconnect at once. Add jittered reconnect backoff, or they stampede the survivors.",
+      "A huge channel (a server with 1 million members) becomes a hot partition. Use time-bucketed partitions and fan out in tiers.",
+      "Duplicate sends on flaky mobile networks: a client message ID deduplicates them."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "How Discord Stores Trillions of Messages",
+     "url": "https://discord.com/blog/how-discord-stores-trillions-of-messages",
+     "kind": "blog",
+     "note": "Discord Engineering"
+    },
+    {
+     "title": "Real-time Messaging",
+     "url": "https://slack.engineering/real-time-messaging/",
+     "kind": "blog",
+     "note": "Slack Engineering"
+    },
+    {
+     "title": "The WebSocket API (MDN)",
+     "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "video",
+   "kind": "build",
+   "module": "assemblies",
+   "group": "classic",
+   "title": "Video Streaming",
+   "subtitle": "Like Netflix or YouTube",
+   "lego": "Chop each movie into small numbered bricks at several quality levels, stock copies in every corner shop, and let each viewer's player grab whichever size fits their connection.",
+   "summary": "Creators upload large video files, and millions of viewers worldwide stream them smoothly on connections ranging from 3G to fibre.",
+   "steps": [
+    "The client asks the API for a presigned URL and uploads the raw file directly to object storage in multiple parts.",
+    "The upload event triggers a transcoding pipeline: a queue of jobs split into chunks that workers encode in parallel into many bitrates and resolutions, packaged as HLS or DASH segments of about 2–6 seconds.",
+    "Segments and manifests are written back to object storage, and metadata (title, status, segment locations) goes to a database.",
+    "Viewers fetch the manifest and segments from a CDN. The player's adaptive bitrate logic switches quality segment by segment as bandwidth changes.",
+    "Views, watch time and quality-of-experience events stream into analytics and recommendations."
+   ],
+   "uses": [
+    "apigateway",
+    "objectstore",
+    "queue",
+    "containers",
+    "serverless",
+    "cdn",
+    "rdbms",
+    "stream"
+   ],
+   "sections": [
+    {
+     "title": "Break it",
+     "items": [
+      "A new episode drops and the CDN is cold: pre-position popular titles at the edge before release.",
+      "A transcode worker dies mid-chunk: the job becomes visible again and is re-encoded. Writes to deterministic output keys make that idempotent."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Netflix Open Connect",
+     "url": "https://openconnect.netflix.com/",
+     "kind": "docs",
+     "note": "The CDN appliances Netflix places inside ISPs"
+    },
+    {
+     "title": "Completing the Netflix Cloud Migration",
+     "url": "https://about.netflix.com/en/news/completing-the-netflix-cloud-migration",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Netflix Tech Blog",
+     "url": "https://netflixtechblog.com/",
+     "kind": "blog",
+     "note": "Encoding, streaming and resilience posts"
+    }
+   ]
+  },
+  {
+   "id": "ratelimiter-design",
+   "kind": "build",
+   "module": "assemblies",
+   "group": "classic",
+   "title": "Distributed Rate Limiter",
+   "subtitle": "Protect an API used by millions of clients",
+   "lego": "A turnstile at every entrance, all reading the same shared tally board so no one can sneak extra passes by switching doors.",
+   "summary": "Limit each API key to N requests per minute across a fleet of 200 gateway nodes, adding less than 1–2 ms of latency, and keep the API up even if the limiter's store has trouble.",
+   "steps": [
+    "Enforce in the API Gateway or a sidecar, before the request reaches business services.",
+    "Keep a token bucket per key in Redis, updated atomically with a Lua script that refills based on elapsed time and takes one token.",
+    "Shard the Redis keys by API key. Hot keys can keep a small local token cache on each gateway, synced asynchronously.",
+    "Reject with 429 Too Many Requests, a Retry-After header, and X-RateLimit-Remaining headers.",
+    "Choose deliberately what happens when Redis is unreachable: fail open, with a coarse local limit as a backstop."
+   ],
+   "uses": [
+    "apigateway",
+    "cache",
+    "ratelimiting",
+    "consistenthashing"
+   ],
+   "sections": [
+    {
+     "title": "Algorithms",
+     "items": [
+      "Token bucket: allows bursts and is simple. Sliding-window counter: smooth and memory-cheap. Fixed window: simplest, but allows double bursts at the edges."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Scaling your API with rate limiters",
+     "url": "https://stripe.com/blog/rate-limiters",
+     "kind": "blog",
+     "note": "Stripe"
+    },
+    {
+     "title": "How we built rate limiting capable of scaling to millions of domains",
+     "url": "https://blog.cloudflare.com/counting-things-a-lot-of-different-things/",
+     "kind": "blog",
+     "note": "Cloudflare"
+    }
+   ]
+  },
+  {
+   "id": "notifications",
+   "kind": "build",
+   "module": "assemblies",
+   "group": "classic",
+   "title": "Notification System",
+   "subtitle": "Push, SMS and email at scale",
+   "lego": "A mailroom that sorts every outgoing letter into the right chute (push, SMS or email), throws out duplicates, and keeps retrying any letter the post office bounces.",
+   "summary": "Many product services need to notify users through push, SMS and email: tens of millions of messages a day, respecting user preferences, never double-sending, and surviving flaky third-party providers.",
+   "steps": [
+    "Services call a Notification API (or publish events) with user_id, template and data, plus an idempotency key.",
+    "The notification service checks user preferences, quiet hours and rate caps, renders the template, and deduplicates on the key.",
+    "It enqueues onto a separate queue per channel (push, SMS, email) so a slow SMS provider can't block push.",
+    "Channel workers call the providers (APNs/FCM, Twilio, SES) with timeouts, retries with backoff, and circuit breakers per provider, failing over to a secondary provider where possible.",
+    "Messages that exhaust their retries go to a dead-letter queue. Delivery status streams into analytics."
+   ],
+   "uses": [
+    "apigateway",
+    "containers",
+    "queue",
+    "rdbms",
+    "cache",
+    "idempotency",
+    "retries",
+    "circuitbreaker"
+   ],
+   "sections": [
+    {
+     "title": "Break it",
+     "items": [
+      "The email provider is down for an hour: the email queue grows while push and SMS keep flowing, and the backlog drains when the provider recovers. Set a TTL for time-sensitive messages such as one-time passcodes.",
+      "A marketing blast of 50 million messages starves transactional ones: use separate priority queues."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Amazon SQS dead-letter queues",
+     "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Timeouts, retries, and backoff with jitter",
+     "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    }
+   ]
+  },
+  {
+   "id": "read-primers",
+   "kind": "brick",
+   "module": "path",
+   "group": "blueprints",
+   "title": "System Design Primers",
+   "subtitle": "ByteByteGo System Design 101 · The System Design Primer",
+   "lego": "The official instruction booklets. Flip through every page once before you try your own model.",
+   "summary": "Two free, visual, community-maintained overviews of every standard brick and pattern. ByteByteGo's System Design 101 is a collection of one-page diagrams (how HTTPS works, CDN, caching and database choices). Donne Martin's System Design Primer is a structured syllabus with worked solutions and Anki decks.",
+   "sections": [
+    {
+     "title": "How to study them",
+     "items": [
+      "Read one topic, close the tab, and redraw the diagram from memory in Excalidraw. Compare, then fix the gaps.",
+      "Map each topic to a card in this app, and put anything new in the card's Notes (N)."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "ByteByteGo: System Design 101",
+     "url": "https://github.com/ByteByteGoHq/system-design-101",
+     "kind": "course",
+     "note": null
+    },
+    {
+     "title": "The System Design Primer",
+     "url": "https://github.com/donnemartin/system-design-primer",
+     "kind": "course",
+     "note": "Donne Martin"
+    },
+    {
+     "title": "ByteByteGo newsletter",
+     "url": "https://blog.bytebytego.com/",
+     "kind": "blog",
+     "note": "Weekly deep dives"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "read-alexxu",
+   "kind": "brick",
+   "module": "path",
+   "group": "blueprints",
+   "title": "System Design Interview, Volumes 1 & 2",
+   "subtitle": "Alex Xu (and Sahn Lam for Volume 2)",
+   "lego": "The master-builder sets: complete models with step-by-step instructions and the reasoning behind each choice.",
+   "summary": "Chapter-length walkthroughs of the classic builds, including the rate limiter, consistent hashing, key-value store, unique ID generator, URL shortener, web crawler, notification system, news feed, chat, search autocomplete, YouTube and Google Drive. Volume 2 adds proximity search, maps, payments, a stock exchange and more. Each follows a four-step framework: scope the problem, propose a high-level design, deep dive, wrap up.",
+   "sections": [
+    {
+     "title": "How to study it",
+     "items": [
+      "Before each chapter, give yourself 45 minutes to design it cold. Then read it and list what you missed.",
+      "Rebuild the chapter's design as a Build card in your notes, with its steps and the bricks used."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "ByteByteGo (books and course)",
+     "url": "https://bytebytego.com/",
+     "kind": "book",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "read-ddia",
+   "kind": "brick",
+   "module": "path",
+   "group": "blueprints",
+   "title": "Designing Data-Intensive Applications",
+   "subtitle": "Martin Kleppmann (O'Reilly)",
+   "lego": "The materials-science textbook: why each kind of plastic bends, snaps or holds under load.",
+   "summary": "The deepest single book on the principles under the bricks: storage engines (LSM trees vs B-trees), encoding, replication, partitioning, transactions and isolation levels, the trouble with distributed systems, consistency and consensus, and batch and stream processing. It is where interview answers turn into real understanding.",
+   "sections": [
+    {
+     "title": "How to study it",
+     "items": [
+      "One chapter a week. After each, write a one-paragraph explanation in Notes as if teaching a junior engineer.",
+      "Follow the chapter references into the papers listed under Foundational Papers."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Designing Data-Intensive Applications",
+     "url": "https://dataintensive.net/",
+     "kind": "book",
+     "note": null
+    },
+    {
+     "title": "Martin Kleppmann's blog",
+     "url": "https://martin.kleppmann.com/",
+     "kind": "blog",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "read-netflix",
+   "kind": "brick",
+   "module": "path",
+   "group": "blueprints",
+   "title": "Netflix: Datacenter Monolith → Cloud Microservices",
+   "subtitle": "Netflix Tech Blog",
+   "lego": "Watching a master builder take apart one giant brittle model and rebuild it as hundreds of small, replaceable sub-assemblies, while it stays on display the whole time.",
+   "summary": "In 2008 a major database corruption stopped DVD shipments for three days. Netflix then spent about seven years moving from a monolith in its own datacenters to hundreds of microservices on AWS, finishing in 2016. Along the way it invented or popularized chaos engineering (Chaos Monkey), client-side load balancing, circuit breakers (Hystrix) and its own CDN (Open Connect).",
+   "sections": [
+    {
+     "title": "What to take away",
+     "items": [
+      "Migrate incrementally: move one service or dataset at a time, with dual running and rollbacks.",
+      "Design for failure as the normal state, then prove it continuously in production."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Completing the Netflix Cloud Migration",
+     "url": "https://about.netflix.com/en/news/completing-the-netflix-cloud-migration",
+     "kind": "blog",
+     "note": "Yury Izrailevsky, 2016"
+    },
+    {
+     "title": "Netflix Tech Blog",
+     "url": "https://netflixtechblog.com/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Chaos Monkey",
+     "url": "https://netflix.github.io/chaosmonkey/",
+     "kind": "tool",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "read-uber",
+   "kind": "brick",
+   "module": "path",
+   "group": "blueprints",
+   "title": "Uber: Monolith → Microservices → Domains",
+   "subtitle": "Uber Engineering blog",
+   "lego": "Too many tiny sub-assemblies became impossible to navigate, so they were regrouped into labelled domains with a single door each.",
+   "summary": "Uber split its early Python monolith into thousands of microservices to scale teams and cities. The complexity that followed led to Domain-Oriented Microservice Architecture (DOMA): services grouped into domains and layers, each behind a gateway. Uber also moved from Postgres to MySQL for replication at scale, built the Schemaless datastore, and created H3 for geospatial indexing.",
+   "sections": [
+    {
+     "title": "What to take away",
+     "items": [
+      "Microservices solve organizational scaling but create operational complexity, so group them deliberately.",
+      "Choose databases for their operational behaviour at scale (replication, upgrades), not just their features."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Introducing Domain-Oriented Microservice Architecture",
+     "url": "https://www.uber.com/blog/microservice-architecture/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Why Uber Engineering switched from Postgres to MySQL",
+     "url": "https://www.uber.com/blog/postgres-to-mysql-migration/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "H3: Uber's Hexagonal Hierarchical Spatial Index",
+     "url": "https://www.uber.com/blog/h3/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Uber Engineering blog",
+     "url": "https://www.uber.com/blog/engineering/",
+     "kind": "blog",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "read-airbnb",
+   "kind": "brick",
+   "module": "path",
+   "group": "blueprints",
+   "title": "Airbnb: Monorail → Service-Oriented Architecture",
+   "subtitle": "The Airbnb Tech Blog",
+   "lego": "One huge model everyone was editing at once got divided into owned sections with clear connection points.",
+   "summary": "Airbnb's Ruby on Rails monolith ('Monorail') slowed hundreds of engineers who were deploying the same codebase. Over several years Airbnb migrated to a service-oriented architecture, with presentation, mid-tier and data services, an IDL-based service framework, and strict ownership. It also wrote widely read posts on payments idempotency and data infrastructure.",
+   "sections": [
+    {
+     "title": "What to take away",
+     "items": [
+      "Carve out services along data ownership. A service should own its tables.",
+      "Invest in the platform (service framework, schemas, observability) before the migration, not after."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "The Airbnb Tech Blog",
+     "url": "https://medium.com/airbnb-engineering",
+     "kind": "blog",
+     "note": "Search for 'Building Services at Airbnb' and 'Avoiding Double Payments'"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "read-counterpoint",
+   "kind": "brick",
+   "module": "path",
+   "group": "blueprints",
+   "title": "The Counterpoint: When Not to Split",
+   "subtitle": "Segment's 'Goodbye Microservices'",
+   "lego": "Sometimes the best build is fewer, larger bricks.",
+   "summary": "Segment split its event-delivery pipeline into more than 140 per-destination microservices and queues. Operational load, library drift and on-call pain grew until it merged them back into one service with better testing. The lesson: architecture follows constraints (team size, traffic, change rate). A well-structured modular monolith is a legitimate end state.",
+   "sections": [
+    {
+     "title": "Ask before splitting",
+     "items": [
+      "Do the parts need to scale, deploy or fail independently? Are different teams blocked on each other?",
+      "Can a module boundary inside one deployable give 80% of the benefit?"
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Goodbye Microservices: From 100s of problem children to 1 superstar",
+     "url": "https://segment.com/blog/goodbye-microservices/",
+     "kind": "blog",
+     "note": "Segment Engineering"
+    },
+    {
+     "title": "Microservices",
+     "url": "https://martinfowler.com/articles/microservices.html",
+     "kind": "blog",
+     "note": "James Lewis and Martin Fowler"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "read-sre",
+   "kind": "brick",
+   "module": "path",
+   "group": "blueprints",
+   "title": "Google SRE Book & Amazon Builders' Library",
+   "subtitle": "Free, production-hardened operating manuals",
+   "lego": "The notes from people who keep the world's largest models standing day after day.",
+   "summary": "Google's Site Reliability Engineering book (free online) covers SLOs, overload handling, cascading failures, load balancing and incident response. The Amazon Builders' Library is a set of essays by Amazon principal engineers on timeouts and retries, load shedding, caching, health checks, static stability and shuffle-sharding. Together they are the best free source on how systems behave under failure.",
+   "sections": [
+    {
+     "title": "Start with",
+     "items": [
+      "SRE book: Service Level Objectives, Handling Overload, Addressing Cascading Failures.",
+      "Builders' Library: Timeouts, retries and backoff with jitter; Using load shedding; Caching challenges and strategies."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Site Reliability Engineering (Google)",
+     "url": "https://sre.google/sre-book/table-of-contents/",
+     "kind": "book",
+     "note": null
+    },
+    {
+     "title": "The Amazon Builders' Library",
+     "url": "https://aws.amazon.com/builders-library/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Workload isolation using shuffle-sharding",
+     "url": "https://aws.amazon.com/builders-library/workload-isolation-using-shuffle-sharding/",
+     "kind": "blog",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "paper-gfs",
+   "kind": "brick",
+   "module": "path",
+   "group": "papers",
+   "title": "The Google File System (2003)",
+   "subtitle": "Ghemawat, Gobioff, Leung · SOSP 2003",
+   "lego": "The first mega storage bin built from thousands of cheap, breakable boxes.",
+   "summary": "A single master holds metadata; chunkservers store 64 MB chunks, each replicated three times. The design assumes component failure is normal, optimizes for large sequential reads and record appends, and relaxes consistency. It is the ancestor of HDFS and of modern object and blob storage.",
+   "sections": [
+    {
+     "title": "Key ideas",
+     "items": [
+      "Separate the metadata path (the master) from the data path (clients talk directly to chunkservers).",
+      "Leases give one replica authority to order mutations."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "The Google File System (PDF)",
+     "url": "https://static.googleusercontent.com/media/research.google.com/en//archive/gfs-sosp2003.pdf",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "paper-mapreduce",
+   "kind": "brick",
+   "module": "path",
+   "group": "papers",
+   "title": "MapReduce (2004)",
+   "subtitle": "Dean & Ghemawat · OSDI 2004",
+   "lego": "Give a thousand builders one simple instruction each, then gather their results in a sorted pile.",
+   "summary": "A programming model in which users write map (emit key-value pairs) and reduce (combine the values for each key), and the framework handles partitioning, scheduling, fault tolerance (re-running failed tasks) and stragglers (backup tasks). It launched Hadoop and the era of batch data processing.",
+   "sections": [
+    {
+     "title": "Key ideas",
+     "items": [
+      "Move computation to the data. Deterministic tasks can simply be re-executed on failure."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "MapReduce: Simplified Data Processing on Large Clusters (PDF)",
+     "url": "https://static.googleusercontent.com/media/research.google.com/en//archive/mapreduce-osdi04.pdf",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "paper-bigtable",
+   "kind": "brick",
+   "module": "path",
+   "group": "papers",
+   "title": "Bigtable (2006)",
+   "subtitle": "Chang et al. · OSDI 2006",
+   "lego": "The first giant Bionicle: a sparse, sorted, ever-growing map split into tablets.",
+   "summary": "A sparse, distributed, persistent, sorted map indexed by (row, column, timestamp). Tables split into tablets served by tablet servers; data is stored as SSTables on GFS, with Chubby for coordination. It inspired HBase and Cassandra's data model, and LSM-tree storage is now everywhere.",
+   "sections": [
+    {
+     "title": "Key ideas",
+     "items": [
+      "Write to a memtable and commit log, flush to immutable SSTables, and compact in the background. That is the LSM tree.",
+      "Row keys sorted lexicographically make row-key design the performance lever."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Bigtable: A Distributed Storage System for Structured Data (PDF)",
+     "url": "https://static.googleusercontent.com/media/research.google.com/en//archive/bigtable-osdi06.pdf",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "paper-dynamo",
+   "kind": "brick",
+   "module": "path",
+   "group": "papers",
+   "title": "Dynamo (2007)",
+   "subtitle": "DeCandia et al. (Amazon) · SOSP 2007",
+   "lego": "A shopping-cart store that would rather show a slightly old cart than no cart at all.",
+   "summary": "An always-writable, highly available key-value store for Amazon's shopping cart. It combines consistent hashing with virtual nodes, replication to N nodes with tunable R and W quorums, sloppy quorums and hinted handoff, vector clocks for conflict detection, Merkle trees for anti-entropy, and gossip for membership. It shaped Cassandra, Riak and the NoSQL movement.",
+   "sections": [
+    {
+     "title": "Key ideas",
+     "items": [
+      "Availability over consistency for business reasons: an 'add to cart' must never fail.",
+      "Push conflict resolution to reads, and to the application."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Dynamo: Amazon's Highly Available Key-value Store (PDF)",
+     "url": "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Amazon DynamoDB (USENIX ATC 2022)",
+     "url": "https://www.usenix.org/conference/atc22/presentation/elhemali",
+     "kind": "paper",
+     "note": "How the managed service differs from the 2007 design"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "paper-log",
+   "kind": "brick",
+   "module": "path",
+   "group": "papers",
+   "title": "The Log & Kafka (2011–2013)",
+   "subtitle": "Jay Kreps (LinkedIn)",
+   "lego": "The realization that the conveyor belt itself is the most important piece in the factory.",
+   "summary": "An essay arguing that an append-only, totally ordered log is the unifying abstraction behind databases (write-ahead logs), replication, data integration and stream processing. Built at LinkedIn as Kafka, it became the backbone of event-driven architectures and change data capture.",
+   "sections": [
+    {
+     "title": "Key ideas",
+     "items": [
+      "Put every change on a log, and every other system becomes a materialized view of it.",
+      "Each consumer tracks its own offset, which is why a stream can replay and a queue can't."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "The Log: What every software engineer should know about real-time data's unifying abstraction",
+     "url": "https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Apache Kafka design",
+     "url": "https://kafka.apache.org/documentation/#design",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "paper-spanner",
+   "kind": "brick",
+   "module": "path",
+   "group": "papers",
+   "title": "Spanner (2012)",
+   "subtitle": "Corbett et al. (Google) · OSDI 2012",
+   "lego": "A rigid LEGO grid stretched across the whole planet, kept in sync by atomic clocks.",
+   "summary": "A globally distributed database with externally consistent (linearizable) transactions. TrueTime exposes clock uncertainty from GPS and atomic clocks, and commits wait out that uncertainty. Data is split into Paxos-replicated groups, and two-phase commit runs across groups. It showed that SQL, strong consistency and global scale can coexist, which inspired CockroachDB and YugabyteDB.",
+   "sections": [
+    {
+     "title": "Key ideas",
+     "items": [
+      "Bounded clock uncertainty plus commit-wait gives global ordering without a single leader."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Spanner: Google's Globally-Distributed Database (PDF)",
+     "url": "https://static.googleusercontent.com/media/research.google.com/en//archive/spanner-osdi2012.pdf",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "paper-raft",
+   "kind": "brick",
+   "module": "path",
+   "group": "papers",
+   "title": "Raft & Paxos: Consensus",
+   "subtitle": "Ongaro & Ousterhout 2014 · Lamport 2001",
+   "lego": "The rule five builders use to agree on the next brick even when some of them fall asleep.",
+   "summary": "Consensus lets a cluster agree on an ordered log despite crashes, as long as a majority is up. Raft splits the problem into leader election, log replication and safety, and was designed to be understandable. It powers etcd (Kubernetes), Consul and CockroachDB. Paxos is the original, and 'Paxos Made Simple' is its short explanation.",
+   "sections": [
+    {
+     "title": "Key ideas",
+     "items": [
+      "Majority quorums: 5 nodes tolerate 2 failures. Terms (epochs) fence off stale leaders."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "In Search of an Understandable Consensus Algorithm (Raft)",
+     "url": "https://raft.github.io/raft.pdf",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Raft visualization and resources",
+     "url": "https://raft.github.io/",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "Paxos Made Simple",
+     "url": "https://lamport.azurewebsites.net/pubs/paxos-simple.pdf",
+     "kind": "paper",
+     "note": "Leslie Lamport"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "paper-memcache",
+   "kind": "brick",
+   "module": "path",
+   "group": "papers",
+   "title": "Scaling Memcache at Facebook (2013)",
+   "subtitle": "Nishtala et al. · NSDI 2013",
+   "lego": "How to run the world's biggest arm's-reach shelf without letting it lie to you.",
+   "summary": "How Facebook ran thousands of memcached servers serving billions of requests per second. The paper covers look-aside caching, leases that prevent stale sets and stampedes, regional pools, cold-cluster warm-up, and cross-region invalidation driven by the MySQL commit log. It is the practical manual for caching at scale.",
+   "sections": [
+    {
+     "title": "Key ideas",
+     "items": [
+      "Invalidate by deleting, never by setting, and drive deletions from the database's commit log.",
+      "Leases solve both stale sets and thundering herds."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Scaling Memcache at Facebook (NSDI 2013)",
+     "url": "https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "paper-tail",
+   "kind": "brick",
+   "module": "path",
+   "group": "papers",
+   "title": "The Tail at Scale (2013)",
+   "subtitle": "Jeffrey Dean & Luiz André Barroso · CACM",
+   "lego": "In a model with a thousand pieces, the slowest piece sets the pace.",
+   "summary": "In a fan-out service, rare slow responses (the p99 tail) become the common case for users. The paper catalogues the causes (shared resources, garbage collection, queueing) and techniques to tolerate them: hedged requests, tied requests, micro-partitioning, selective replication, and putting slow machines on probation.",
+   "sections": [
+    {
+     "title": "Key ideas",
+     "items": [
+      "Don't try to eliminate variability. Build systems that are tail-tolerant."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "The Tail at Scale",
+     "url": "https://research.google/pubs/the-tail-at-scale/",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "cad-tools",
+   "kind": "brick",
+   "module": "path",
+   "group": "cad",
+   "title": "Virtual CAD Tools for Architecture",
+   "subtitle": "Excalidraw · Miro · Eraser · draw.io · the C4 model",
+   "lego": "Digital LEGO Designer: lay out the whole model on screen before you buy a single brick.",
+   "summary": "Sketch system topologies before spending money on cloud infrastructure. Excalidraw has a fast hand-drawn feel and is great for interviews. Miro is a collaborative whiteboard. Eraser turns text into diagrams (diagram-as-code) and has cloud icons. draw.io is free and precise. The C4 model gives you zoom levels (context, containers, components, code) so diagrams stay readable.",
+   "sections": [
+    {
+     "title": "Practice routine",
+     "items": [
+      "For every Build card, draw it from memory in under 10 minutes, then compare it with the card.",
+      "Use one colour per brick family, matching this app: compute orange, storage blue, networking green, glue purple.",
+      "Label each arrow with the protocol and whether it is synchronous or asynchronous."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Excalidraw",
+     "url": "https://excalidraw.com/",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "Eraser",
+     "url": "https://www.eraser.io/",
+     "kind": "tool",
+     "note": "Diagram-as-code for architecture"
+    },
+    {
+     "title": "Miro",
+     "url": "https://miro.com/",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "draw.io",
+     "url": "https://www.drawio.com/",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "The C4 model",
+     "url": "https://c4model.com/",
+     "kind": "docs",
+     "note": "Simon Brown"
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "cad-trafficflow",
+   "kind": "build",
+   "module": "path",
+   "group": "cad",
+   "title": "Map the Traffic Flow",
+   "subtitle": "Four questions for every diagram",
+   "lego": "Trace one peg's journey through the whole model with your finger.",
+   "summary": "Take any system you use (a food-delivery app, your company's checkout, this flashcard app) and draw a single request's journey from the user's thumb to durable storage and back.",
+   "steps": [
+    "Where does data enter? DNS, the CDN or edge, the load balancer or API gateway. Mark auth and rate limiting here.",
+    "Where is it computed? Which stateless services handle it, and which calls are synchronous?",
+    "Where does it halt? Queues and streams: what is buffered, for how long, and who drains it?",
+    "Where is it cached? Browser, CDN, the Redis tier, in-process. For each, what TTL and how it is invalidated.",
+    "Where is it permanently saved? The source-of-truth database or object store, how it is replicated, and how it is backed up.",
+    "Finally, circle every single point of failure in red and write the fix next to it."
+   ],
+   "uses": [
+    "dns",
+    "cdn",
+    "apigateway",
+    "loadbalancer",
+    "containers",
+    "queue",
+    "cache",
+    "rdbms",
+    "objectstore"
+   ],
+   "sections": [
+    {
+     "title": "Self-check",
+     "items": [
+      "Can you say the p99 latency budget of each hop?",
+      "What happens to an in-flight request if each box dies right now?"
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "The C4 model",
+     "url": "https://c4model.com/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Challenges with distributed systems",
+     "url": "https://aws.amazon.com/builders-library/challenges-with-distributed-systems/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    }
+   ]
+  },
+  {
+   "id": "cad-framework",
+   "kind": "build",
+   "module": "path",
+   "group": "cad",
+   "title": "The 45-Minute Design Framework",
+   "subtitle": "From a blank page to a defended design",
+   "lego": "The instruction-booklet order: sort the pieces, build the base, add the details, then stress-test.",
+   "summary": "You're handed a vague prompt like 'Design Instagram' and a whiteboard. Walk through a repeatable sequence that produces a scoped, estimated, defensible design in about 45 minutes.",
+   "steps": [
+    "Requirements (5 minutes): the functional core (3–5 features) and the non-functional targets: scale, latency, availability, and the consistency each feature needs.",
+    "Estimates (5 minutes): users, read and write QPS, peak, and storage per year. Decide whether it is read-heavy or write-heavy.",
+    "API (5 minutes): the main endpoints or events, with request and response shapes and idempotency.",
+    "Data model (5 minutes): entities, access patterns, and the choice between SQL and NoSQL, with the partition key.",
+    "High-level design (10 minutes): snap the bricks together and trace the read path and the write path.",
+    "Deep dive (10 minutes): the hardest part, such as fan-out, hot keys, consistency or matching. Offer alternatives and choose one.",
+    "Wrap-up (5 minutes): bottlenecks, failure modes, monitoring and alerting, and what you'd build next."
+   ],
+   "uses": [
+    "estimation",
+    "cap",
+    "sharding",
+    "cache",
+    "queue"
+   ],
+   "sections": [
+    {
+     "title": "Habits of strong candidates",
+     "items": [
+      "State the trade-offs out loud: 'I'm choosing X over Y because…'",
+      "Start simple, then evolve: a single server, then the scaled version."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "ByteByteGo (Alex Xu's four-step framework)",
+     "url": "https://bytebytego.com/",
+     "kind": "course",
+     "note": null
+    },
+    {
+     "title": "The System Design Primer: How to approach a system design interview question",
+     "url": "https://github.com/donnemartin/system-design-primer#how-to-approach-a-system-design-interview-question",
+     "kind": "course",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "moc-urlshortener",
+   "kind": "build",
+   "module": "path",
+   "group": "mocs",
+   "title": "Project 1: Build a URL Shortener",
+   "subtitle": "API endpoint + hash generator + fast key-value store",
+   "lego": "Your first real MOC: three bricks and one working model on your own table.",
+   "summary": "Ship a working URL shortener on a free tier: POST a long URL and get a short code; GET the code and get redirected. Then measure it and make it faster.",
+   "steps": [
+    "Compute: one HTTP service (a Cloudflare Worker, AWS Lambda behind a function URL or API Gateway, or a container on Fly.io or Cloud Run).",
+    "ID generator: base62-encode a counter (Redis INCR) or a random 7-character code with a conditional insert to reject collisions.",
+    "Key-value store: Upstash Redis, DynamoDB (on-demand), or Cloudflare KV storing code → URL.",
+    "Add caching: in-process LRU or edge cache headers for hot codes. Compare 301 and 302.",
+    "Add rate limiting per IP on POST and a click counter that is sent asynchronously (a queue or waitUntil).",
+    "Load-test it with k6 or hey. Record p50 and p99 before and after the cache in Notes (N)."
+   ],
+   "uses": [
+    "serverless",
+    "nosql",
+    "cache",
+    "idgen",
+    "ratelimiting"
+   ],
+   "sections": [
+    {
+     "title": "Stretch goals",
+     "items": [
+      "Custom aliases with a uniqueness guarantee. Expiring links using TTL.",
+      "A click analytics dashboard fed from an event stream."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Cloudflare Workers KV",
+     "url": "https://developers.cloudflare.com/kv/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Upstash (serverless Redis)",
+     "url": "https://upstash.com/",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "Supabase docs",
+     "url": "https://supabase.com/docs",
+     "kind": "docs",
+     "note": "A free Postgres option"
+    },
+    {
+     "title": "k6 load testing",
+     "url": "https://grafana.com/docs/k6/latest/",
+     "kind": "tool",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "moc-thumbnails",
+   "kind": "build",
+   "module": "path",
+   "group": "mocs",
+   "title": "Project 2: Image Thumbnail Generator",
+   "subtitle": "Object storage → event → serverless → object storage",
+   "lego": "Drop a big picture brick in one bin and watch a tiny robot place a miniature copy in the next bin.",
+   "summary": "Upload an image to an object storage bucket. A background event notification triggers a serverless function that resizes it and saves the thumbnail to another bucket or prefix, all without a server of your own.",
+   "steps": [
+    "Create two buckets (or prefixes): uploads/ and thumbnails/. Writing output to a different place prevents an infinite trigger loop.",
+    "Give the client a presigned PUT URL from a tiny API so the image goes straight to storage.",
+    "Configure an S3 event notification (ObjectCreated), optionally through SQS for buffering and retries, to invoke a Lambda function.",
+    "The function downloads the image, resizes it (Sharp or Pillow) to several sizes, and writes them under thumbnails/{key}.",
+    "Record metadata (the original key, sizes, status) in a table, and show a gallery that reads the thumbnails through a CDN.",
+    "Upload the same file twice and upload a corrupt file. Confirm idempotency and that failures land in a DLQ."
+   ],
+   "uses": [
+    "objectstore",
+    "serverless",
+    "queue",
+    "nosql",
+    "cdn",
+    "idempotency",
+    "delivery"
+   ],
+   "sections": [
+    {
+     "title": "Stretch goals",
+     "items": [
+      "Upload 1,000 images at once and watch concurrency, throttling and cost.",
+      "Switch the trigger to EventBridge and fan out to a second consumer, such as image labelling."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Tutorial: Using an Amazon S3 trigger to create thumbnail images",
+     "url": "https://docs.aws.amazon.com/lambda/latest/dg/with-s3-tutorial.html",
+     "kind": "docs",
+     "note": "AWS Lambda Developer Guide"
+    },
+    {
+     "title": "Amazon SQS dead-letter queues",
+     "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "moc-jobqueue",
+   "kind": "build",
+   "module": "path",
+   "group": "mocs",
+   "title": "Project 3: Flash-Sale Order Queue",
+   "subtitle": "A mini version of Example B that you can break",
+   "lego": "Rebuild the toy-store ticket slot on your desk, then send a stampede at it.",
+   "summary": "Build a tiny checkout: an API that accepts orders with an idempotency key, a queue, and a worker that writes to Postgres at a controlled rate. Then load-test it with a simulated flash sale.",
+   "steps": [
+    "API (container or function): validate the order, do an atomic stock reservation in Redis, and enqueue {order, idempotencyKey}.",
+    "Queue: SQS, RabbitMQ in Docker, or a Postgres table used with SELECT … FOR UPDATE SKIP LOCKED.",
+    "Worker: an INSERT with UNIQUE(idempotency_key), a fake payment call with random failures and delays, and an acknowledgement only on success.",
+    "Blast it with 50× normal load using k6. Watch queue depth, worker throughput and database connections.",
+    "Kill the worker mid-run and restart it. Verify there are no lost or duplicated orders."
+   ],
+   "uses": [
+    "containers",
+    "cache",
+    "queue",
+    "rdbms",
+    "idempotency",
+    "retries",
+    "backpressure"
+   ],
+   "sections": [
+    {
+     "title": "What you should observe",
+     "items": [
+      "API latency stays flat while the queue absorbs the spike.",
+      "The database's write rate stays at the worker's pace, not at the traffic's pace."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Designing robust and predictable APIs with idempotency",
+     "url": "https://stripe.com/blog/idempotency",
+     "kind": "blog",
+     "note": "Stripe"
+    },
+    {
+     "title": "RabbitMQ tutorials",
+     "url": "https://www.rabbitmq.com/tutorials",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "chaos-principles",
+   "kind": "brick",
+   "module": "path",
+   "group": "chaos",
+   "title": "Chaos Engineering",
+   "subtitle": "Break it on purpose, in daylight, with a hypothesis",
+   "lego": "Deliberately pull a brick out of your model to see whether it wobbles, holds, or collapses, before a child's elbow does it for you.",
+   "summary": "Chaos engineering means experimenting on a system to build confidence that it withstands turbulent conditions. Define the steady state (for example successful checkouts per minute), form a hypothesis ('if a cache node dies, checkouts stay within 5%'), inject a real-world fault, keep the blast radius small, and compare. Netflix's Chaos Monkey randomly terminates production instances so teams must design for it.",
+   "sections": [
+    {
+     "title": "Fault menu",
+     "items": [
+      "Kill an instance, container or availability zone. Crash or fail over the database.",
+      "Add latency or packet loss, fill the disk, exhaust connections, skew the clock, revoke credentials."
+     ]
+    },
+    {
+     "title": "Tools",
+     "items": [
+      "Toxiproxy (latency and timeouts between services), tc netem (network faults on Linux), Chaos Mesh (Kubernetes), AWS Fault Injection Service."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Principles of Chaos Engineering",
+     "url": "https://principlesofchaos.org/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Chaos Engineering (Basiri et al., IEEE Software 2016)",
+     "url": "https://arxiv.org/abs/1702.05843",
+     "kind": "paper",
+     "note": "Netflix's formalization"
+    },
+    {
+     "title": "Chaos Monkey",
+     "url": "https://netflix.github.io/chaosmonkey/",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "Toxiproxy",
+     "url": "https://github.com/Shopify/toxiproxy",
+     "kind": "tool",
+     "note": "Shopify"
+    },
+    {
+     "title": "tc-netem(8) manual",
+     "url": "https://man7.org/linux/man-pages/man8/tc-netem.8.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Chaos Mesh",
+     "url": "https://chaos-mesh.org/",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "AWS Fault Injection Service",
+     "url": "https://aws.amazon.com/fis/",
+     "kind": "tool",
+     "note": null
+    }
+   ],
+   "uses": null,
+   "steps": null
+  },
+  {
+   "id": "chaos-dbcrash",
+   "kind": "build",
+   "module": "path",
+   "group": "chaos",
+   "title": "Drill: The Database Crashes",
+   "subtitle": "Does the app fail gracefully, or fall over completely?",
+   "lego": "Yank out the bottom drawer while builders are still reaching into it.",
+   "summary": "With your mini-project under steady load, stop the primary database (docker stop postgres, or trigger a managed failover). Observe what happens to incoming traffic, then patch the holes.",
+   "steps": [
+    "Write the hypothesis: 'Reads keep working from cache or a replica, writes queue up, and there are no 500s at the edge.'",
+    "Start load (k6 at a steady rate) and a dashboard of error rate, p99 latency and queue depth.",
+    "Kill the database. Watch: do requests hang (no timeout), return 500s instantly, or degrade?",
+    "Restore it. Watch: does the app reconnect on its own, or does it need a restart because the connection pool is dead?",
+    "Patch and repeat until the result matches the hypothesis."
+   ],
+   "uses": [
+    "rdbms",
+    "replication",
+    "cache",
+    "queue",
+    "circuitbreaker",
+    "retries"
+   ],
+   "sections": [
+    {
+     "title": "What should happen",
+     "items": [
+      "Short connect and query timeouts, so there are no thread pile-ups.",
+      "The circuit breaker opens: serve cached reads and show a friendly 'saving…' for queued writes.",
+      "The health check stays shallow, so the load balancer doesn't eject every app server because the database is down."
+     ]
+    },
+    {
+     "title": "Common holes",
+     "items": [
+      "No timeout (a default of infinity), connection pools that never re-validate, and retry storms on recovery."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Implementing health checks",
+     "url": "https://aws.amazon.com/builders-library/implementing-health-checks/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "Addressing Cascading Failures",
+     "url": "https://sre.google/sre-book/addressing-cascading-failures/",
+     "kind": "book",
+     "note": "Google SRE book"
+    }
+   ]
+  },
+  {
+   "id": "chaos-cachedown",
+   "kind": "build",
+   "module": "path",
+   "group": "chaos",
+   "title": "Drill: The Cache Layer Goes Down",
+   "subtitle": "Does the backend drown in database calls?",
+   "lego": "The arm's-reach shelf collapses, and suddenly every builder is digging in the heavy bottom drawer at once.",
+   "summary": "With your app serving a read-heavy load at a 95%+ cache hit rate, stop Redis, or flush it, to simulate a cold restart. Measure how much load hits the database and whether it survives.",
+   "steps": [
+    "Record the baseline: the cache hit ratio, database QPS and database CPU.",
+    "Flush or stop the cache under load, and watch database QPS jump by roughly 1 / (1 − hit rate). A 95% hit rate means about 20× the load.",
+    "Note whether the database saturates, latency explodes, or the app times out and retries, which makes it worse.",
+    "Patch it: request coalescing (single-flight), a short in-process L1 cache, load shedding on low-priority reads, and gradual cache warming.",
+    "Repeat, and confirm the database stays under about 70% CPU during a cold start."
+   ],
+   "uses": [
+    "cache",
+    "cachingpatterns",
+    "rdbms",
+    "backpressure",
+    "circuitbreaker"
+   ],
+   "sections": [
+    {
+     "title": "The lesson",
+     "items": [
+      "A cache that the database can't survive without is really a hidden dependency. Size the database for the cold-cache case, or protect it."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Caching challenges and strategies",
+     "url": "https://aws.amazon.com/builders-library/caching-challenges-and-strategies/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "Scaling Memcache at Facebook",
+     "url": "https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala",
+     "kind": "paper",
+     "note": "Cold-cluster warm-up"
+    }
+   ]
+  },
+  {
+   "id": "chaos-latency",
+   "kind": "build",
+   "module": "path",
+   "group": "chaos",
+   "title": "Drill: Inject Artificial Latency",
+   "subtitle": "A slow dependency is worse than a dead one",
+   "lego": "One builder in the chain starts working in slow motion. Does the line wait politely, or does everyone pile up behind them?",
+   "summary": "Add 500 ms to 2 s of latency (and some packet loss) between your service and one dependency, such as payments or the database, using Toxiproxy or tc netem. Observe thread and connection exhaustion and cascading slowness.",
+   "steps": [
+    "Put Toxiproxy between the app and the dependency, and add a latency toxic of 1,000 ms ± 300 ms.",
+    "Watch in-flight requests, pool usage and p99 latency upstream. Do unrelated endpoints slow down too?",
+    "Add timeouts (from the dependency's p99), bulkheads (a separate pool), and a circuit breaker with a fallback.",
+    "Add retries with capped exponential backoff and jitter, and check that they don't amplify the load.",
+    "Repeat, and confirm unrelated endpoints stay fast and the affected feature degrades cleanly."
+   ],
+   "uses": [
+    "retries",
+    "circuitbreaker",
+    "backpressure",
+    "latency"
+   ],
+   "sections": [
+    {
+     "title": "The lesson",
+     "items": [
+      "Dead dependencies fail fast. Slow ones hold resources until everything is stuck. Timeouts are the first line of defence."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Toxiproxy",
+     "url": "https://github.com/Shopify/toxiproxy",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "Timeouts, retries, and backoff with jitter",
+     "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "The Tail at Scale",
+     "url": "https://research.google/pubs/the-tail-at-scale/",
+     "kind": "paper",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "chaos-poison",
+   "kind": "build",
+   "module": "path",
+   "group": "chaos",
+   "title": "Drill: Poison Message & Queue Backlog",
+   "subtitle": "When the buffer tray overflows",
+   "lego": "One malformed piece jams the machine, and the tray behind it keeps filling up.",
+   "summary": "In your order-queue project, publish a message that always makes the worker throw an error, then double the producer rate beyond worker capacity for 10 minutes. See what happens to the queue, and to your users.",
+   "steps": [
+    "Send the poison message. Does it retry forever and block a worker? Configure maxReceiveCount and a DLQ.",
+    "Alert on DLQ depth greater than zero, and build a redrive or replay path once the bug is fixed.",
+    "Overload the producers. Chart queue depth and the age of the oldest message against time.",
+    "Autoscale workers on backlog per worker, capped at the database's safe limit, and shed or delay low-priority messages.",
+    "Decide what the user sees when the ETA exceeds a threshold: an honest wait time, or reject at the edge."
+   ],
+   "uses": [
+    "queue",
+    "delivery",
+    "idempotency",
+    "backpressure"
+   ],
+   "sections": [
+    {
+     "title": "The lesson",
+     "items": [
+      "Queues hide overload until they don't. Monitor the age of the oldest message, not just the count."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Avoiding insurmountable queue backlogs",
+     "url": "https://aws.amazon.com/builders-library/avoiding-insurmountable-queue-backlogs/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "Queues Don't Fix Overload",
+     "url": "https://ferd.ca/queues-don-t-fix-overload.html",
+     "kind": "blog",
+     "note": "Fred Hebert"
+    }
+   ]
+  },
+  {
+   "id": "chaos-azfailure",
+   "kind": "build",
+   "module": "path",
+   "group": "chaos",
+   "title": "Drill: Lose an Availability Zone",
+   "subtitle": "Static stability",
+   "lego": "Knock an entire table over. Does the model on the other tables keep standing without any rebuilding?",
+   "summary": "Simulate losing one of three availability zones: terminate its instances, and block its subnets or database replica. Can the remaining zones carry full traffic without any control-plane action, such as launching new instances?",
+   "steps": [
+    "Pre-provision about 50% headroom per zone (with 3 zones, each runs at ≤ 66% so 2 zones can carry 100%).",
+    "Fail the zone: the load balancer health checks eject its targets, and the database fails over to a standby in another zone.",
+    "Measure the error spike duration, the failover time of the database and cache, and whether autoscaling was needed.",
+    "Verify there are no cross-zone hard dependencies, such as a single NAT gateway or a single-zone cache.",
+    "Write up the recovery time actually measured compared with your target, in Notes (N)."
+   ],
+   "uses": [
+    "loadbalancer",
+    "vm",
+    "replication",
+    "slo"
+   ],
+   "sections": [
+    {
+     "title": "The lesson",
+     "items": [
+      "Design so that surviving a failure never requires the control plane to be healthy."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Static stability using Availability Zones",
+     "url": "https://aws.amazon.com/builders-library/static-stability-using-availability-zones/",
+     "kind": "blog",
+     "note": "Amazon Builders' Library"
+    },
+    {
+     "title": "AWS Fault Injection Service",
+     "url": "https://aws.amazon.com/fis/",
+     "kind": "tool",
+     "note": null
+    }
+   ]
+  }
+ ]
+}

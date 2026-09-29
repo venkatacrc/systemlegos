@@ -1,0 +1,263 @@
+[
+  {
+    "id": "uber",
+    "kind": "build",
+    "module": "assemblies",
+    "group": "worked",
+    "title": "Uber-like Ride-Hailing",
+    "subtitle": "Example A · real-time geospatial matching",
+    "lego": "A city-sized model where hundreds of thousands of tiny car bricks keep moving, and every few seconds a passenger brick asks, 'which car is closest to me?'",
+    "summary": "Hundreds of thousands of drivers broadcast their location every few seconds. Passengers request rides and must be matched to a nearby available driver in real time, without two passengers getting the same driver.",
+    "steps": [
+      "An API Gateway authenticates the driver apps and receives a location ping (driver_id, lat, lng, status) every ~4 seconds.",
+      "Pings go straight onto an event stream (Kafka), keyed by geo cell (for example an H3 index) so each region's updates stay ordered. The gateway never writes to a database per ping.",
+      "A geospatial compute cluster (containers) consumes the stream and updates an in-memory cache (Redis GEO, or H3 cell → driver sets) with each driver's latest position and a short TTL, so drivers who go silent disappear on their own. Other consumers, such as ETA, surge pricing and analytics, read the same stream independently.",
+      "When a passenger requests a ride, a serverless function (or matching service) asks Redis for available drivers within a radius, ranks them by ETA, and claims one atomically (for example SET driver:lock NX with a TTL) to prevent double dispatch.",
+      "The match goes into a message queue, and a notifier sends the driver a push notification with retries and a timeout. If the driver declines or doesn't answer, the lock is released and the next candidate is offered.",
+      "The confirmed trip is written to a durable database (sharded by city or trip ID) as the system of record for billing and history."
+    ],
+    "uses": ["apigateway", "stream", "containers", "cache", "serverless", "queue", "nosql", "idempotency"],
+    "sections": [
+      {"title": "Why these bricks", "items": [
+        "Location is high-volume and short-lived. Keep only the latest position in memory; the stream holds history for replay and analytics.",
+        "The stream decouples ingestion from consumers, so a slow analytics job never delays matching.",
+        "Geo cells turn 'nearby' into a handful of key lookups instead of scanning every driver.",
+        "The queue makes notifications reliable and retryable without blocking the matcher."
+      ]},
+      {"title": "Numbers", "items": [
+        "500,000 active drivers × 1 ping every 4 s ≈ 125,000 writes per second of ingest.",
+        "Each position ≈ 100 bytes, so all active drivers fit in well under 1 GB of RAM."
+      ]},
+      {"title": "Break it", "items": [
+        "A Redis shard dies: its drivers vanish until their next ping (about 4 s) or until the cache is rebuilt from the stream. Is a few seconds of blindness acceptable?",
+        "Friday night downtown: one geo cell's partition runs hot. Split cells into finer resolution or sub-partitions.",
+        "Two matchers pick the same driver: without the atomic claim, both riders get a confirmation.",
+        "The push provider slows down: the queue backlog grows, so set a message TTL and re-match instead of sending stale offers."
+      ]}
+    ],
+    "links": [
+      {"title": "H3: Uber's Hexagonal Hierarchical Spatial Index", "url": "https://www.uber.com/blog/h3/", "kind": "blog", "note": "Uber Engineering"},
+      {"title": "H3 documentation", "url": "https://h3geo.org/", "kind": "docs", "note": null},
+      {"title": "Redis geospatial indexes", "url": "https://redis.io/docs/latest/develop/data-types/geospatial/", "kind": "docs", "note": null},
+      {"title": "Introducing Domain-Oriented Microservice Architecture", "url": "https://www.uber.com/blog/microservice-architecture/", "kind": "blog", "note": "How Uber reorganized about 2,200 microservices"},
+      {"title": "Uber Engineering blog", "url": "https://www.uber.com/blog/engineering/", "kind": "blog", "note": null}
+    ]
+  },
+  {
+    "id": "checkout",
+    "kind": "build",
+    "module": "assemblies",
+    "group": "worked",
+    "title": "E-commerce Flash-Sale Checkout",
+    "subtitle": "Example B · surviving a purchase surge",
+    "lego": "Doors open on a toy-store sale. Instead of everyone rushing the one cash register (the database), customers drop numbered tickets in a slot, and a clerk processes them one by one.",
+    "summary": "During a flash sale, millions of shoppers try to buy at the same moment. Handle the surge without dropping orders, overselling limited stock, or charging anyone twice.",
+    "steps": [
+      "A CDN serves the product pages and static assets, and an API Gateway applies per-user rate limits (optionally a virtual waiting room) so the origin sees only real checkout attempts.",
+      "Load balancers spread millions of concurrent requests across hundreds of stateless checkout containers that autoscale.",
+      "Each checkout reserves stock atomically in a fast store (a Redis DECR, or a conditional UPDATE … WHERE stock > 0) and rejects immediately when stock is gone.",
+      "Instead of writing the full order to the database under peak load, the container drops an order message (with a client-generated idempotency key) onto a durable message queue.",
+      "The user instantly sees 'Your order is processing', and the page polls or receives a push when the order is confirmed.",
+      "Isolated order-processing workers pull jobs at a steady pace the database can handle. Each worker writes the order to the relational database in a transaction, calls the payment gateway with the same idempotency key, and acknowledges the message only after both succeed.",
+      "Messages that keep failing go to a dead-letter queue for inspection. An outbox table publishes OrderConfirmed events for email, fulfilment and analytics."
+    ],
+    "uses": ["cdn", "apigateway", "ratelimiting", "loadbalancer", "containers", "cache", "queue", "rdbms", "idempotency", "sagas"],
+    "sections": [
+      {"title": "Why these bricks", "items": [
+        "The queue turns a spike the database can't survive into a steady flow it can (load leveling).",
+        "Stateless containers scale out instantly; the database doesn't, so it is protected behind the queue.",
+        "Idempotency keys make every retry safe, whether from the browser, the queue or the payment call."
+      ]},
+      {"title": "Numbers", "items": [
+        "1 million orders in 10 minutes ≈ 1,700 orders per second on average, with the first seconds at 10× that. Workers might drain 2,000 per second."
+      ]},
+      {"title": "Break it", "items": [
+        "A worker crashes after charging but before acknowledging: the message reappears, and the idempotency key stops a second charge.",
+        "The payment gateway times out: retry with backoff and the same key. Never generate a new key on retry.",
+        "The queue backlog grows: autoscale workers on queue depth, but cap them at the database's safe concurrency and show an honest ETA.",
+        "The Redis stock count and the database disagree after a crash: reconcile, and choose reserve-then-confirm with expiring reservations."
+      ]}
+    ],
+    "links": [
+      {"title": "Designing robust and predictable APIs with idempotency", "url": "https://stripe.com/blog/idempotency", "kind": "blog", "note": "Stripe"},
+      {"title": "Surviving Flashes of High-Write Traffic Using Scriptable Load Balancers", "url": "https://shopify.engineering/surviving-flashes-of-high-write-traffic-using-scriptable-load-balancers-part-i", "kind": "blog", "note": "Shopify Engineering"},
+      {"title": "A Pods Architecture To Allow Shopify To Scale", "url": "https://shopify.engineering/a-pods-architecture-to-allow-shopify-to-scale", "kind": "blog", "note": "Shopify Engineering"},
+      {"title": "Pattern: Transactional outbox", "url": "https://microservices.io/patterns/data/transactional-outbox.html", "kind": "docs", "note": null},
+      {"title": "Avoiding insurmountable queue backlogs", "url": "https://aws.amazon.com/builders-library/avoiding-insurmountable-queue-backlogs/", "kind": "blog", "note": "Amazon Builders' Library"}
+    ]
+  },
+  {
+    "id": "urlshortener-design",
+    "kind": "build",
+    "module": "assemblies",
+    "group": "classic",
+    "title": "URL Shortener at Scale",
+    "subtitle": "Like bit.ly or TinyURL",
+    "lego": "A giant wall of tiny labelled drawers: each short label opens a drawer holding the long address.",
+    "summary": "Design a service that turns long URLs into 7-character short links and redirects about 100 million clicks a day with low latency. Reads outnumber writes about 100 to 1.",
+    "steps": [
+      "Write path: POST /links {longUrl}. Generate a unique ID (a Snowflake ID or a range-allocated counter), encode it in base62 (62^7 ≈ 3.5 trillion codes), and store code → longUrl, owner and expiry in a key-value store.",
+      "Read path: GET /{code} goes through the CDN or edge, then a load balancer to stateless services, then a Redis cache, then the key-value store on a miss. Answer with a 301 (cacheable, cheapest) or 302 (every click reaches you, so you can count it).",
+      "Publish click events asynchronously to a stream for analytics. Never do it inline on the redirect.",
+      "Rate-limit creation per user or IP to stop spam, and check URLs against a malware list."
+    ],
+    "uses": ["loadbalancer", "containers", "cache", "nosql", "cdn", "stream", "idgen", "ratelimiting"],
+    "sections": [
+      {"title": "Trade-offs to discuss", "items": [
+        "Hash of the URL plus a collision check makes duplicate URLs share one code, but costs a read on every write.",
+        "A counter per range (each server leases blocks of 1,000 IDs) needs no coordination per request.",
+        "Custom aliases require a uniqueness check, for example a conditional put."
+      ]}
+    ],
+    "links": [
+      {"title": "The System Design Primer", "url": "https://github.com/donnemartin/system-design-primer", "kind": "course", "note": "See the Pastebin/Bit.ly solution"},
+      {"title": "Announcing Snowflake", "url": "https://blog.x.com/engineering/en_us/a/2010/announcing-snowflake", "kind": "blog", "note": null}
+    ]
+  },
+  {
+    "id": "newsfeed",
+    "kind": "build",
+    "module": "assemblies",
+    "group": "classic",
+    "title": "News Feed / Timeline",
+    "subtitle": "Like Twitter/X, Instagram or Facebook",
+    "lego": "Every follower has a personal mailbox tray. Do you drop a copy of each new brick into every tray (push), or does each follower walk around collecting bricks when they look (pull)?",
+    "summary": "Users follow others and open their home timeline: the newest posts from everyone they follow, loaded in under 200 ms. Some accounts have 100 million followers.",
+    "steps": [
+      "Post service: store the post in a sharded store (by author) and media in object storage behind a CDN.",
+      "Publish PostCreated to a queue or stream.",
+      "Fan-out workers look up the author's followers and push the post ID into each follower's timeline list in Redis (fan-out on write), trimmed to the newest ~800 IDs.",
+      "For celebrity authors, skip fan-out. At read time, merge their recent posts into the follower's cached timeline (fan-out on read). This hybrid approach is the classic answer.",
+      "The timeline read fetches IDs from Redis, hydrates the post bodies from the post cache or store, and ranks them."
+    ],
+    "uses": ["apigateway", "containers", "queue", "cache", "nosql", "objectstore", "cdn", "sharding"],
+    "sections": [
+      {"title": "Why", "items": [
+        "Reads vastly outnumber writes, so precompute timelines to make reads cheap.",
+        "Pushing a celebrity's post to 100 million timelines would take far too long and cost too much, hence the hybrid."
+      ]},
+      {"title": "Break it", "items": [
+        "The fan-out queue backs up after a viral post: timelines lag. Prioritize active users and skip fan-out to dormant ones.",
+        "The timeline cache is lost: rebuild on demand from the social graph plus recent posts, and protect the database with request coalescing."
+      ]}
+    ],
+    "links": [
+      {"title": "Timelines at Scale", "url": "https://www.infoq.com/presentations/Twitter-Timeline-Scalability/", "kind": "talk", "note": "Raffi Krikorian, Twitter (QCon 2012)"},
+      {"title": "TAO: Facebook's Distributed Data Store for the Social Graph", "url": "https://www.usenix.org/conference/atc13/technical-sessions/presentation/bronson", "kind": "paper", "note": null}
+    ]
+  },
+  {
+    "id": "chat",
+    "kind": "build",
+    "module": "assemblies",
+    "group": "classic",
+    "title": "Real-Time Chat",
+    "subtitle": "Like WhatsApp, Slack or Discord",
+    "lego": "Each person keeps a walkie-talkie line open to a switchboard brick. The switchboard knows who's on which line and relays each message instantly.",
+    "summary": "One-to-one and group chat with messages delivered in under a second, online presence, message history, and delivery to offline users.",
+    "steps": [
+      "Clients hold a persistent WebSocket to a fleet of connection-gateway servers behind an L4 load balancer.",
+      "A session registry in Redis maps user_id to the gateway that holds their connection, and tracks presence with heartbeats and TTLs.",
+      "When a message is sent, the chat service assigns a per-channel sequence number and persists it to a wide-column store partitioned by (channel_id, time bucket).",
+      "The message is published to a stream or pub/sub topic. The gateways holding recipients' connections push it down their sockets.",
+      "Offline recipients get a push notification through a notification queue, and clients sync missed messages on reconnect using their last seen sequence number."
+    ],
+    "uses": ["loadbalancer", "containers", "cache", "nosql", "stream", "queue", "sharding"],
+    "sections": [
+      {"title": "Break it", "items": [
+        "A gateway server dies: all its clients reconnect at once. Add jittered reconnect backoff, or they stampede the survivors.",
+        "A huge channel (a server with 1 million members) becomes a hot partition. Use time-bucketed partitions and fan out in tiers.",
+        "Duplicate sends on flaky mobile networks: a client message ID deduplicates them."
+      ]}
+    ],
+    "links": [
+      {"title": "How Discord Stores Trillions of Messages", "url": "https://discord.com/blog/how-discord-stores-trillions-of-messages", "kind": "blog", "note": "Discord Engineering"},
+      {"title": "Real-time Messaging", "url": "https://slack.engineering/real-time-messaging/", "kind": "blog", "note": "Slack Engineering"},
+      {"title": "The WebSocket API (MDN)", "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "video",
+    "kind": "build",
+    "module": "assemblies",
+    "group": "classic",
+    "title": "Video Streaming",
+    "subtitle": "Like Netflix or YouTube",
+    "lego": "Chop each movie into small numbered bricks at several quality levels, stock copies in every corner shop, and let each viewer's player grab whichever size fits their connection.",
+    "summary": "Creators upload large video files, and millions of viewers worldwide stream them smoothly on connections ranging from 3G to fibre.",
+    "steps": [
+      "The client asks the API for a presigned URL and uploads the raw file directly to object storage in multiple parts.",
+      "The upload event triggers a transcoding pipeline: a queue of jobs split into chunks that workers encode in parallel into many bitrates and resolutions, packaged as HLS or DASH segments of about 2–6 seconds.",
+      "Segments and manifests are written back to object storage, and metadata (title, status, segment locations) goes to a database.",
+      "Viewers fetch the manifest and segments from a CDN. The player's adaptive bitrate logic switches quality segment by segment as bandwidth changes.",
+      "Views, watch time and quality-of-experience events stream into analytics and recommendations."
+    ],
+    "uses": ["apigateway", "objectstore", "queue", "containers", "serverless", "cdn", "rdbms", "stream"],
+    "sections": [
+      {"title": "Break it", "items": [
+        "A new episode drops and the CDN is cold: pre-position popular titles at the edge before release.",
+        "A transcode worker dies mid-chunk: the job becomes visible again and is re-encoded. Writes to deterministic output keys make that idempotent."
+      ]}
+    ],
+    "links": [
+      {"title": "Netflix Open Connect", "url": "https://openconnect.netflix.com/", "kind": "docs", "note": "The CDN appliances Netflix places inside ISPs"},
+      {"title": "Completing the Netflix Cloud Migration", "url": "https://about.netflix.com/en/news/completing-the-netflix-cloud-migration", "kind": "blog", "note": null},
+      {"title": "Netflix Tech Blog", "url": "https://netflixtechblog.com/", "kind": "blog", "note": "Encoding, streaming and resilience posts"}
+    ]
+  },
+  {
+    "id": "ratelimiter-design",
+    "kind": "build",
+    "module": "assemblies",
+    "group": "classic",
+    "title": "Distributed Rate Limiter",
+    "subtitle": "Protect an API used by millions of clients",
+    "lego": "A turnstile at every entrance, all reading the same shared tally board so no one can sneak extra passes by switching doors.",
+    "summary": "Limit each API key to N requests per minute across a fleet of 200 gateway nodes, adding less than 1–2 ms of latency, and keep the API up even if the limiter's store has trouble.",
+    "steps": [
+      "Enforce in the API Gateway or a sidecar, before the request reaches business services.",
+      "Keep a token bucket per key in Redis, updated atomically with a Lua script that refills based on elapsed time and takes one token.",
+      "Shard the Redis keys by API key. Hot keys can keep a small local token cache on each gateway, synced asynchronously.",
+      "Reject with 429 Too Many Requests, a Retry-After header, and X-RateLimit-Remaining headers.",
+      "Choose deliberately what happens when Redis is unreachable: fail open, with a coarse local limit as a backstop."
+    ],
+    "uses": ["apigateway", "cache", "ratelimiting", "consistenthashing"],
+    "sections": [
+      {"title": "Algorithms", "items": [
+        "Token bucket: allows bursts and is simple. Sliding-window counter: smooth and memory-cheap. Fixed window: simplest, but allows double bursts at the edges."
+      ]}
+    ],
+    "links": [
+      {"title": "Scaling your API with rate limiters", "url": "https://stripe.com/blog/rate-limiters", "kind": "blog", "note": "Stripe"},
+      {"title": "How we built rate limiting capable of scaling to millions of domains", "url": "https://blog.cloudflare.com/counting-things-a-lot-of-different-things/", "kind": "blog", "note": "Cloudflare"}
+    ]
+  },
+  {
+    "id": "notifications",
+    "kind": "build",
+    "module": "assemblies",
+    "group": "classic",
+    "title": "Notification System",
+    "subtitle": "Push, SMS and email at scale",
+    "lego": "A mailroom that sorts every outgoing letter into the right chute (push, SMS or email), throws out duplicates, and keeps retrying any letter the post office bounces.",
+    "summary": "Many product services need to notify users through push, SMS and email: tens of millions of messages a day, respecting user preferences, never double-sending, and surviving flaky third-party providers.",
+    "steps": [
+      "Services call a Notification API (or publish events) with user_id, template and data, plus an idempotency key.",
+      "The notification service checks user preferences, quiet hours and rate caps, renders the template, and deduplicates on the key.",
+      "It enqueues onto a separate queue per channel (push, SMS, email) so a slow SMS provider can't block push.",
+      "Channel workers call the providers (APNs/FCM, Twilio, SES) with timeouts, retries with backoff, and circuit breakers per provider, failing over to a secondary provider where possible.",
+      "Messages that exhaust their retries go to a dead-letter queue. Delivery status streams into analytics."
+    ],
+    "uses": ["apigateway", "containers", "queue", "rdbms", "cache", "idempotency", "retries", "circuitbreaker"],
+    "sections": [
+      {"title": "Break it", "items": [
+        "The email provider is down for an hour: the email queue grows while push and SMS keep flowing, and the backlog drains when the provider recovers. Set a TTL for time-sensitive messages such as one-time passcodes.",
+        "A marketing blast of 50 million messages starves transactional ones: use separate priority queues."
+      ]}
+    ],
+    "links": [
+      {"title": "Amazon SQS dead-letter queues", "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html", "kind": "docs", "note": null},
+      {"title": "Timeouts, retries, and backoff with jitter", "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/", "kind": "blog", "note": "Amazon Builders' Library"}
+    ]
+  }
+]

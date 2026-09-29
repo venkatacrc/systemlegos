@@ -1,0 +1,439 @@
+[
+  {
+    "id": "scaling",
+    "kind": "brick",
+    "module": "rules",
+    "group": "scale",
+    "title": "Vertical vs Horizontal Scaling",
+    "subtitle": "Scale up vs scale out",
+    "lego": "Swap a small brick for a giant brick (vertical), or add more identical bricks side by side (horizontal).",
+    "summary": "Vertical scaling gives one machine more CPU, RAM or disk. It is simple, needs no code changes, and hits a ceiling and a single point of failure. Horizontal scaling adds more machines behind a load balancer or partitioning scheme. It has almost no ceiling and survives a node failure, but requires stateless services or partitioned data.",
+    "sections": [
+      {"title": "Rules of thumb", "items": [
+        "Scale the stateless tiers horizontally first; it's cheap and easy.",
+        "Scale databases vertically as far as is sensible, then add read replicas, then shard.",
+        "Autoscale on a leading signal (queue depth, concurrency) rather than a lagging one (CPU at 90%)."
+      ]},
+      {"title": "Watch out", "items": [
+        "Horizontal scale moves the bottleneck downstream. Fifty more app servers can open 5,000 more database connections."
+      ]}
+    ],
+    "links": [
+      {"title": "The System Design Primer: Scalability", "url": "https://github.com/donnemartin/system-design-primer#performance-vs-scalability", "kind": "course", "note": null},
+      {"title": "Designs, Lessons and Advice from Building Large Distributed Systems", "url": "https://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf", "kind": "talk", "note": "Jeff Dean, LADIS 2009 keynote"}
+    ]
+  },
+  {
+    "id": "stateless",
+    "kind": "brick",
+    "module": "rules",
+    "group": "scale",
+    "title": "Stateless Services",
+    "subtitle": "Share-nothing application tiers",
+    "lego": "Every worker brick is identical and remembers nothing, so any brick can be swapped, added or thrown away without the model noticing.",
+    "summary": "A stateless server keeps no user data between requests in its own memory or disk. Sessions, uploads and job state live in shared stores: a database, a cache, object storage or a signed token (such as a JWT). Then the load balancer can send any request to any instance, and instances can be killed or added freely.",
+    "sections": [
+      {"title": "Why it matters", "items": [
+        "Enables autoscaling, rolling deploys, spot instances and serverless.",
+        "Removes the need for sticky sessions, and failover just works."
+      ]},
+      {"title": "Where the state goes", "items": [
+        "Session data goes to Redis or a signed cookie or JWT.",
+        "Uploaded files go to object storage. Work in progress goes to a queue or database."
+      ]}
+    ],
+    "links": [
+      {"title": "The Twelve-Factor App: Processes", "url": "https://12factor.net/processes", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "replication",
+    "kind": "brick",
+    "module": "rules",
+    "group": "scale",
+    "title": "Replication",
+    "subtitle": "Leader-follower · multi-leader · leaderless quorums",
+    "lego": "Build identical copies of the same model on different tables, so if one table collapses, the others still stand.",
+    "summary": "Replication keeps copies of the same data on several nodes, for availability, read scaling and locality. In leader-follower replication, one node takes writes and followers replay its log (Postgres, MySQL). In multi-leader replication, several regions accept writes and must resolve conflicts. Leaderless systems (Dynamo, Cassandra) write to W of N replicas and read from R of N; when R + W > N, a read overlaps the latest write.",
+    "sections": [
+      {"title": "Key choices", "items": [
+        "Synchronous replication means no data loss on failover but slower writes. Asynchronous means fast writes but possible loss and lag.",
+        "Automatic failover needs consensus (Raft, Paxos) or a coordinator to avoid split-brain, where two nodes both think they are leader."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Replication lag: a user writes, then reads from a follower and doesn't see the change. Fix with read-your-writes routing.",
+        "An asynchronous leader dies before shipping its last writes, and they are lost after failover."
+      ]}
+    ],
+    "links": [
+      {"title": "Designing Data-Intensive Applications, Chapter 5: Replication", "url": "https://dataintensive.net/", "kind": "book", "note": "Martin Kleppmann"},
+      {"title": "In Search of an Understandable Consensus Algorithm (Raft)", "url": "https://raft.github.io/raft.pdf", "kind": "paper", "note": null},
+      {"title": "Dynamo: Amazon's Highly Available Key-value Store", "url": "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf", "kind": "paper", "note": "Sloppy quorums and hinted handoff"}
+    ]
+  },
+  {
+    "id": "sharding",
+    "kind": "brick",
+    "module": "rules",
+    "group": "scale",
+    "title": "Sharding (Partitioning)",
+    "subtitle": "Split one dataset across many databases",
+    "lego": "The model is too big for one table, so you split it into sections and give each table one section, using a rule everyone agrees on to know which section lives where.",
+    "summary": "Sharding splits data by a shard key so each node holds a subset. Range sharding (by date or by A–M) makes range scans easy but creates hot spots. Hash sharding spreads load evenly but loses range locality. Directory or lookup sharding maps keys to shards in a table, which is flexible but adds a lookup. Choose the key so most queries hit exactly one shard.",
+    "sections": [
+      {"title": "Choosing a shard key", "items": [
+        "Use what nearly every query filters by: tenant_id, user_id, channel_id.",
+        "It needs high cardinality and evenly spread traffic. Avoid time or other monotonically increasing keys for hash-less range shards."
+      ]},
+      {"title": "Costs", "items": [
+        "Cross-shard joins and transactions become application problems.",
+        "Resharding is painful. Use many logical shards mapped onto fewer physical nodes so you can move them later.",
+        "Celebrity keys still create hot shards and need special handling."
+      ]}
+    ],
+    "links": [
+      {"title": "Sharding & IDs at Instagram", "url": "https://instagram-engineering.com/sharding-ids-at-instagram-1cf5a71e5a5c", "kind": "blog", "note": "Logical shards on Postgres, and time-sortable IDs"},
+      {"title": "Herding elephants: lessons learned from sharding Postgres at Notion", "url": "https://www.notion.so/blog/sharding-postgres-at-notion", "kind": "blog", "note": null},
+      {"title": "How Figma's databases team lived to tell the scale", "url": "https://www.figma.com/blog/how-figmas-databases-team-lived-to-tell-the-scale/", "kind": "blog", "note": null},
+      {"title": "Vitess documentation", "url": "https://vitess.io/docs/", "kind": "docs", "note": "Sharding middleware for MySQL, from YouTube"}
+    ]
+  },
+  {
+    "id": "consistenthashing",
+    "kind": "brick",
+    "module": "rules",
+    "group": "scale",
+    "title": "Consistent Hashing",
+    "subtitle": "Stable key placement as nodes come and go",
+    "lego": "Arrange the tables in a circle. Each piece goes to the next table clockwise, so adding a table only takes pieces from its one neighbour.",
+    "summary": "Nodes and keys are hashed onto the same ring, and each key belongs to the first node clockwise from it. Adding or removing a node moves only about 1/N of the keys, compared with nearly all of them under hash(key) mod N. Virtual nodes (many points per server) smooth out the load. It is used by Dynamo, Cassandra, CDNs, cache clusters and load balancers (Maglev).",
+    "sections": [
+      {"title": "Remember", "items": [
+        "Plain modulo hashing reshuffles almost every key when N changes, which is a cache-miss storm.",
+        "Replicate by storing each key on the next R distinct nodes around the ring."
+      ]}
+    ],
+    "links": [
+      {"title": "Consistent Hashing and Random Trees (Karger et al., STOC 1997)", "url": "https://dl.acm.org/doi/10.1145/258533.258660", "kind": "paper", "note": "The original paper, written for web caching"},
+      {"title": "Dynamo: Amazon's Highly Available Key-value Store", "url": "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf", "kind": "paper", "note": "Section 4.2: partitioning"},
+      {"title": "Maglev: A Fast and Reliable Software Network Load Balancer", "url": "https://www.usenix.org/conference/nsdi16/technical-sessions/presentation/eisenbud", "kind": "paper", "note": "Maglev hashing"}
+    ]
+  },
+  {
+    "id": "cap",
+    "kind": "brick",
+    "module": "rules",
+    "group": "data",
+    "title": "CAP & PACELC",
+    "subtitle": "What you give up when the network splits, and when it doesn't",
+    "lego": "Two halves of the model are separated by a gap. Either both halves stop changing until they can talk again (consistency), or each keeps building on its own and you reconcile later (availability).",
+    "summary": "CAP says that during a network partition (P), a system must choose between consistency (C: every read sees the latest write, or gets an error) and availability (A: every request gets an answer, possibly stale). PACELC adds that Else, when there is no partition, you still trade latency (L) against consistency (C). For example, DynamoDB's default eventual reads favour latency, while Spanner favours consistency.",
+    "sections": [
+      {"title": "Use it well", "items": [
+        "Partitions aren't optional, so the real question is how each operation behaves when one happens.",
+        "Choose per operation, not per system: bank balances need C, like counts can take A.",
+        "Most real systems are neither pure CP nor pure AP. Describe the exact consistency guarantee instead."
+      ]}
+    ],
+    "links": [
+      {"title": "CAP Twelve Years Later: How the 'Rules' Have Changed", "url": "https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/", "kind": "paper", "note": "Eric Brewer"},
+      {"title": "Please stop calling databases CP or AP", "url": "https://martin.kleppmann.com/2015/05/11/please-stop-calling-databases-cp-or-ap.html", "kind": "blog", "note": "Martin Kleppmann"},
+      {"title": "Consistency Tradeoffs in Modern Distributed Database System Design (PACELC)", "url": "https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf", "kind": "paper", "note": "Daniel Abadi, IEEE Computer 2012"}
+    ]
+  },
+  {
+    "id": "consistency",
+    "kind": "brick",
+    "module": "rules",
+    "group": "data",
+    "title": "Consistency Models",
+    "subtitle": "Linearizable · read-your-writes · monotonic · eventual",
+    "lego": "How quickly does everyone around the table see the brick you just placed: instantly, only you, or eventually?",
+    "summary": "Consistency models range from strong to weak. Linearizable means the system behaves like a single copy, and every read sees the latest completed write. Sequential and causal consistency preserve order and cause-and-effect. Read-your-writes guarantees you always see your own updates. Monotonic reads guarantee you never go back in time. Eventual consistency only promises that replicas converge when writes stop.",
+    "sections": [
+      {"title": "Pick per feature", "items": [
+        "Payments, inventory, unique usernames and leader election need linearizable operations.",
+        "A profile edit needs read-your-writes: route that user's reads to the leader for a few seconds.",
+        "Feeds, like counts and analytics can be eventual."
+      ]}
+    ],
+    "links": [
+      {"title": "Eventually Consistent: Revisited", "url": "https://www.allthingsdistributed.com/2008/12/eventually_consistent.html", "kind": "blog", "note": "Werner Vogels"},
+      {"title": "Jepsen: Consistency Models", "url": "https://jepsen.io/consistency", "kind": "docs", "note": "A clickable map of the hierarchy"}
+    ]
+  },
+  {
+    "id": "cachingpatterns",
+    "kind": "brick",
+    "module": "rules",
+    "group": "data",
+    "title": "Caching Patterns & Invalidation",
+    "subtitle": "Cache-aside · write-through · write-behind · TTLs",
+    "lego": "Decide when the arm's-reach shelf is refilled, and when a piece on it is too old to trust.",
+    "summary": "Cache-aside (lazy loading) is the default: read the cache, on a miss read the database, then set the cache with a TTL. Write-through updates the cache and the database together. Write-behind writes the cache first and flushes to the database asynchronously, which is fast but can lose data. For invalidation, prefer deleting the key on write over updating it, always set a TTL as a safety net, and use versioned keys for immutable data.",
+    "sections": [
+      {"title": "Stampede defences", "items": [
+        "Request coalescing (single-flight): one request fetches while the others wait for its result.",
+        "Leases or locks per key, as in Facebook's memcache.",
+        "Refresh popular keys before they expire, and add jitter to TTLs so keys don't expire together."
+      ]},
+      {"title": "Gotchas", "items": [
+        "A race between 'delete on write' and a concurrent cache fill can store stale data. Leases or short TTLs contain it.",
+        "Negative caching (remembering 'not found') prevents repeated misses for missing keys."
+      ]}
+    ],
+    "links": [
+      {"title": "Caching challenges and strategies", "url": "https://aws.amazon.com/builders-library/caching-challenges-and-strategies/", "kind": "blog", "note": "Amazon Builders' Library"},
+      {"title": "Scaling Memcache at Facebook", "url": "https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala", "kind": "paper", "note": "Section 3.2.1: leases"},
+      {"title": "Under the hood: Broadcasting live video to millions", "url": "https://engineering.fb.com/2015/12/03/ios/under-the-hood-broadcasting-live-video-to-millions/", "kind": "blog", "note": "Request coalescing at the edge for Facebook Live"}
+    ]
+  },
+  {
+    "id": "sagas",
+    "kind": "brick",
+    "module": "rules",
+    "group": "data",
+    "title": "Sagas & the Transactional Outbox",
+    "subtitle": "Consistency across services without distributed locks",
+    "lego": "A multi-builder assembly where each builder finishes their part and passes a note to the next. If a later step fails, each builder takes back their own part in reverse order.",
+    "summary": "Once data is spread across services, one ACID transaction can't cover it, and two-phase commit is fragile. A saga is a sequence of local transactions, each with a compensating action (for example, refund the payment and release the stock). The transactional outbox fixes the dual-write problem: write the business row and an 'event to publish' row in the same local transaction, and a relay publishes the outbox rows to the queue or stream.",
+    "sections": [
+      {"title": "Why the outbox", "items": [
+        "'Update the database, then publish to Kafka' can crash in between, and you get an order with no event.",
+        "The outbox plus at-least-once relay plus idempotent consumers gives an effectively-once outcome."
+      ]},
+      {"title": "Orchestration vs choreography", "items": [
+        "Orchestration: a central coordinator tells each service what to do. Easier to follow and monitor.",
+        "Choreography: services react to each other's events. Looser coupling, but harder to see the whole flow."
+      ]}
+    ],
+    "links": [
+      {"title": "Pattern: Saga", "url": "https://microservices.io/patterns/data/saga.html", "kind": "docs", "note": "microservices.io"},
+      {"title": "Pattern: Transactional outbox", "url": "https://microservices.io/patterns/data/transactional-outbox.html", "kind": "docs", "note": "microservices.io"},
+      {"title": "Life Beyond Distributed Transactions: An Apostate's Opinion", "url": "https://queue.acm.org/detail.cfm?id=3025012", "kind": "paper", "note": "Pat Helland, ACM Queue"}
+    ]
+  },
+  {
+    "id": "idgen",
+    "kind": "brick",
+    "module": "rules",
+    "group": "data",
+    "title": "Unique ID Generation",
+    "subtitle": "Auto-increment · UUID · Snowflake IDs",
+    "lego": "Every brick needs a serial number stamped on it, and thousands of factories must stamp numbers at the same time without ever printing the same one twice.",
+    "summary": "A single database auto-increment is simple but becomes a bottleneck and a single point of failure. UUIDv4 is random, needs no coordination, and fragments B-tree indexes. Snowflake-style IDs pack a timestamp, a machine ID and a per-millisecond sequence into 64 bits, so they are unique, roughly time-sortable and generated locally. UUIDv7 is a time-ordered UUID standard.",
+    "sections": [
+      {"title": "Use it for", "items": [
+        "URL shortener keys (encode the number in base62), tweet and post IDs, order numbers, shard-aware IDs (put the shard ID inside the ID)."
+      ]},
+      {"title": "Watch out", "items": [
+        "If a clock moves backwards, a Snowflake generator can issue duplicates. Refuse to issue IDs until the clock catches up.",
+        "Sequential public IDs leak business volume and invite scraping."
+      ]}
+    ],
+    "links": [
+      {"title": "Announcing Snowflake", "url": "https://blog.x.com/engineering/en_us/a/2010/announcing-snowflake", "kind": "blog", "note": "Twitter Engineering, 2010"},
+      {"title": "twitter-archive/snowflake", "url": "https://github.com/twitter-archive/snowflake", "kind": "docs", "note": "The original implementation and ID layout"},
+      {"title": "Sharding & IDs at Instagram", "url": "https://instagram-engineering.com/sharding-ids-at-instagram-1cf5a71e5a5c", "kind": "blog", "note": "IDs generated inside Postgres"}
+    ]
+  },
+  {
+    "id": "idempotency",
+    "kind": "brick",
+    "module": "rules",
+    "group": "reliability",
+    "title": "Idempotency",
+    "subtitle": "Idempotency keys make retries safe",
+    "lego": "Pressing the same brick onto the same stud twice leaves one brick, not two.",
+    "summary": "An operation is idempotent if doing it several times has the same effect as doing it once. The client sends a unique Idempotency-Key with each logical request (for example, one checkout attempt). The server stores the key with the result, and a retry with the same key returns the stored result instead of charging again. This is what makes at-least-once delivery and automatic retries safe.",
+    "sections": [
+      {"title": "Implementation", "items": [
+        "Enforce uniqueness on (client, key) in the database. Insert the key first; if the insert conflicts, return the saved response.",
+        "Keep keys for longer than the longest retry window, for example 24 hours.",
+        "Natural idempotency: PUT and DELETE, 'set status = shipped', upserts keyed by event ID."
+      ]}
+    ],
+    "links": [
+      {"title": "Designing robust and predictable APIs with idempotency", "url": "https://stripe.com/blog/idempotency", "kind": "blog", "note": "Stripe"},
+      {"title": "Making retries safe with idempotent APIs", "url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/", "kind": "blog", "note": "Amazon Builders' Library"},
+      {"title": "Stripe API: Idempotent requests", "url": "https://docs.stripe.com/api/idempotent_requests", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "retries",
+    "kind": "brick",
+    "module": "rules",
+    "group": "reliability",
+    "title": "Timeouts, Retries, Backoff & Jitter",
+    "subtitle": "Fail fast, retry politely",
+    "lego": "If a builder doesn't answer, wait a bit before asking again, wait longer each time, and don't let the whole room shout at the same moment.",
+    "summary": "Every network call needs a timeout; without one, a slow dependency ties up your threads forever. Retry only transient errors, and only idempotent operations. Space retries out with exponential backoff (for example 100 ms, 200 ms, 400 ms…) plus random jitter so clients don't retry in sync. Cap the number of attempts, and use a retry budget so retries can't multiply load during an outage.",
+    "sections": [
+      {"title": "How it breaks", "items": [
+        "Retry storms: three layers each retrying three times turns one failure into 27 calls.",
+        "Retries without jitter synchronize into waves that knock the dependency down again."
+      ]}
+    ],
+    "links": [
+      {"title": "Timeouts, retries, and backoff with jitter", "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/", "kind": "blog", "note": "Amazon Builders' Library"},
+      {"title": "Exponential Backoff And Jitter", "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/", "kind": "blog", "note": "Marc Brooker, with simulations"},
+      {"title": "Addressing Cascading Failures (Google SRE book)", "url": "https://sre.google/sre-book/addressing-cascading-failures/", "kind": "book", "note": null}
+    ]
+  },
+  {
+    "id": "circuitbreaker",
+    "kind": "brick",
+    "module": "rules",
+    "group": "reliability",
+    "title": "Circuit Breakers & Bulkheads",
+    "subtitle": "Contain failures before they cascade",
+    "lego": "A breaker switch between sub-assemblies that snaps open when one keeps failing, plus walls between sections so a collapse in one doesn't topple the rest.",
+    "summary": "A circuit breaker counts failures to a dependency. Past a threshold it opens and fails fast, often returning a fallback. After a cooldown it half-opens and lets a few trial calls through, closing again if they succeed. Bulkheads give each dependency its own thread pool or connection pool, so one slow dependency can't take every thread.",
+    "sections": [
+      {"title": "Fallbacks", "items": [
+        "Serve cached or default data, hide the feature (no recommendations row), or queue the request for later.",
+        "A fallback must be cheaper and more reliable than the thing it replaces."
+      ]}
+    ],
+    "links": [
+      {"title": "CircuitBreaker", "url": "https://martinfowler.com/bliki/CircuitBreaker.html", "kind": "blog", "note": "Martin Fowler"},
+      {"title": "Hystrix: How it Works", "url": "https://github.com/Netflix/Hystrix/wiki/How-it-Works", "kind": "docs", "note": "Netflix's breaker and bulkhead library, now in maintenance mode"},
+      {"title": "Addressing Cascading Failures (Google SRE book)", "url": "https://sre.google/sre-book/addressing-cascading-failures/", "kind": "book", "note": null}
+    ]
+  },
+  {
+    "id": "ratelimiting",
+    "kind": "brick",
+    "module": "rules",
+    "group": "reliability",
+    "title": "Rate Limiting",
+    "subtitle": "Token bucket · leaky bucket · fixed and sliding windows",
+    "lego": "A turnstile on the front-door stud: each visitor gets a handful of tokens that refill slowly, and no tokens means no entry.",
+    "summary": "A rate limiter caps how many requests a client (by user, API key or IP) can make. A token bucket allows bursts up to the bucket size and a sustained refill rate. A sliding window gives smoother limits than fixed windows, which allow double bursts at window edges. In a distributed system, keep counters in Redis and update them atomically (INCR with EXPIRE, or a Lua script). Reject with HTTP 429 and a Retry-After header.",
+    "sections": [
+      {"title": "Design choices", "items": [
+        "Where: at the gateway, per service, or both.",
+        "Fail open or fail closed when the limiter's store is down.",
+        "Layer the limits: per-user limits, global load shedding, and reserved capacity for critical traffic."
+      ]}
+    ],
+    "links": [
+      {"title": "Scaling your API with rate limiters", "url": "https://stripe.com/blog/rate-limiters", "kind": "blog", "note": "Stripe"},
+      {"title": "How we built rate limiting capable of scaling to millions of domains", "url": "https://blog.cloudflare.com/counting-things-a-lot-of-different-things/", "kind": "blog", "note": "Cloudflare's sliding-window approximation"}
+    ]
+  },
+  {
+    "id": "backpressure",
+    "kind": "brick",
+    "module": "rules",
+    "group": "reliability",
+    "title": "Backpressure & Load Shedding",
+    "subtitle": "Say 'slow down' or 'no' before you fall over",
+    "lego": "When the builder's hands are full, they stop accepting pieces, or politely drop the least important ones, instead of letting everything crash to the floor.",
+    "summary": "Backpressure pushes the signal to slow down back upstream: bounded queues, blocking producers, HTTP 429 or 503. Load shedding deliberately rejects excess or low-priority work so the rest finishes in time. A server at 110% capacity that accepts everything often completes nothing, because every request times out after doing its work.",
+    "sections": [
+      {"title": "Techniques", "items": [
+        "Bounded queues and concurrency limits, which can adapt to measured latency.",
+        "Prioritize: checkout over recommendations, interactive over batch.",
+        "Drop requests whose client deadline has already passed."
+      ]}
+    ],
+    "links": [
+      {"title": "Using load shedding to avoid overload", "url": "https://aws.amazon.com/builders-library/using-load-shedding-to-avoid-overload/", "kind": "blog", "note": "Amazon Builders' Library"},
+      {"title": "Handling Overload (Google SRE book)", "url": "https://sre.google/sre-book/handling-overload/", "kind": "book", "note": null},
+      {"title": "Queues Don't Fix Overload", "url": "https://ferd.ca/queues-don-t-fix-overload.html", "kind": "blog", "note": "Fred Hebert"}
+    ]
+  },
+  {
+    "id": "delivery",
+    "kind": "brick",
+    "module": "rules",
+    "group": "reliability",
+    "title": "Delivery Semantics",
+    "subtitle": "At-most-once · at-least-once · exactly-once",
+    "lego": "Will each piece on the conveyor arrive zero or one time, one or more times, or exactly once?",
+    "summary": "At-most-once means acknowledging before processing: messages can be lost but never duplicated. At-least-once means acknowledging after processing: nothing is lost but duplicates happen, and it is the default for SQS, Kafka consumers and S3 events. Exactly-once delivery isn't possible over an unreliable network in general, but exactly-once effects are: combine at-least-once delivery with idempotent processing or transactional sinks (Kafka transactions, dedupe tables).",
+    "sections": [
+      {"title": "Remember", "items": [
+        "Design for at-least-once plus idempotency. It's the pragmatic answer in nearly every interview and production system."
+      ]}
+    ],
+    "links": [
+      {"title": "Exactly-once Semantics Are Possible: Here's How Kafka Does It", "url": "https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/", "kind": "blog", "note": "Confluent"},
+      {"title": "Challenges with distributed systems", "url": "https://aws.amazon.com/builders-library/challenges-with-distributed-systems/", "kind": "blog", "note": "Amazon Builders' Library: the eight failure points of one request"}
+    ]
+  },
+  {
+    "id": "latency",
+    "kind": "brick",
+    "module": "rules",
+    "group": "numbers",
+    "title": "Latency Numbers & Tail Latency",
+    "subtitle": "Know the orders of magnitude",
+    "lego": "Know how far each drawer is from your hands before you decide where to keep a piece.",
+    "summary": "Rough orders of magnitude: L1 cache ≈ 1 ns, main memory ≈ 100 ns, SSD random read ≈ 100 µs, a round trip in the same datacenter ≈ 0.5 ms, a disk seek ≈ 10 ms, and a round trip across a continent ≈ 50–150 ms. Tail latency (p99, p999) dominates at scale. If a page fans out to 100 backends, a 1-in-100 slow response slows most page loads.",
+    "sections": [
+      {"title": "Tail tolerance", "items": [
+        "Hedged requests: after the p95 time, send a second copy of the request and use whichever answers first.",
+        "Measure percentiles, not averages. Set timeouts from the p99."
+      ]}
+    ],
+    "links": [
+      {"title": "Latency Numbers Every Programmer Should Know", "url": "https://gist.github.com/jboner/2841832", "kind": "docs", "note": "Based on Jeff Dean and Peter Norvig"},
+      {"title": "The Tail at Scale", "url": "https://research.google/pubs/the-tail-at-scale/", "kind": "paper", "note": "Dean and Barroso, CACM 2013"},
+      {"title": "Designs, Lessons and Advice from Building Large Distributed Systems", "url": "https://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf", "kind": "talk", "note": "Jeff Dean, LADIS 2009"}
+    ]
+  },
+  {
+    "id": "estimation",
+    "kind": "build",
+    "module": "rules",
+    "group": "numbers",
+    "title": "Back-of-the-Envelope Estimation",
+    "subtitle": "Size it before you draw it",
+    "lego": "Count how many pieces you need before you pick the baseplate.",
+    "summary": "Estimate the load for a photo-sharing app with 100 million daily active users, where each user views 50 photos and uploads 0.5 photos per day, and an average photo is 500 KB. Work out the read QPS, write QPS, peak QPS, daily new storage and 5-year storage.",
+    "steps": [
+      "Seconds per day ≈ 86,400 ≈ 10^5. So 1 million requests a day ≈ 12 per second.",
+      "Reads: 100M × 50 = 5 billion per day, so about 58,000 QPS on average.",
+      "Writes: 100M × 0.5 = 50 million per day, so about 580 QPS. The read-to-write ratio is 100:1, which says read-heavy: cache and CDN.",
+      "Peak ≈ 2–3× average, so plan for about 150,000 read QPS and 1,500 write QPS.",
+      "Storage: 50M × 500 KB = 25 TB per day, about 9 PB per year, about 45 PB over 5 years before replication. That means object storage with lifecycle tiers.",
+      "Metadata: 50M rows per day × about 1 KB = 50 GB per day, which fits a sharded database or a NoSQL table."
+    ],
+    "uses": ["objectstore", "cdn", "cache", "sharding"],
+    "sections": [
+      {"title": "Handy constants", "items": [
+        "2^10 ≈ a thousand, 2^20 ≈ a million, 2^30 ≈ a billion, 2^40 ≈ a trillion (KB, MB, GB, TB).",
+        "One modern server handles very roughly 10k–100k simple requests per second. One Postgres primary, very roughly 10k–50k simple writes per second.",
+        "Round aggressively. The goal is the order of magnitude, not the decimal."
+      ]}
+    ],
+    "links": [
+      {"title": "ByteByteGo: System Design 101", "url": "https://github.com/ByteByteGoHq/system-design-101", "kind": "course", "note": null},
+      {"title": "Latency Numbers Every Programmer Should Know", "url": "https://gist.github.com/jboner/2841832", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "slo",
+    "kind": "brick",
+    "module": "rules",
+    "group": "numbers",
+    "title": "Availability, SLOs & Error Budgets",
+    "subtitle": "How many nines, and what they cost",
+    "lego": "Decide how often the model is allowed to have a missing brick, and spend that allowance on shipping new features.",
+    "summary": "An SLI is a measured indicator, such as the share of requests that succeed in under 300 ms. An SLO is the target for it, such as 99.9% over 30 days. An SLA is a contract with penalties. The error budget is 1 minus the SLO; while budget remains you ship faster, and when it runs out you focus on reliability. Components in series multiply their availabilities (99.9% × 99.9% ≈ 99.8%); redundant components in parallel raise it.",
+    "sections": [
+      {"title": "The nines", "items": [
+        "99% ≈ 3.65 days of downtime a year (7.3 hours a month).",
+        "99.9% ≈ 8.8 hours a year (43.8 minutes a month).",
+        "99.99% ≈ 52.6 minutes a year (4.4 minutes a month).",
+        "99.999% ≈ 5.3 minutes a year. Each extra nine costs roughly 10× more."
+      ]}
+    ],
+    "links": [
+      {"title": "Service Level Objectives (Google SRE book)", "url": "https://sre.google/sre-book/service-level-objectives/", "kind": "book", "note": null},
+      {"title": "Implementing SLOs (Google SRE workbook)", "url": "https://sre.google/workbook/implementing-slos/", "kind": "book", "note": null}
+    ]
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "bricks",
+    "title": "1 · The Bricks",
+    "groups": [
+      {"id": "compute", "label": "Compute — the Workers", "color": "orange"},
+      {"id": "storage", "label": "Storage & Databases — the Memory", "color": "blue"},
+      {"id": "networking", "label": "Networking & Routing — the Connectors", "color": "green"},
+      {"id": "integration", "label": "Integration & Communication — the Glue", "color": "purple"}
+    ]
+  },
+  {
+    "id": "rules",
+    "title": "2 · Building Rules",
+    "groups": [
+      {"id": "scale", "label": "Scaling the Structure", "color": "teal"},
+      {"id": "data", "label": "Data & Consistency", "color": "indigo"},
+      {"id": "reliability", "label": "Reliability & Flow Control", "color": "red"},
+      {"id": "numbers", "label": "Numbers & Targets", "color": "brown"}
+    ]
+  },
+  {
+    "id": "assemblies",
+    "title": "3 · Assemblies",
+    "groups": [
+      {"id": "worked", "label": "Worked Examples", "color": "yellow"},
+      {"id": "classic", "label": "Classic Builds", "color": "pink"}
+    ]
+  },
+  {
+    "id": "path",
+    "title": "4 · Master Builder Path",
+    "groups": [
+      {"id": "blueprints", "label": "Step 1 · Trace the Blueprints", "color": "blue"},
+      {"id": "papers", "label": "Step 1 · Foundational Papers", "color": "indigo"},
+      {"id": "cad", "label": "Step 2 · Virtual CAD Tools", "color": "teal"},
+      {"id": "mocs", "label": "Step 3 · Mini-MOCs (My Own Creations)", "color": "green"},
+      {"id": "chaos", "label": "Step 4 · Break Your Models", "color": "red"}
+    ]
+  }
+]
