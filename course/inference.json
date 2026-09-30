@@ -1,0 +1,430 @@
+[
+  {
+    "id": "multilora",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Multi-LoRA Serving",
+    "subtitle": "S-LoRA · Punica · LoRAX · vLLM LoRA adapters",
+    "lego": "One big motor with a rack of tiny snap-on attachments: every customer gets their own custom tool head without needing their own motor.",
+    "summary": "LoRA fine-tunes add small low-rank adapter matrices (a few MB to a few hundred MB) to a shared base model. A multi-LoRA server keeps one copy of the base weights on the GPU and batches requests for different adapters together, using custom kernels (Punica's SGMV, S-LoRA's unified paging) so mixed-adapter batches stay efficient. Adapters are loaded on demand from object storage into CPU and GPU caches with LRU eviction. Thousands of fine-tuned 'models' can share one GPU pool.",
+    "sections": [
+      {"title": "Reach for it when", "items": [
+        "Fine-tuning as a service, per-customer or per-task specializations (per-merchant tone, per-language, per-domain), or A/B testing many fine-tunes cheaply."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Cold adapter loads add latency spikes. Pre-warm popular adapters and route by adapter affinity.",
+        "Too many distinct adapters in one batch slows the kernels. Cap max_loras per batch.",
+        "Adapter and base-model version mismatch after a base upgrade. Pin versions in the registry."
+      ]}
+    ],
+    "links": [
+      {"title": "S-LoRA: Serving Thousands of Concurrent LoRA Adapters", "url": "https://arxiv.org/abs/2311.03285", "kind": "paper", "note": null},
+      {"title": "Punica: Multi-Tenant LoRA Serving", "url": "https://arxiv.org/abs/2310.18547", "kind": "paper", "note": "The SGMV kernel"},
+      {"title": "LoRA: Low-Rank Adaptation of Large Language Models", "url": "https://arxiv.org/abs/2106.09685", "kind": "paper", "note": null},
+      {"title": "LoRAX", "url": "https://github.com/predibase/lorax", "kind": "tool", "note": "Multi-LoRA inference server"},
+      {"title": "vLLM LoRA adapters", "url": "https://docs.vllm.ai/en/latest/features/lora.html", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "structuredoutput",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Structured Output & Tool Calling",
+    "subtitle": "Constrained decoding · JSON schema · grammars · XGrammar · Outlines",
+    "lego": "A stencil laid over the baseplate: the model can only place bricks where the stencil has holes, so the result always fits the socket it's going into.",
+    "summary": "Constrained decoding masks the model's next-token probabilities so the output must match a JSON schema, a regex or a context-free grammar. Downstream code, and tool calls in agents, never receive malformed output. Modern engines (XGrammar, Outlines, llguidance) precompile the grammar into token masks so the per-token overhead is negligible, and vLLM and SGLang expose it through OpenAI-style response_format and tool schemas.",
+    "sections": [
+      {"title": "Design tips", "items": [
+        "Keep schemas small and flat. Deeply nested or huge enum schemas slow mask compilation, so cache compiled grammars per schema.",
+        "Constraints guarantee the shape, not correctness. Still validate the values and retry on semantic errors."
+      ]}
+    ],
+    "links": [
+      {"title": "XGrammar: Flexible and Efficient Structured Generation Engine for LLMs", "url": "https://arxiv.org/abs/2411.15100", "kind": "paper", "note": null},
+      {"title": "Efficient Guided Generation for Large Language Models (Outlines)", "url": "https://arxiv.org/abs/2307.09702", "kind": "paper", "note": null},
+      {"title": "SGLang: Efficient Execution of Structured Language Model Programs", "url": "https://arxiv.org/abs/2312.07104", "kind": "paper", "note": "Compressed finite-state machines for fast JSON decoding"},
+      {"title": "ReAct: Synergizing Reasoning and Acting in Language Models", "url": "https://arxiv.org/abs/2210.03629", "kind": "paper", "note": "The tool-calling agent loop"}
+    ]
+  },
+  {
+    "id": "tokenstreaming",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Token Streaming & Cancellation",
+    "subtitle": "Server-Sent Events · WebSockets · gRPC streams · WebRTC · request cancellation",
+    "lego": "Hand each brick to the customer the moment it's placed instead of shipping the finished model, and stop building the instant they walk away.",
+    "summary": "LLM responses are streamed token by token so perceived latency is the time to first token, not the full generation time. Chat APIs mostly use Server-Sent Events over HTTP. Bidirectional apps (voice, collaborative editing) use WebSockets or WebRTC. Every hop (CDN, gateway, service mesh, load balancer) must support long-lived streaming connections without buffering. A client disconnect must propagate to the engine so it frees the sequence's KV cache and stops wasting GPU time.",
+    "sections": [
+      {"title": "Gotchas", "items": [
+        "Proxies that buffer responses (default nginx and some CDNs) destroy streaming. Disable buffering for these routes.",
+        "Idle and read timeouts must allow for long generations. Heartbeat comments keep connections alive.",
+        "Cancelled requests that keep decoding are a silent capacity leak. Monitor aborted versus completed requests.",
+        "Retries after partial output need care: resume or restart, and tell the client which."
+      ]}
+    ],
+    "links": [
+      {"title": "Server-sent events (MDN)", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events", "kind": "docs", "note": null},
+      {"title": "OpenAI API: streaming responses", "url": "https://platform.openai.com/docs/api-reference/streaming", "kind": "docs", "note": "The de facto streaming format"},
+      {"title": "LLM Inference Performance Engineering: Best Practices", "url": "https://www.databricks.com/blog/llm-inference-performance-engineering-best-practices", "kind": "blog", "note": "Why TTFT dominates perceived latency"}
+    ]
+  },
+  {
+    "id": "inferencecaching",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Inference Caching: Prompt, Exact & Semantic",
+    "subtitle": "Provider prompt caching · response caches · GPTCache · LMCache",
+    "lego": "Keep photos of models you've already built: if someone asks for the same model (or one that looks the same) you show them the photo instead of rebuilding.",
+    "summary": "There are three layers of reuse. Prompt (KV) caching reuses the computed attention state for a shared prefix, so answers stay fresh but prefill is skipped. Exact-response caching returns a stored completion for an identical request, which is safe only with deterministic settings (temperature 0) and non-personal content. Semantic caching embeds the query and returns a cached answer when a previous query is similar enough. It is cheap but risky: similar-looking questions can need different answers. Cross-instance KV caches (LMCache, Mooncake) share prefix state across replicas and tiers.",
+    "sections": [
+      {"title": "Rules", "items": [
+        "Scope caches per tenant and per model version, and never serve one user's personal answer to another.",
+        "Tune semantic similarity thresholds on real traffic and track the false-hit rate, not just the hit rate.",
+        "Invalidate on model, prompt-template or source-data changes."
+      ]}
+    ],
+    "links": [
+      {"title": "Prompt caching (Anthropic docs)", "url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching", "kind": "docs", "note": null},
+      {"title": "GPTCache", "url": "https://github.com/zilliztech/GPTCache", "kind": "tool", "note": "Semantic cache for LLM responses"},
+      {"title": "LMCache", "url": "https://github.com/LMCache/LMCache", "kind": "tool", "note": "KV cache sharing and offload across engines"},
+      {"title": "vLLM automatic prefix caching", "url": "https://docs.vllm.ai/en/latest/features/automatic_prefix_caching.html", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "code-completion",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Code Completion (Copilot-style)",
+    "subtitle": "Ghost-text suggestions on every keystroke",
+    "lego": "A builder watching over your shoulder who has to hand you the next brick before your hand reaches the pile, or not bother at all.",
+    "summary": "Suggest the next lines of code inline in the IDE for 1M active developers. Suggestions must appear within about 300 ms end to end or they are useless. Most requests are cancelled because the user keeps typing, and context (surrounding files) is large.",
+    "steps": [
+      "The IDE plugin debounces keystrokes (about 50–100 ms), builds a fill-in-the-middle prompt (code before and after the cursor, plus snippets from open tabs and similar files), and caches recent completions locally.",
+      "Requests go to the nearest region over a persistent HTTP/2 connection (Torbit or CDN edge, then the AI gateway for auth and quotas). A new keystroke cancels the in-flight request all the way down to the engine.",
+      "A small, fast code model (1–15B, FP8) runs on vLLM or TensorRT-LLM with prefix caching. Consecutive requests from the same file share most of their prefix, so route by user or file affinity.",
+      "Speculative decoding with n-gram or prompt lookup is highly effective because code often copies nearby text. Cap output at a few lines and stop at the block end.",
+      "Post-filter suggestions (syntax check, duplicate and license filters) and stream the first lines as soon as they're ready.",
+      "Log accept, reject and partial-accept events to Kafka. The acceptance rate is the key product metric and feeds evaluation and fine-tuning."
+    ],
+    "uses": ["torbit", "aigateway", "tokenstreaming", "prefixrouting", "vllm", "specdecoding", "quantization", "kafka", "prometheus", "latency"],
+    "sections": [
+      {"title": "Numbers", "items": [
+        "Budget roughly 300 ms: about 50 ms network, about 100 ms prefill of a 2–4k-token prompt, about 100 ms for 20–40 output tokens with speculation, and the rest for the plugin.",
+        "With 1M developers at a few requests a minute, 30–60% are cancelled. Cancellation is a capacity feature, not an edge case."
+      ]},
+      {"title": "Break it", "items": [
+        "Disable cancellation propagation: GPU load jumps and p95 latency explodes, which shows why aborts must reach the engine.",
+        "Route round-robin instead of by affinity: the prefix-cache hit rate collapses and TTFT doubles."
+      ]}
+    ],
+    "links": [
+      {"title": "Inside GitHub: Working with the LLMs behind GitHub Copilot", "url": "https://github.blog/2023-05-17-inside-github-working-with-the-llms-behind-github-copilot/", "kind": "blog", "note": null},
+      {"title": "How GitHub Copilot is getting better at understanding your code", "url": "https://github.blog/2023-05-17-how-github-copilot-is-getting-better-at-understanding-your-code/", "kind": "blog", "note": "Prompt construction from neighboring tabs"},
+      {"title": "The lifecycle of a code AI completion", "url": "https://sourcegraph.com/blog/the-lifecycle-of-a-code-ai-completion", "kind": "blog", "note": "Sourcegraph Cody: debounce, context, post-processing"},
+      {"title": "Efficient Training of Language Models to Fill in the Middle", "url": "https://arxiv.org/abs/2207.14255", "kind": "paper", "note": null},
+      {"title": "Prompt lookup decoding", "url": "https://github.com/apoorvumang/prompt-lookup-decoding", "kind": "tool", "note": "N-gram speculation"}
+    ]
+  },
+  {
+    "id": "multitenant-lora",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Fine-Tuning as a Service: Thousands of LoRA Models",
+    "subtitle": "One base model, 5,000 customer adapters, one GPU pool",
+    "lego": "Instead of a motor per customer, one row of motors with a wall of snap-on tool heads fetched as each order arrives.",
+    "summary": "Customers upload data, get a fine-tuned 'model' and call it by name. There are 5,000 fine-tunes, most rarely used and a few very hot. Dedicated GPUs per fine-tune would cost 5,000× too much; serve them all from a shared pool with p95 TTFT under 1 s.",
+    "steps": [
+      "Fine-tuning jobs (Ray Train) produce LoRA adapters that are registered in MLflow with their base-model version and stored in GCS.",
+      "The AI gateway maps the customer model name to (base model, adapter ID) and enforces per-tenant token quotas.",
+      "An adapter-aware router sends a request to a replica that already has the adapter loaded, falling back to the least-loaded replica with free adapter slots.",
+      "vLLM or LoRAX replicas hold the base model once, keep hot adapters in GPU memory and warm ones in CPU memory, and fetch cold ones from GCS through a local disk cache. Mixed-adapter batches use SGMV kernels.",
+      "Very hot adapters are merged into dedicated replicas, and idle ones age out of every cache. Per-tenant metering feeds billing."
+    ],
+    "uses": ["aigateway", "multilora", "prefixrouting", "vllm", "k8sserving", "mlflow", "gcs", "ray", "ratelimiting", "prometheus"],
+    "sections": [
+      {"title": "Napkin", "items": [
+        "Llama-3-8B adapters at rank 16 on attention layers are about 20–50 MB each. 5,000 adapters is 100–250 GB total: too much for one GPU, easy for a CPU plus NVMe tier."
+      ]},
+      {"title": "Break it", "items": [
+        "A noisy tenant floods its adapter: per-tenant token-rate limits and fair queuing must protect the others.",
+        "Upgrade the base model: every adapter must be retrained or pinned to the old base. Run both bases side by side during migration."
+      ]}
+    ],
+    "links": [
+      {"title": "S-LoRA: Serving Thousands of Concurrent LoRA Adapters", "url": "https://arxiv.org/abs/2311.03285", "kind": "paper", "note": null},
+      {"title": "Punica: Multi-Tenant LoRA Serving", "url": "https://arxiv.org/abs/2310.18547", "kind": "paper", "note": null},
+      {"title": "LoRAX", "url": "https://github.com/predibase/lorax", "kind": "tool", "note": null}
+    ]
+  },
+  {
+    "id": "fraud-scoring",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Real-Time Payment Fraud Scoring",
+    "subtitle": "Classic online inference in the checkout critical path",
+    "lego": "A security guard at the checkout who has 50 ms to look at the customer's history and decide: wave through, ask for ID, or stop.",
+    "summary": "Score every payment authorization (20,000 per second at peak) for fraud before approving it. The p99 must be under 50 ms because this is inside checkout, availability must be 99.99%, and new fraud patterns must be caught within minutes.",
+    "steps": [
+      "The checkout service calls the scoring service synchronously with a strict timeout. On timeout, fall back to a rules-only decision rather than failing the payment.",
+      "The scoring service fetches features in one batched call: real-time velocity features (card attempts in the last 10 minutes, new device, amount versus the user's norm) from the online feature store (Redis or Cassandra), plus precomputed batch features.",
+      "Streaming features are maintained by Flink over the payment event stream in Kafka. Batch features come from nightly Spark jobs, materialized online.",
+      "The model is a gradient-boosted tree ensemble (CPU, or Triton's FIL backend), optionally combined with a small neural model. A rules engine applies hard blocks and allows. The output is approve, challenge (3-D Secure) or decline.",
+      "Every decision, with its features and model version, is logged to Kafka. Chargebacks arrive weeks later as labels for retraining. New models run in shadow, then canary, gated on precision, recall and dollars saved."
+    ],
+    "uses": ["featurestore", "distcache", "cassandra", "streamprocessing", "kafka", "spark", "triton", "mlflow", "mlpipelines", "circuitbreaker", "latency", "slo"],
+    "sections": [
+      {"title": "Numbers", "items": [
+        "50 ms p99 splits into about 5 ms network, 10–15 ms feature fetch (one round trip, parallel), 5–10 ms model, and the rest as headroom. No LLM fits this path."
+      ]},
+      {"title": "Break it", "items": [
+        "The feature store is slow: the timeout plus fallback to rules keeps checkout up. Alert on the fallback rate.",
+        "The streaming job lags: velocity features go stale and fraud slips through. Alert on feature freshness, not just latency."
+      ]}
+    ],
+    "links": [
+      {"title": "How we built it: Stripe Radar", "url": "https://stripe.com/blog/how-we-built-it-stripe-radar", "kind": "blog", "note": "1,000+ features scored in under 100 ms; moved from XGBoost + DNN to a DNN-only model"},
+      {"title": "Meet Michelangelo: Uber's Machine Learning Platform", "url": "https://www.uber.com/blog/michelangelo-machine-learning-platform/", "kind": "blog", "note": "Online serving with feature-store lookups"},
+      {"title": "Triton FIL backend (tree models on GPU/CPU)", "url": "https://github.com/triton-inference-server/fil_backend", "kind": "tool", "note": null}
+    ]
+  },
+  {
+    "id": "semantic-search",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Semantic Product Search",
+    "subtitle": "Embedding service + ANN retrieval + cross-encoder reranker",
+    "lego": "Translate the shopper's words into coordinates on a map of all products, grab the nearest ones, and let an expert reorder the shortlist.",
+    "summary": "Improve search for 'shoes for a rainy hike' over 100M products at 30,000 queries per second with p95 under 150 ms, combining keyword and semantic matches.",
+    "steps": [
+      "Offline: embed every product title and description with a batch job (Ray Data on GPUs), then build a sharded ANN index (HNSW or ScaNN) plus the keyword index. CDC and Kafka keep both fresh.",
+      "Online: the query goes to an embedding service (a small encoder on Triton or Text Embeddings Inference with dynamic batching; queries are short, so batches are large and cheap). Popular query embeddings are cached.",
+      "Run keyword search and ANN search in parallel, fetching about 200 candidates each, then fuse them (reciprocal rank fusion).",
+      "A cross-encoder reranker on GPU scores the top about 100 (query, product) pairs, and business rules (stock, sponsored slots) apply. Return the top 40.",
+      "Log queries, results and clicks. Evaluate offline with NDCG and online with A/B tests, and retrain the encoder on click data."
+    ],
+    "uses": ["apigateway", "distcache", "vectordb", "searchindex", "triton", "ray", "cdc", "kafka", "latency"],
+    "sections": [
+      {"title": "Break it", "items": [
+        "The reranker pool is saturated: skip reranking (the degraded but fast path) instead of timing out the whole search.",
+        "An embedding model upgrade: new query vectors don't match the old index. Re-embed the corpus and swap indexes atomically (blue/green)."
+      ]}
+    ],
+    "links": [
+      {"title": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks", "url": "https://arxiv.org/abs/1908.10084", "kind": "paper", "note": null},
+      {"title": "Dense Passage Retrieval for Open-Domain Question Answering", "url": "https://arxiv.org/abs/2004.04906", "kind": "paper", "note": null},
+      {"title": "Text Embeddings Inference", "url": "https://github.com/huggingface/text-embeddings-inference", "kind": "tool", "note": "Hugging Face embedding and reranker server"},
+      {"title": "Efficient and robust approximate nearest neighbor search using HNSW", "url": "https://arxiv.org/abs/1603.09320", "kind": "paper", "note": null}
+    ]
+  },
+  {
+    "id": "agent-serving",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Agentic Assistant with Tool Calling",
+    "subtitle": "Multi-turn, long-context, many model calls per user request",
+    "lego": "A builder who keeps going back to the parts catalog, the order system and the calculator, dozens of times, before handing you the finished model.",
+    "summary": "A customer-support agent that looks up orders, checks policies, issues refunds and answers in chat. One user turn can trigger 5–20 LLM calls with growing context (up to 50k tokens), and it must stay responsive and never take unsafe actions.",
+    "steps": [
+      "Sessions are sticky: the gateway routes every call in a session to the same engine replica (or the KV-aware router finds it), so the ever-growing conversation prefix stays cached.",
+      "Each step's LLM call uses structured output (a JSON tool-call schema) on SGLang or vLLM. The orchestrator validates the arguments and executes the tool (order API, policy search, refund service) with idempotency keys and timeouts.",
+      "Tool results are appended to the context. Stable content (system prompt, tool definitions) sits at the front for maximum prefix reuse. Long sessions offload KV to CPU or SSD (LMCache) instead of recomputing.",
+      "Guardrails check risky actions (refunds above $X need confirmation or human approval), and every step is traced with OpenTelemetry (prompt, tool, latency, tokens).",
+      "Intermediate progress ('Checking your order…') streams to the user so perceived latency stays low. Cap steps and tokens per turn to bound cost."
+    ],
+    "uses": ["aigateway", "prefixrouting", "inferencecaching", "structuredoutput", "sglang", "vllm", "tokenstreaming", "idempotency", "tracing", "ratelimiting"],
+    "sections": [
+      {"title": "Numbers", "items": [
+        "Ten calls over a 30k-token context without prefix caching means about 300k prefill tokens per turn. With a 95% hit rate it's about 15k: a 20× cost difference."
+      ]},
+      {"title": "Break it", "items": [
+        "A tool hangs: the step timeout makes the agent tell the user rather than spin. A replica restart mid-session: KV is lost, so the next call re-prefills (slow, but correct)."
+      ]}
+    ],
+    "links": [
+      {"title": "ReAct: Synergizing Reasoning and Acting in Language Models", "url": "https://arxiv.org/abs/2210.03629", "kind": "paper", "note": null},
+      {"title": "SGLang: Efficient Execution of Structured Language Model Programs", "url": "https://arxiv.org/abs/2312.07104", "kind": "paper", "note": null},
+      {"title": "XGrammar", "url": "https://arxiv.org/abs/2411.15100", "kind": "paper", "note": null},
+      {"title": "LMCache", "url": "https://github.com/LMCache/LMCache", "kind": "tool", "note": null},
+      {"title": "Prompt caching (Anthropic docs)", "url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "voice-agent",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Real-Time Voice Assistant",
+    "subtitle": "Streaming speech-to-text → LLM → text-to-speech in under a second",
+    "lego": "Three builders passing bricks hand to hand so fast that the customer hears the answer start before they've finished blinking.",
+    "summary": "A phone and app voice assistant for order status and returns. Voice-to-voice latency must be under about 800 ms to feel natural, users interrupt ('barge in'), and 5,000 concurrent calls are expected at peak.",
+    "steps": [
+      "Audio flows over WebRTC (or telephony via SIP) to a media server in the nearest region. Voice activity detection spots the end of the user's turn.",
+      "Streaming ASR (a Whisper-class or streaming Conformer model on GPU) emits partial transcripts continuously, so the final transcript is ready about 100–200 ms after speech ends.",
+      "The LLM (a small, fast model on vLLM, with the conversation prefix cached per call) starts generating immediately. Tokens stream out.",
+      "Streaming TTS starts synthesizing from the first sentence fragment. Audio frames go back over WebRTC.",
+      "Barge-in: when the user speaks, stop TTS playback and cancel the LLM generation instantly. The pipeline is orchestrated by LiveKit Agents or Pipecat."
+    ],
+    "uses": ["tokenstreaming", "vllm", "prefixrouting", "triton", "k8sserving", "quantization", "latency", "loadbalancer"],
+    "sections": [
+      {"title": "Latency budget", "items": [
+        "About 800 ms: VAD end-of-turn about 200 ms, ASR finalization about 100 ms, LLM TTFT about 200 ms, TTS first audio about 150 ms, network about 100 ms. Every stage must stream."
+      ]},
+      {"title": "Break it", "items": [
+        "Add 300 ms of RTT by serving from a far region: conversation feels broken. Regional placement matters more than model size here."
+      ]}
+    ],
+    "links": [
+      {"title": "Robust Speech Recognition via Large-Scale Weak Supervision (Whisper)", "url": "https://arxiv.org/abs/2212.04356", "kind": "paper", "note": null},
+      {"title": "LiveKit Agents", "url": "https://github.com/livekit/agents", "kind": "tool", "note": "Realtime voice agent framework over WebRTC"},
+      {"title": "Pipecat", "url": "https://github.com/pipecat-ai/pipecat", "kind": "tool", "note": "Open-source voice and multimodal pipeline framework"}
+    ]
+  },
+  {
+    "id": "moe-serving",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Serving a Giant Mixture-of-Experts Model",
+    "subtitle": "DeepSeek-V3/R1-class (671B total, ~37B active) at scale",
+    "lego": "A factory with 256 specialist builders where each brick is handed to only a few of them, so the factory is huge but each step is fast, as long as the hand-offs are quick.",
+    "summary": "Serve a 671B-parameter MoE model (256 routed experts, about 37B active per token) as a public API with high throughput per GPU. The model doesn't fit on one 8-GPU node in FP16, and expert routing creates all-to-all communication.",
+    "steps": [
+      "Store weights in FP8 (about 700 GB). A prefill cluster and a decode cluster are sized separately (disaggregated), with KV transferred over RDMA.",
+      "Decode uses wide expert parallelism across many nodes (for example EP across 2–4+ nodes), so each GPU holds a few experts and gets large per-expert batches. Attention uses data parallelism to avoid duplicating KV.",
+      "All-to-all dispatch and combine of tokens to experts uses optimized kernels (DeepEP) and overlaps communication with compute (two-batch overlap).",
+      "An expert-parallel load balancer replicates hot experts on extra GPUs, because expert popularity is skewed and shifts with traffic.",
+      "Multi-token prediction heads serve as a built-in speculative drafter to boost decode speed. Prefix caching on disk or SSD serves repeated contexts."
+    ],
+    "uses": ["disaggregated", "parallelism", "quantization", "specdecoding", "sglang", "vllm", "prefixrouting", "k8sserving", "prometheus"],
+    "sections": [
+      {"title": "Why it's hard", "items": [
+        "Communication, not FLOPs, becomes the bottleneck. Interconnect topology (NVLink domain, InfiniBand or RoCE) decides the design.",
+        "Tiny per-expert batches waste GPUs, so wide EP needs lots of concurrent traffic to pay off."
+      ]}
+    ],
+    "links": [
+      {"title": "DeepSeek-V3 Technical Report", "url": "https://arxiv.org/abs/2412.19437", "kind": "paper", "note": null},
+      {"title": "DeepSeek Open Infra Index (inference system overview)", "url": "https://github.com/deepseek-ai/open-infra-index", "kind": "tool", "note": "Day-6 write-up: prefill/decode EP, costs and throughput"},
+      {"title": "DeepEP", "url": "https://github.com/deepseek-ai/DeepEP", "kind": "tool", "note": "Expert-parallel all-to-all kernels"},
+      {"title": "Switch Transformers: Scaling to Trillion Parameter Models", "url": "https://arxiv.org/abs/2101.03961", "kind": "paper", "note": "MoE fundamentals"},
+      {"title": "Deploying DeepSeek with PD Disaggregation and Large-Scale Expert Parallelism", "url": "https://lmsys.org/blog/2025-05-05-large-scale-ep/", "kind": "blog", "note": "SGLang on 96 H100s"}
+    ]
+  },
+  {
+    "id": "global-llm-api",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Multi-Region LLM API with Fallbacks",
+    "subtitle": "Capacity-aware global routing when GPUs are the scarce resource",
+    "lego": "Motor rooms in several cities: a dispatcher sends each job to whichever room has free motors, and to a rented room across town when all are full.",
+    "summary": "Run a company-wide LLM API across 3 regions with a 99.95% availability SLO. GPU capacity per region is fixed (reservations), traffic has daily peaks, and a region or an entire model pool can fail.",
+    "steps": [
+      "Global DNS or anycast (Torbit or Cloud Load Balancing) sends users to the nearest healthy region's AI gateway.",
+      "Each gateway knows the real-time capacity of every region (queue depth, KV utilization, error rates) and spills over to another region when local pools are saturated. Streaming latency rises slightly; availability holds.",
+      "Priority classes: interactive traffic is served first. Batch and offline traffic go to a separate queue that absorbs idle capacity (off-peak) and is shed first under load.",
+      "The fallback chain per model: self-hosted primary, then a secondary region, then a smaller model, then an external vendor API (contractually approved), then a clear 'busy, retry later' with Retry-After.",
+      "The model registry and weights are replicated to every region (GCS multi-region or dual-region buckets). Rollouts go region by region, and SLO burn-rate alerts gate each step."
+    ],
+    "uses": ["dns", "torbit", "aigateway", "k8sserving", "vllm", "gcs", "backpressure", "ratelimiting", "circuitbreaker", "retries", "slo", "prometheus"],
+    "sections": [
+      {"title": "Break it", "items": [
+        "Drain a whole region: the others must absorb the load. Plan N+1 regional capacity or accept shedding low-priority traffic.",
+        "A vendor fallback outage at the same time: the last line of defense is graceful degradation, not unbounded retries."
+      ]}
+    ],
+    "links": [
+      {"title": "Handling Overload (Google SRE book)", "url": "https://sre.google/sre-book/handling-overload/", "kind": "book", "note": "Criticality, client-side throttling, load shedding"},
+      {"title": "LiteLLM routing and fallbacks", "url": "https://docs.litellm.ai/docs/routing", "kind": "docs", "note": null},
+      {"title": "Llumnix: Dynamic Scheduling for LLM Serving (OSDI 2024)", "url": "https://arxiv.org/abs/2406.03243", "kind": "paper", "note": "Live migration of requests across instances"},
+      {"title": "The Tail at Scale", "url": "https://research.google/pubs/the-tail-at-scale/", "kind": "paper", "note": null}
+    ]
+  },
+  {
+    "id": "llm-guardrails",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Inline Safety & Moderation Guardrails",
+    "subtitle": "Classifiers on every prompt and response without doubling latency",
+    "lego": "Inspectors at both doors of the motor room who check every order coming in and every model going out, without making the line longer.",
+    "summary": "Every chat request and response for customer-facing LLM features must be checked for prompt injection, PII, toxicity and policy violations. Guardrails may add at most about 50 ms to TTFT and must scale with all LLM traffic.",
+    "steps": [
+      "Input checks run in parallel with the start of generation: a fast PII detector plus a small injection and safety classifier (on Triton, or a Llama Guard-class model on vLLM). If a check fails, cancel the generation before anything reaches the user.",
+      "Output checks run on streamed chunks (every sentence or N tokens) so the stream isn't held until the end. Unsafe text is stopped mid-stream with a replacement message.",
+      "Deterministic rules (regex for card numbers, allowlists and blocklists) run first because they're cheap. Model-based checks come next. Only escalations go to a larger judge model asynchronously.",
+      "Violations and near-misses are logged to Kafka for review. Policies are versioned, and classifier updates go through shadow evaluation."
+    ],
+    "uses": ["aigateway", "tokenstreaming", "triton", "vllm", "kafka", "prometheus", "circuitbreaker"],
+    "sections": [
+      {"title": "Break it", "items": [
+        "The guardrail service is down: fail closed for high-risk features and fail open with extra logging for low-risk ones. Decide per feature in advance."
+      ]}
+    ],
+    "links": [
+      {"title": "Llama Guard: LLM-based Input-Output Safeguard", "url": "https://arxiv.org/abs/2312.06674", "kind": "paper", "note": null},
+      {"title": "A Holistic Approach to Undesired Content Detection in the Real World", "url": "https://arxiv.org/abs/2208.03274", "kind": "paper", "note": "OpenAI moderation model"},
+      {"title": "NeMo Guardrails", "url": "https://github.com/NVIDIA/NeMo-Guardrails", "kind": "tool", "note": null}
+    ]
+  },
+  {
+    "id": "moc-kvrouter",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Mini-MOC: Prefix-Aware Router vs Round Robin",
+    "subtitle": "Hands-on: prove why routing matters for LLMs",
+    "lego": "Run two dispatchers side by side, one random and one who remembers which builder has which pages open, and time them.",
+    "summary": "Run 2–4 small vLLM replicas (one GPU each, or CPU with a tiny model) and write a simple router in about 100 lines: hash the first N prompt tokens to a replica, with a load cap. Compare it against round robin on a chat workload with shared system prompts and multi-turn sessions.",
+    "steps": [
+      "Generate a workload: 20 system prompts × 200 users × 5 turns, with each turn appending to the conversation.",
+      "Baseline: round robin via nginx or Envoy. Record TTFT p50/p95, the prefix-cache hit rate (vLLM metrics), and throughput.",
+      "Your router: consistent hashing on (system prompt plus session ID), falling back to the least-loaded replica when the chosen one's queue exceeds a threshold.",
+      "Bonus: try the Gateway API Inference Extension or llm-d's scheduler on kind or minikube and compare it with yours.",
+      "Write up the results: the hit-rate and TTFT improvement, and what happens when one replica gets a hot system prompt."
+    ],
+    "uses": ["prefixrouting", "consistenthashing", "vllm", "loadbalancer", "inferencecaching", "prometheus"],
+    "sections": [],
+    "links": [
+      {"title": "Gateway API Inference Extension", "url": "https://github.com/kubernetes-sigs/gateway-api-inference-extension", "kind": "tool", "note": null},
+      {"title": "llm-d", "url": "https://github.com/llm-d/llm-d", "kind": "tool", "note": null},
+      {"title": "vLLM automatic prefix caching", "url": "https://docs.vllm.ai/en/latest/features/automatic_prefix_caching.html", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "drill-badmodel",
+    "kind": "build",
+    "module": "ml",
+    "group": "inferencebuilds",
+    "title": "Drill: Bad Model Rollout & Noisy Tenant",
+    "subtitle": "Chaos engineering for the model layer, not just the infrastructure",
+    "lego": "Slip a slightly miswired motor into the line and let one customer hog the dispatcher, then see whether anyone notices before the customers do.",
+    "summary": "Infrastructure is healthy, but the model is wrong: a new version that is 30% slower, emits malformed JSON 5% of the time, or has a broken chat template. Meanwhile one tenant sends 10× its normal traffic. Do your canaries, evaluations and quotas catch it?",
+    "steps": [
+      "Hypothesis: the canary at 5% traffic detects the regression within 10 minutes and rolls back automatically, and other tenants' p95 TTFT stays within SLO during the noisy-tenant spike.",
+      "Deploy a deliberately degraded model version (a wrong quantization, a missing stop token, or a bad template) as the canary through the Istio or KServe traffic split.",
+      "Watch the signals: TPOT and TTFT per version, structured-output parse-failure rate, average output length (runaway generations), user thumbs-down rate, and guardrail triggers.",
+      "Simultaneously replay 10× traffic from one tenant key. Per-tenant token limits and fair queuing must contain it.",
+      "Record the time to detect and the time to roll back, and which dashboard or alert fired first. Add the missing ones."
+    ],
+    "uses": ["mlflow", "mlpipelines", "istio", "k8sserving", "aigateway", "structuredoutput", "ratelimiting", "prometheus", "slo"],
+    "sections": [
+      {"title": "The lesson", "items": [
+        "Model regressions return HTTP 200. You need quality and behavior metrics per model version, not just error rates."
+      ]}
+    ],
+    "links": [
+      {"title": "Principles of Chaos Engineering", "url": "https://principlesofchaos.org/", "kind": "docs", "note": null},
+      {"title": "The ML Test Score: A Rubric for ML Production Readiness", "url": "https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/", "kind": "paper", "note": null}
+    ]
+  }
+]

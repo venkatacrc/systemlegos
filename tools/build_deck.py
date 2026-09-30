@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 COURSE = ROOT / "course"
-CARD_FILES = ["bricks.json", "rules.json", "assemblies.json", "path.json"]
+CARD_FILES = ["bricks.json", "rules.json", "assemblies.json", "path.json", "platform.json", "data.json", "ml.json", "inference.json"]
 DECK = ROOT / "app" / "Sources" / "SystemLegos" / "Resources" / "deck.json"
 
 REQUIRED = {"id", "kind", "module", "group", "title", "summary", "sections", "links"}

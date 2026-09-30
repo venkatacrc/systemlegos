@@ -23,6 +23,11 @@
      "id": "integration",
      "label": "Integration & Communication — the Glue",
      "color": "purple"
+    },
+    {
+     "id": "observability",
+     "label": "Observability — the Inspectors",
+     "color": "brown"
     }
    ]
   },
@@ -98,6 +103,53 @@
      "color": "red"
     }
    ]
+  },
+  {
+   "id": "data",
+   "title": "5 · Data & Batch Pipelines",
+   "groups": [
+    {
+     "id": "streaming",
+     "label": "Streaming Pipelines",
+     "color": "purple"
+    },
+    {
+     "id": "batch",
+     "label": "Batch Processing & the Lakehouse",
+     "color": "blue"
+    },
+    {
+     "id": "pipelinebuilds",
+     "label": "Pipeline Builds & Drills",
+     "color": "yellow"
+    }
+   ]
+  },
+  {
+   "id": "ml",
+   "title": "6 · ML Platform & LLM Serving",
+   "groups": [
+    {
+     "id": "mlplatform",
+     "label": "ML Platform",
+     "color": "teal"
+    },
+    {
+     "id": "serving",
+     "label": "Online Large-Model Serving",
+     "color": "red"
+    },
+    {
+     "id": "inferencebuilds",
+     "label": "Online Inference Case Studies",
+     "color": "orange"
+    },
+    {
+     "id": "mlbuilds",
+     "label": "ML Builds, Projects & Drills",
+     "color": "pink"
+    }
+   ]
   }
  ],
  "cards": [
@@ -163,8 +215,8 @@
      "note": "Amazon Builders' Library"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "containers",
@@ -228,8 +280,8 @@
      "note": "The whole checklist for container-friendly services"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "kubernetes",
@@ -285,8 +337,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "serverless",
@@ -350,8 +402,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "rdbms",
@@ -421,8 +473,8 @@
      "note": "Horizontally sharding Postgres"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "nosql",
@@ -491,8 +543,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "objectstore",
@@ -556,8 +608,413 @@
      "note": "The ancestor of large-scale blob storage"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "cassandra",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "storage",
+   "title": "Wide-Column Stores: Cassandra",
+   "subtitle": "Apache Cassandra · ScyllaDB · Google Bigtable · HBase",
+   "lego": "A huge rack of labelled drawers spread over many tables. Every table can take new pieces at any moment, and each drawer keeps its pieces sorted.",
+   "summary": "A masterless, Dynamo-style cluster with a Bigtable-style data model. Rows are placed on a consistent-hash ring by partition key and replicated to N nodes (typically 3, across racks or zones). Any node can coordinate a request, and the consistency level is chosen per query (ONE, QUORUM, LOCAL_QUORUM, ALL). Writes go to a commit log and memtable and are flushed to immutable SSTables that are compacted later (an LSM tree), so writes are very fast. Inside a partition, rows are sorted by clustering columns, which makes 'latest N items for X' queries cheap.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Write-heavy, always-on workloads: messages, events, time series, activity feeds, IoT, audit logs.",
+      "Multi-datacenter active-active with local-quorum latency.",
+      "Access patterns are known up front: design one table per query."
+     ]
+    },
+    {
+     "title": "Data modeling rules",
+     "items": [
+      "Primary key = (partition key, clustering columns…). The partition key spreads load; clustering columns sort rows inside it.",
+      "Bound partition size (roughly under 100 MB) by adding a time bucket to the key, for example (channel_id, day).",
+      "Denormalize: write the same data into several query-shaped tables. There are no joins."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "No joins, limited secondary indexes, and ad-hoc queries are expensive.",
+      "Lightweight transactions (Paxos-based compare-and-set) exist but are slow. Use them sparingly.",
+      "Repairs, compaction tuning, JVM garbage collection pauses (Cassandra) and tombstones take real operational care."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Hot or oversized partitions (a mega-channel or celebrity key) overload a few replicas.",
+      "Tombstone buildup from heavy deletes makes reads scan dead data and time out.",
+      "Skipped anti-entropy repair leaves replicas silently diverged, and deleted data can reappear."
+     ]
+    },
+    {
+     "title": "Similar blocks",
+     "items": [
+      "ScyllaDB: Cassandra-compatible, rewritten in C++ with a shard-per-core design. Discord moved to it from Cassandra.",
+      "Google Bigtable and HBase: range-partitioned wide-column stores with a single master for metadata. Row-key design is the whole game.",
+      "Amazon DynamoDB: a managed service with similar partition and sort-key modeling."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Cassandra: A Decentralized Structured Storage System (LADIS 2009)",
+     "url": "https://www.cs.cornell.edu/projects/ladis2009/papers/lakshman-ladis2009.pdf",
+     "kind": "paper",
+     "note": "Lakshman and Malik, Facebook"
+    },
+    {
+     "title": "Apache Cassandra: Dynamo architecture",
+     "url": "https://cassandra.apache.org/doc/latest/cassandra/architecture/dynamo.html",
+     "kind": "docs",
+     "note": "Ring, replication, tunable consistency"
+    },
+    {
+     "title": "Apache Cassandra documentation",
+     "url": "https://cassandra.apache.org/doc/latest/",
+     "kind": "docs",
+     "note": "Includes the data-modeling guide"
+    },
+    {
+     "title": "How Discord Stores Trillions of Messages",
+     "url": "https://discord.com/blog/how-discord-stores-trillions-of-messages",
+     "kind": "blog",
+     "note": "Cassandra to ScyllaDB, hot partitions"
+    },
+    {
+     "title": "Bigtable: A Distributed Storage System for Structured Data",
+     "url": "https://static.googleusercontent.com/media/research.google.com/en//archive/bigtable-osdi06.pdf",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "distributedsql",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "storage",
+   "title": "Distributed SQL (NewSQL)",
+   "subtitle": "Google Spanner · CockroachDB · YugabyteDB · Amazon Aurora",
+   "lego": "The rigid LEGO grid, but built from many baseplates snapped together, and it still feels like one board.",
+   "summary": "Relational databases that keep SQL and ACID transactions but scale out horizontally. Data is split into ranges or tablets, each replicated with Raft or Paxos, and transactions that span ranges use a distributed commit protocol. Spanner uses TrueTime for external consistency; CockroachDB and YugabyteDB use hybrid logical clocks. Aurora takes a different route: one writer, with a shared, replicated storage layer that scales reads and durability.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "You've outgrown a single Postgres or MySQL primary but still need transactions and SQL.",
+      "Multi-region deployments with strong consistency and automatic failover.",
+      "You want to avoid hand-rolled application-level sharding."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Every write pays for consensus. Cross-region transactions add tens to hundreds of milliseconds.",
+      "Hot ranges (sequential primary keys) still bottleneck. Use hashed or UUID keys.",
+      "Costs more and has more moving parts than a single-node database."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Spanner: Google's Globally-Distributed Database",
+     "url": "https://static.googleusercontent.com/media/research.google.com/en//archive/spanner-osdi2012.pdf",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "CockroachDB: The Resilient Geo-Distributed SQL Database (SIGMOD 2020)",
+     "url": "https://dl.acm.org/doi/10.1145/3318464.3386134",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Amazon Aurora: Design Considerations for High Throughput Cloud-Native Relational Databases (SIGMOD 2017)",
+     "url": "https://dl.acm.org/doi/10.1145/3035918.3056101",
+     "kind": "paper",
+     "note": "The log is the database"
+    },
+    {
+     "title": "YugabyteDB documentation",
+     "url": "https://docs.yugabyte.com/",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "searchindex",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "storage",
+   "title": "Search Engines",
+   "subtitle": "Elasticsearch · OpenSearch · Apache Solr · Lucene",
+   "lego": "The index at the back of the instruction booklet: look up a word and it tells you every page it appears on.",
+   "summary": "Search engines build an inverted index (term → list of documents), plus BM25 relevance scoring, analyzers for tokenizing and stemming, facets and aggregations, and increasingly vector search too. An index is split into shards with replicas across nodes. It is fed from the source-of-truth database, usually asynchronously through change data capture or events, and is almost never the system of record.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Full-text product and catalog search, typeahead, log search and analytics, faceted filtering."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Near-real-time rather than instant: refresh intervals of about 1 s. Reindexing after a mapping change is costly.",
+      "The index drifts from the database if the update pipeline drops events. Plan full rebuilds."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Too many small shards overload the cluster state. Deep pagination and heavy aggregations exhaust memory.",
+      "Split-brain from bad quorum settings on older versions."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Elasticsearch",
+     "url": "https://www.elastic.co/elasticsearch",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "OpenSearch documentation",
+     "url": "https://opensearch.org/docs/latest/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Apache Lucene",
+     "url": "https://lucene.apache.org/",
+     "kind": "docs",
+     "note": "The library under Elasticsearch, OpenSearch and Solr"
+    },
+    {
+     "title": "How we rebuilt the Walmart Autocomplete Backend",
+     "url": "https://medium.com/walmartglobaltech/how-we-rebuilt-the-walmart-autocomplete-backend-10efe71d624a",
+     "kind": "blog",
+     "note": "Walmart Global Tech: a prefix index served from a distributed cache"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "vectordb",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "storage",
+   "title": "Vector Databases",
+   "subtitle": "pgvector · Milvus · Vertex AI Vector Search · FAISS · Pinecone",
+   "lego": "A bin sorted by shape-similarity instead of by label: hold up a piece and it hands you the ones that look most like it.",
+   "summary": "Vector databases store embeddings (dense vectors from a model) and answer 'k nearest neighbours' queries with approximate nearest neighbour (ANN) indexes. HNSW is a graph index: fast with high recall, but memory-hungry. IVF plus product quantization clusters and compresses vectors, so it is cheaper at billion scale. Metadata filters and hybrid search (combined with BM25) narrow the results. They are the retrieval brick behind RAG, semantic search, recommendations and deduplication.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Retrieval-augmented generation (RAG) for LLM apps, semantic or product search, similar-item recommendations.",
+      "Start with pgvector if you already run Postgres. Move to a dedicated engine for more than about 100 million vectors or very high QPS."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Recall vs latency vs memory is tuned through index parameters (HNSW M and efSearch, IVF nlist and nprobe).",
+      "Re-embedding the whole corpus when the embedding model changes is a batch job to plan for."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Efficient and robust approximate nearest neighbor search using HNSW graphs",
+     "url": "https://arxiv.org/abs/1603.09320",
+     "kind": "paper",
+     "note": "Malkov and Yashunin"
+    },
+    {
+     "title": "Billion-scale similarity search with GPUs (FAISS)",
+     "url": "https://arxiv.org/abs/1702.08734",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "pgvector",
+     "url": "https://github.com/pgvector/pgvector",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "Milvus documentation",
+     "url": "https://milvus.io/docs",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+     "url": "https://arxiv.org/abs/2005.11401",
+     "kind": "paper",
+     "note": "The original RAG paper"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "coordination",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "storage",
+   "title": "Coordination Services",
+   "subtitle": "ZooKeeper · etcd · Consul · Google Chubby",
+   "lego": "The small, trusted referee's notebook that every builder checks to find out who's in charge and which instructions are current.",
+   "summary": "Coordination services are small, strongly consistent (consensus-replicated) key-value stores for coordination, not bulk data. They provide leader election, distributed locks and leases, service discovery, configuration, and cluster membership through watches and ephemeral keys. etcd stores all Kubernetes state. ZooKeeper historically coordinated Kafka, HBase and Hadoop; Kafka has replaced it with its own KRaft quorum.",
+   "sections": [
+    {
+     "title": "Use it well",
+     "items": [
+      "Keep data tiny (KBs to MBs), and keep writes infrequent.",
+      "A lock needs a fencing token (a monotonic number checked by the resource). Otherwise a paused client can act on an expired lease."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Losing quorum (for example 2 of 3 nodes) blocks all writes and leader changes. Run 3 or 5 nodes across zones.",
+      "Abusing it as a general database causes slow disks, huge snapshots and election storms."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "ZooKeeper: Wait-free coordination for Internet-scale systems (USENIX ATC 2010)",
+     "url": "https://www.usenix.org/conference/usenix-atc-10/zookeeper-wait-free-coordination-internet-scale-systems",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "The Chubby lock service for loosely-coupled distributed systems",
+     "url": "https://research.google/pubs/the-chubby-lock-service-for-loosely-coupled-distributed-systems/",
+     "kind": "paper",
+     "note": "Mike Burrows, OSDI 2006"
+    },
+    {
+     "title": "etcd documentation",
+     "url": "https://etcd.io/docs/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "How to do distributed locking",
+     "url": "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html",
+     "kind": "blog",
+     "note": "Martin Kleppmann on fencing tokens"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "gcs",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "storage",
+   "title": "Google Cloud Storage Buckets",
+   "subtitle": "GCS · gs:// · the data lake and model store on GCP",
+   "lego": "Google's version of the giant storage bins, with a choice of how close to the front door each bin sits (and what it costs to open).",
+   "summary": "GCS is Google Cloud's object store. Objects live in buckets under a flat namespace with '/' only as a naming convention. Location types are region, dual-region and multi-region. Storage classes are Standard, Nearline (30-day minimum), Coldline (90-day) and Archive (365-day), with Autoclass available to tier automatically. It offers strong global consistency for object reads, writes and listing, IAM with uniform bucket-level access, signed URLs, object versioning, lifecycle rules, and Pub/Sub notifications. It is the default landing zone for data lakes, Spark and Dataproc jobs, BigQuery external tables, training data and model artifacts.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Raw and curated data-lake zones (Parquet or Iceberg files), batch pipeline inputs and outputs.",
+      "ML datasets, checkpoints and model weights. Mount with Cloud Storage FUSE, or stream with parallel readers.",
+      "Media and static assets behind Cloud CDN. Backups and logs with lifecycle rules to cheaper classes."
+     ]
+    },
+    {
+     "title": "Design tips",
+     "items": [
+      "Co-locate buckets with compute (same region) to avoid egress cost and latency.",
+      "Ramp request rates gradually. Very high QPS on sequential names (timestamps) can hot-spot, so prefer random or hashed prefixes.",
+      "Use Pub/Sub notifications or Eventarc to trigger pipelines when objects land. Delivery is at-least-once, so make consumers idempotent.",
+      "Many small files hurt Spark and BigQuery. Compact them into files of about 128 MB to 1 GB."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Early deletion fees and retrieval costs on cold classes surprise batch jobs that reread old data.",
+      "A publicly readable bucket through a mistaken IAM binding. Enforce public access prevention.",
+      "Loading model weights from GCS on every pod start slows GPU autoscaling. Cache or pre-stage the weights."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Storage classes",
+     "url": "https://cloud.google.com/storage/docs/storage-classes",
+     "kind": "docs",
+     "note": "Google Cloud"
+    },
+    {
+     "title": "Bucket locations",
+     "url": "https://cloud.google.com/storage/docs/locations",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Request rate and access distribution guidelines",
+     "url": "https://cloud.google.com/storage/docs/request-rate",
+     "kind": "docs",
+     "note": "Avoiding hot-spotting"
+    },
+    {
+     "title": "Cloud Storage consistency",
+     "url": "https://cloud.google.com/storage/docs/consistency",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Pub/Sub notifications for Cloud Storage",
+     "url": "https://cloud.google.com/storage/docs/pubsub-notifications",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Object Lifecycle Management",
+     "url": "https://cloud.google.com/storage/docs/lifecycle",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Signed URLs",
+     "url": "https://cloud.google.com/storage/docs/access-signed-urls",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Cloud Storage FUSE",
+     "url": "https://cloud.google.com/storage/docs/gcs-fuse",
+     "kind": "docs",
+     "note": "Mount buckets for training and serving"
+    }
+   ],
+   "steps": null,
+   "uses": null
   },
   {
    "id": "dns",
@@ -606,8 +1063,8 @@
      "note": "Latency, geolocation, weighted, failover"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "loadbalancer",
@@ -674,8 +1131,8 @@
      "note": "The L7 proxy behind most service meshes"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "apigateway",
@@ -730,8 +1187,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "cdn",
@@ -786,8 +1243,137 @@
      "note": "Netflix's own CDN, placed inside ISPs"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "istio",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "networking",
+   "title": "Service Mesh: Istio",
+   "subtitle": "Istio · Envoy · Linkerd · ambient mode",
+   "lego": "A clip-on connector attached to every brick, so every connection between bricks is locked, counted and steerable without redesigning the bricks themselves.",
+   "summary": "A service mesh moves service-to-service networking out of application code into a proxy layer. In sidecar mode an Envoy proxy runs next to every pod; in ambient mode per-node ztunnel proxies handle L4 and optional waypoint proxies handle L7. The control plane (istiod) pushes configuration to the proxies. You get mutual TLS and workload identity, fine-grained traffic management (weighted canaries, header routing, retries, timeouts, circuit breaking, fault injection, mirroring), authorization policy, and uniform metrics and traces.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Many microservices on Kubernetes need zero-trust mTLS and consistent retries, timeouts and telemetry.",
+      "Progressive delivery: shift 1% → 10% → 100% of traffic to a new version, or mirror production traffic to a shadow model.",
+      "Chaos drills: inject delays and aborts with a VirtualService, no code changes needed."
+     ]
+    },
+    {
+     "title": "Key resources",
+     "items": [
+      "Gateway (ingress and egress), VirtualService (routing rules), DestinationRule (subsets, load balancing, outlier detection), PeerAuthentication and AuthorizationPolicy (mTLS and access)."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Sidecars add memory and CPU per pod and extra latency per hop, which ambient mode reduces.",
+      "Mesh-level retries stacked on client retries multiply load. Own retries in one layer.",
+      "A bad mesh config push can break traffic cluster-wide. Canary your control-plane changes."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "What is Istio?",
+     "url": "https://istio.io/latest/docs/concepts/what-is-istio/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Istio traffic management",
+     "url": "https://istio.io/latest/docs/concepts/traffic-management/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Istio security (mTLS, identity, authorization)",
+     "url": "https://istio.io/latest/docs/concepts/security/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Istio ambient mode overview",
+     "url": "https://istio.io/latest/docs/ambient/overview/",
+     "kind": "docs",
+     "note": "Sidecar-less mesh"
+    },
+    {
+     "title": "What is Envoy",
+     "url": "https://www.envoyproxy.io/docs/envoy/latest/intro/what_is_envoy",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "torbit",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "networking",
+   "title": "Torbit: Walmart's Edge Platform",
+   "subtitle": "Edge proxy · L7 routing · edge caching and security",
+   "lego": "Walmart's own front gate and sorting station at the edge of the city. Every visitor passes through it before reaching any building, and it decides which building they go to.",
+   "summary": "Torbit began as a web-performance startup (real-user monitoring and dynamic front-end optimization) that Walmart Labs acquired in 2013. The team went on to build Walmart's in-house edge infrastructure: proxies, load balancers, edge security and real-user monitoring. Walmart engineers use Torbit for edge traffic control such as path-based routing between legacy and new services. Conceptually it plays the role of a CDN or edge proxy plus L7 load balancer in front of the origin: TLS termination, caching, request routing and rewriting, bot and WAF protection, and gradual traffic shifting.",
+   "sections": [
+    {
+     "title": "Where it sits",
+     "items": [
+      "Client → DNS → Torbit edge (TLS, cache, security, routing) → regional load balancers or ingress (Istio gateway) → services.",
+      "The public equivalent is Cloudflare, Akamai or Fastly, combined with an Envoy or NGINX edge tier."
+     ]
+    },
+    {
+     "title": "Use it for",
+     "items": [
+      "Path-based migration: route /api/cart/* to the new microservice at 10%, then increase, with instant rollback at the edge.",
+      "Shielding origins from flash-sale spikes with caching, rate limits and request collapsing."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "An edge misconfiguration affects everything behind it. Stage and canary routing changes.",
+      "Caching personalized responses leaks data. Split what is cacheable from what is personalized."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Walmart Labs scoops up site-speed optimizer Torbit (TechCrunch, 2013)",
+     "url": "https://techcrunch.com/2013/07/24/walmart-labs-scoops-up-website-optimization-startup-torbit-to-help-it-keep-pace-with-amazon/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Faster is Better: How We Are Optimizing Walmart.com",
+     "url": "https://walmartlabs.blogspot.com/2013/07/fasterisbetter.html",
+     "kind": "blog",
+     "note": "@WalmartLabs announcement"
+    },
+    {
+     "title": "Farewell Torbit / Walmart",
+     "url": "https://www.jonefox.com/farewell-torbit-walmart/",
+     "kind": "blog",
+     "note": "Co-founder on proxies, load balancers, edge infrastructure and edge security"
+    },
+    {
+     "title": "Fine-Grained Traffic Routing for Microservice Migration",
+     "url": "https://medium.com/walmartglobaltech/fine-grained-traffic-routing-for-microservice-migration-065bab8460ca",
+     "kind": "blog",
+     "note": "Walmart Global Tech: path-based routing with Torbit"
+    }
+   ],
+   "steps": null,
+   "uses": null
   },
   {
    "id": "queue",
@@ -856,8 +1442,8 @@
      "note": "Work queues, pub/sub, routing, RPC"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "stream",
@@ -927,8 +1513,8 @@
      "note": "Martin Fowler: four different patterns under one name"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "cache",
@@ -998,8 +1584,283 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "kafka",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "integration",
+   "title": "Apache Kafka Deep Dive",
+   "subtitle": "Brokers · topics · partitions · consumer groups · KRaft",
+   "lego": "The master conveyor belt, split into parallel lanes (partitions). Each lane keeps its pieces in order, and every station bookmarks how far down each lane it has read.",
+   "summary": "A topic is split into partitions. Each partition is an ordered, append-only log stored on a leader broker and replicated to followers; the in-sync replica set is the ISR. Producers choose the partition by key hash, and batch and compress records. Consumers in a group split the partitions between them (one partition to at most one consumer in the group) and commit offsets. Retention is by time or size, or by compaction to the latest value per key. KRaft (a Raft metadata quorum) has replaced ZooKeeper. Kafka Connect moves data in and out; Kafka Streams and Flink process it.",
+   "sections": [
+    {
+     "title": "Durability knobs",
+     "items": [
+      "Producer acks=all, enable.idempotence=true, and topic min.insync.replicas=2 with replication factor 3 means no loss if one broker dies.",
+      "Transactions plus read_committed consumers give exactly-once read-process-write within Kafka."
+     ]
+    },
+    {
+     "title": "Sizing and scaling",
+     "items": [
+      "Partitions cap consumer parallelism. Choose for peak throughput per consumer, with headroom, because adding partitions later reshuffles key-to-partition mapping.",
+      "Key by the entity whose events must stay ordered (order_id, driver_id), and watch for skew."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Consumer rebalances: a slow handler exceeds max.poll.interval.ms, the consumer is kicked out, partitions move, lag spikes. Decouple polling from processing.",
+      "Under-replicated partitions and unclean leader election lead to data loss. Keep unclean.leader.election.enable=false.",
+      "Poison messages block a partition. Route them to a dead-letter topic after N retries."
+     ]
+    },
+    {
+     "title": "At Walmart",
+     "items": [
+      "Walmart describes 25,000+ Kafka consumers processing trillions of messages a day. Its Messaging Proxy Service decouples consumption from processing to avoid rebalance-driven lag."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Apache Kafka documentation",
+     "url": "https://kafka.apache.org/documentation/",
+     "kind": "docs",
+     "note": "Design, replication, delivery semantics"
+    },
+    {
+     "title": "KIP-500: Replace ZooKeeper with a Self-Managed Metadata Quorum",
+     "url": "https://cwiki.apache.org/confluence/display/KAFKA/KIP-500%3A+Replace+ZooKeeper+with+a+Self-Managed+Metadata+Quorum",
+     "kind": "docs",
+     "note": "KRaft"
+    },
+    {
+     "title": "Reliably Processing Trillions of Kafka Messages Per Day",
+     "url": "https://medium.com/walmartglobaltech/reliably-processing-trillions-of-kafka-messages-per-day-23494f553ef9",
+     "kind": "blog",
+     "note": "Walmart Global Tech"
+    },
+    {
+     "title": "Apache Kafka for Item Setup",
+     "url": "https://medium.com/walmartglobaltech/apache-kafka-for-item-setup-3fe8f4ba5967",
+     "kind": "blog",
+     "note": "Walmart Global Tech"
+    },
+    {
+     "title": "The Log: What every software engineer should know about real-time data's unifying abstraction",
+     "url": "https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying",
+     "kind": "blog",
+     "note": "Jay Kreps"
+    },
+    {
+     "title": "Exactly-once Semantics Are Possible: Here's How Kafka Does It",
+     "url": "https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/",
+     "kind": "blog",
+     "note": "Confluent"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "distcache",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "integration",
+   "title": "Distributed Cache",
+   "subtitle": "Redis Cluster · Memcached pools · Netflix EVCache · client-side sharding",
+   "lego": "Many arm's-reach shelves spread down a long table, with a rule that tells every builder which shelf a given piece lives on, and spare shelves that hold copies.",
+   "summary": "When one cache node isn't enough memory or throughput, keys are partitioned across many nodes. Redis Cluster uses 16,384 hash slots assigned to primaries with replicas; Memcached uses client-side consistent hashing, often through a proxy such as mcrouter or twemproxy. Replicas and zone-aware copies add availability, and cross-region replication (for example through Kafka, as in Netflix EVCache) keeps global caches warm. A near cache (in-process L1) in front of the distributed L2 absorbs the hottest keys.",
+   "sections": [
+    {
+     "title": "Design choices",
+     "items": [
+      "Sharding: Redis Cluster hash slots or consistent hashing, so adding a node moves only about 1/N of keys.",
+      "Replication: a replica per shard for failover, and copies in each zone so reads stay local.",
+      "Consistency: invalidate on write (preferably driven by change data capture), TTL as a safety net, versioned keys for immutable data."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Hot keys: one shard melts while the rest idle. Replicate hot keys, add an L1 near cache, or split the key.",
+      "Node loss or resharding means a cold slice and a database spike. Warm the cache gradually and coalesce requests.",
+      "Big values or keys (multi-MB) cause latency spikes and network saturation.",
+      "Multi-key operations fail across slots in Redis Cluster. Use hash tags {user42}:… to co-locate keys."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Redis cluster specification",
+     "url": "https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/",
+     "kind": "docs",
+     "note": "Hash slots, failover, redirection"
+    },
+    {
+     "title": "A large scale analysis of hundreds of in-memory cache clusters at Twitter (OSDI 2020)",
+     "url": "https://www.usenix.org/conference/osdi20/presentation/yang",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Caching for a Global Netflix",
+     "url": "https://netflixtechblog.com/caching-for-a-global-netflix-7bcc457012f1",
+     "kind": "blog",
+     "note": "EVCache cross-region replication through Kafka"
+    },
+    {
+     "title": "How we rebuilt the Walmart Autocomplete Backend",
+     "url": "https://medium.com/walmartglobaltech/how-we-rebuilt-the-walmart-autocomplete-backend-10efe71d624a",
+     "kind": "blog",
+     "note": "Walmart: Memcached-backed index, daily writer, geo-replicated readers"
+    },
+    {
+     "title": "Scaling Memcache at Facebook",
+     "url": "https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "twemproxy",
+     "url": "https://github.com/twitter/twemproxy",
+     "kind": "tool",
+     "note": "Sharding proxy for Memcached and Redis"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "prometheus",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "observability",
+   "title": "Metrics & Alerting: Prometheus",
+   "subtitle": "Prometheus · Grafana · Alertmanager · Thanos / Mimir",
+   "lego": "Gauges clipped onto every brick, read every few seconds and written into a logbook, with an alarm bell when a needle crosses the red line.",
+   "summary": "Prometheus pulls (scrapes) metrics over HTTP from /metrics endpoints every 15–60 s and stores them as time series identified by a metric name and labels, in a compressed time-series database. The metric types are counters, gauges, histograms and summaries. You query with PromQL, for example rate(http_requests_total[5m]) and histogram_quantile(0.99, …). Alertmanager deduplicates and routes alerts. Grafana draws dashboards. Thanos, Cortex or Mimir add long-term, global, highly available storage.",
+   "sections": [
+    {
+     "title": "What to measure",
+     "items": [
+      "RED for services: request Rate, Errors, Duration (as histograms, for p50/p95/p99).",
+      "USE for resources: Utilization, Saturation, Errors (CPU, memory, disk, GPU, queue depth).",
+      "The four golden signals: latency, traffic, errors, saturation. Alert on SLO burn rate, not on raw CPU."
+     ]
+    },
+    {
+     "title": "For LLM serving",
+     "items": [
+      "Time to first token (TTFT), time per output token (TPOT), tokens per second, running and waiting requests, KV-cache usage, GPU utilization (DCGM exporter). vLLM, SGLang and Triton expose Prometheus metrics."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Cardinality explosion: putting user_id or request_id in labels creates millions of series and exhausts memory.",
+      "Averages hide tails. Averaging precomputed quantiles across instances is mathematically wrong; aggregate histograms instead."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Prometheus overview",
+     "url": "https://prometheus.io/docs/introduction/overview/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Histograms and summaries",
+     "url": "https://prometheus.io/docs/practices/histograms/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Monitoring Distributed Systems (Google SRE book)",
+     "url": "https://sre.google/sre-book/monitoring-distributed-systems/",
+     "kind": "book",
+     "note": "The four golden signals"
+    },
+    {
+     "title": "Gorilla: A Fast, Scalable, In-Memory Time Series Database (VLDB 2015)",
+     "url": "https://www.vldb.org/pvldb/vol8/p1816-teller.pdf",
+     "kind": "paper",
+     "note": "Compression used by Prometheus's TSDB"
+    },
+    {
+     "title": "The RED Method: how to instrument your services",
+     "url": "https://grafana.com/blog/2018/08/02/the-red-method-how-to-instrument-your-services/",
+     "kind": "blog",
+     "note": "Tom Wilkie"
+    },
+    {
+     "title": "The USE Method",
+     "url": "https://www.brendangregg.com/usemethod.html",
+     "kind": "blog",
+     "note": "Brendan Gregg"
+    },
+    {
+     "title": "Thanos",
+     "url": "https://thanos.io/",
+     "kind": "tool",
+     "note": "Highly available, long-term Prometheus"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "tracing",
+   "kind": "brick",
+   "module": "bricks",
+   "group": "observability",
+   "title": "Distributed Tracing & Logs",
+   "subtitle": "OpenTelemetry · Jaeger · Tempo · structured logging",
+   "lego": "A tracer dye on one peg, so you can watch exactly which bricks it passed through and how long it paused at each.",
+   "summary": "A trace follows one request across services as a tree of spans (with service, operation, duration and attributes), linked by a trace ID propagated in headers (W3C traceparent). OpenTelemetry is the vendor-neutral standard: SDKs plus a Collector for traces, metrics and logs. Sampling (head-based or tail-based) keeps costs sane. Structured JSON logs that carry the trace ID tie the three signals together.",
+   "sections": [
+    {
+     "title": "Use it for",
+     "items": [
+      "Finding which hop inflated the p99, spotting fan-out N+1 calls, and tracing a request through gateway, mesh, model server and database."
+     ]
+    },
+    {
+     "title": "Watch out",
+     "items": [
+      "Missing context propagation (async queues, thread pools) breaks traces. Pass the context through Kafka headers.",
+      "Log volume costs: sample debug logs and never log prompts or PII by default."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "OpenTelemetry documentation",
+     "url": "https://opentelemetry.io/docs/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Dapper, a Large-Scale Distributed Systems Tracing Infrastructure",
+     "url": "https://research.google/pubs/dapper-a-large-scale-distributed-systems-tracing-infrastructure/",
+     "kind": "paper",
+     "note": "Google, 2010"
+    },
+    {
+     "title": "Jaeger",
+     "url": "https://www.jaegertracing.io/",
+     "kind": "tool",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
   },
   {
    "id": "scaling",
@@ -1040,8 +1901,8 @@
      "note": "Jeff Dean, LADIS 2009 keynote"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "stateless",
@@ -1076,8 +1937,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "replication",
@@ -1124,8 +1985,8 @@
      "note": "Sloppy quorums and hinted handoff"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "sharding",
@@ -1179,8 +2040,8 @@
      "note": "Sharding middleware for MySQL, from YouTube"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "consistenthashing",
@@ -1220,8 +2081,8 @@
      "note": "Maglev hashing"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "cap",
@@ -1262,8 +2123,8 @@
      "note": "Daniel Abadi, IEEE Computer 2012"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "consistency",
@@ -1298,8 +2159,8 @@
      "note": "A clickable map of the hierarchy"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "cachingpatterns",
@@ -1347,8 +2208,8 @@
      "note": "Request coalescing at the edge for Facebook Live"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "sagas",
@@ -1395,8 +2256,8 @@
      "note": "Pat Helland, ACM Queue"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "idgen",
@@ -1442,8 +2303,8 @@
      "note": "IDs generated inside Postgres"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "idempotency",
@@ -1484,8 +2345,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "retries",
@@ -1525,8 +2386,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "circuitbreaker",
@@ -1566,8 +2427,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "ratelimiting",
@@ -1602,8 +2463,8 @@
      "note": "Cloudflare's sliding-window approximation"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "backpressure",
@@ -1644,8 +2505,8 @@
      "note": "Fred Hebert"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "delivery",
@@ -1678,8 +2539,8 @@
      "note": "Amazon Builders' Library: the eight failure points of one request"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "latency",
@@ -1719,8 +2580,8 @@
      "note": "Jeff Dean, LADIS 2009"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "estimation",
@@ -1804,8 +2665,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "uber",
@@ -1827,11 +2688,13 @@
    "uses": [
     "apigateway",
     "stream",
+    "kafka",
     "containers",
     "cache",
     "serverless",
     "queue",
     "nosql",
+    "cassandra",
     "idempotency"
    ],
    "sections": [
@@ -1922,7 +2785,10 @@
     "queue",
     "rdbms",
     "idempotency",
-    "sagas"
+    "sagas",
+    "distcache",
+    "istio",
+    "prometheus"
    ],
    "sections": [
     {
@@ -2110,6 +2976,7 @@
     "containers",
     "cache",
     "nosql",
+    "cassandra",
     "stream",
     "queue",
     "sharding"
@@ -2334,8 +3201,8 @@
      "note": "Weekly deep dives"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "read-alexxu",
@@ -2363,8 +3230,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "read-ddia",
@@ -2398,8 +3265,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "read-netflix",
@@ -2439,8 +3306,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "read-uber",
@@ -2486,8 +3353,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "read-airbnb",
@@ -2515,8 +3382,8 @@
      "note": "Search for 'Building Services at Airbnb' and 'Avoiding Double Payments'"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "read-counterpoint",
@@ -2550,8 +3417,8 @@
      "note": "James Lewis and Martin Fowler"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "read-sre",
@@ -2591,8 +3458,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "paper-gfs",
@@ -2620,8 +3487,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "paper-mapreduce",
@@ -2648,8 +3515,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "paper-bigtable",
@@ -2677,8 +3544,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "paper-dynamo",
@@ -2712,8 +3579,8 @@
      "note": "How the managed service differs from the 2007 design"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "paper-log",
@@ -2747,8 +3614,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "paper-spanner",
@@ -2775,8 +3642,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "paper-raft",
@@ -2815,8 +3682,8 @@
      "note": "Leslie Lamport"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "paper-memcache",
@@ -2844,8 +3711,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "paper-tail",
@@ -2872,8 +3739,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "cad-tools",
@@ -2926,8 +3793,8 @@
      "note": "Simon Brown"
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "cad-trafficflow",
@@ -3257,8 +4124,8 @@
      "note": null
     }
    ],
-   "uses": null,
-   "steps": null
+   "steps": null,
+   "uses": null
   },
   {
    "id": "chaos-dbcrash",
@@ -3497,6 +4364,2584 @@
     {
      "title": "AWS Fault Injection Service",
      "url": "https://aws.amazon.com/fis/",
+     "kind": "tool",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "streamprocessing",
+   "kind": "brick",
+   "module": "data",
+   "group": "streaming",
+   "title": "Stream Processing",
+   "subtitle": "Apache Flink · Spark Structured Streaming · Kafka Streams · Google Dataflow (Beam)",
+   "lego": "Robots standing beside the conveyor belt that sort, count and combine pieces as they fly past, instead of waiting for the belt to stop.",
+   "summary": "Stream processing runs continuous computations over unbounded event streams: filters, enrichments, joins, and windowed aggregations (tumbling, sliding, session). Event time vs processing time matters. Watermarks estimate when a window has seen all its data, and allowed lateness plus triggers decide what to do with stragglers. State (counts, joins) lives in local stores such as RocksDB, and periodic distributed snapshots (Flink checkpoints) give exactly-once state on failure.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Real-time features (clicks in the last 5 minutes), fraud detection, live dashboards, inventory and price propagation, alerting.",
+      "Continuously materializing views into a cache, a search index or an OLAP store."
+     ]
+    },
+    {
+     "title": "Trade-offs",
+     "items": [
+      "Harder to test and operate than batch. State migrations and reprocessing need planning.",
+      "Exactly-once holds end to end only with transactional or idempotent sinks."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Backpressure from a slow sink stalls the whole job and consumer lag grows.",
+      "State grows without bound from joins with no TTL, and checkpoints get slower and slower.",
+      "A skewed key (one mega-merchant) pins one task while the others idle."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "The Dataflow Model (VLDB 2015)",
+     "url": "https://research.google/pubs/the-dataflow-model-a-practical-approach-to-balancing-correctness-latency-and-cost-in-massive-scale-unbounded-out-of-order-data-processing/",
+     "kind": "paper",
+     "note": "Windows, watermarks, triggers"
+    },
+    {
+     "title": "Streaming 101: The world beyond batch",
+     "url": "https://www.oreilly.com/radar/the-world-beyond-batch-streaming-101/",
+     "kind": "blog",
+     "note": "Tyler Akidau"
+    },
+    {
+     "title": "Lightweight Asynchronous Snapshots for Distributed Dataflows",
+     "url": "https://arxiv.org/abs/1506.08603",
+     "kind": "paper",
+     "note": "Flink's checkpointing algorithm"
+    },
+    {
+     "title": "Structured Streaming: A Declarative API for Real-Time Applications in Apache Spark (SIGMOD 2018)",
+     "url": "https://people.eecs.berkeley.edu/~matei/papers/2018/sigmod_structured_streaming.pdf",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Apache Flink documentation",
+     "url": "https://nightlies.apache.org/flink/flink-docs-stable/",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "cdc",
+   "kind": "brick",
+   "module": "data",
+   "group": "streaming",
+   "title": "Change Data Capture (CDC)",
+   "subtitle": "Debezium · Datastream · Netflix DBLog · Kafka Connect",
+   "lego": "A camera pointed at the database's diary, copying every line to the conveyor belt the moment it's written.",
+   "summary": "CDC tails the database's replication log (Postgres WAL, MySQL binlog) and emits every insert, update and delete as an ordered event, usually into Kafka. Downstream systems (search index, cache invalidation, data lake, feature store) stay in sync without dual writes from the application. An initial snapshot plus the ongoing log gives a complete copy.",
+   "sections": [
+    {
+     "title": "Use it for",
+     "items": [
+      "Feeding the lakehouse and BigQuery in near-real time, invalidating caches, updating search indexes, publishing outbox events."
+     ]
+    },
+    {
+     "title": "Watch out",
+     "items": [
+      "Schema changes flow downstream. Use a schema registry with compatibility rules.",
+      "Replication slots that aren't consumed make the source database retain WAL until its disk fills."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Debezium documentation",
+     "url": "https://debezium.io/documentation/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "DBLog: A Watermark Based Change-Data-Capture Framework",
+     "url": "https://arxiv.org/abs/2010.12597",
+     "kind": "paper",
+     "note": "Netflix"
+    },
+    {
+     "title": "Pattern: Transactional outbox",
+     "url": "https://microservices.io/patterns/data/transactional-outbox.html",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "lambdakappa",
+   "kind": "brick",
+   "module": "data",
+   "group": "streaming",
+   "title": "Lambda vs Kappa Architecture",
+   "subtitle": "Batch plus speed layer, or one streaming path with replay",
+   "lego": "Build the model twice (a careful overnight version plus a quick live sketch), or build it once on the conveyor belt and simply rewind the belt when you need to rebuild.",
+   "summary": "The Lambda architecture runs a batch layer (accurate, recomputed daily) and a speed layer (approximate, real time), and merges them at query time. The cost is two codebases that drift apart. The Kappa architecture uses a single stream-processing path over a replayable log (Kafka with long retention, or a lakehouse table), and reprocesses by replaying into a new version of the job. Modern stacks often blend the two: streaming for freshness, and a lakehouse where batch and streaming read and write the same tables.",
+   "sections": [
+    {
+     "title": "Choose",
+     "items": [
+      "Lambda when batch logic is heavy (large ML training features) and a streaming approximation is acceptable.",
+      "Kappa when one codebase and one source of truth matter more, and replay is affordable."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Questioning the Lambda Architecture",
+     "url": "https://www.oreilly.com/radar/questioning-the-lambda-architecture/",
+     "kind": "blog",
+     "note": "Jay Kreps coins Kappa"
+    },
+    {
+     "title": "The Log: What every software engineer should know",
+     "url": "https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying",
+     "kind": "blog",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "spark",
+   "kind": "brick",
+   "module": "data",
+   "group": "batch",
+   "title": "Apache Spark",
+   "subtitle": "Spark SQL / DataFrames · Dataproc · Databricks · EMR",
+   "lego": "A crew of a hundred builders who each take a pile of pieces, sort them in parallel, swap pieces with each other when needed, and hand back one finished model.",
+   "summary": "A distributed compute engine. A driver turns your DataFrame or SQL code into a DAG of stages. Narrow transformations (map, filter) run in parallel per partition; wide ones (groupBy, join) shuffle data across the network between stages. The Catalyst optimizer and Tungsten execution engine generate efficient plans, and Adaptive Query Execution (AQE) re-plans at runtime: it coalesces partitions, switches join strategies and splits skewed partitions. Spark reads and writes Parquet, ORC, Iceberg and Delta tables on GCS, S3 or HDFS, and also runs Structured Streaming and MLlib.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Batch ETL and ELT over GBs to PBs, feature engineering for training, large joins and aggregations, backfills.",
+      "Batch scoring, or preparing data for Ray and GPU training jobs."
+     ]
+    },
+    {
+     "title": "Performance levers",
+     "items": [
+      "Avoid shuffles. Broadcast small tables in joins, and filter and project early (predicate pushdown into Parquet).",
+      "Right-size partitions (about 128–256 MB each). Fix skew with AQE skew joins or by salting hot keys.",
+      "Cache only what is reused. Use columnar formats and partition tables by date."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Executor OOM from skew or huge shuffles. Driver OOM from collect() on big data.",
+      "The small-files problem: thousands of tiny outputs slow every downstream job. Compact them.",
+      "Spot or preemptible executor loss causes recomputation. Enable graceful decommissioning and checkpoints for long lineages."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Resilient Distributed Datasets (NSDI 2012)",
+     "url": "https://www.usenix.org/conference/nsdi12/technical-sessions/presentation/zaharia",
+     "kind": "paper",
+     "note": "The original Spark paper"
+    },
+    {
+     "title": "Spark SQL: Relational Data Processing in Spark (SIGMOD 2015)",
+     "url": "https://people.csail.mit.edu/matei/papers/2015/sigmod_spark_sql.pdf",
+     "kind": "paper",
+     "note": "The Catalyst optimizer"
+    },
+    {
+     "title": "Spark SQL performance tuning (AQE)",
+     "url": "https://spark.apache.org/docs/latest/sql-performance-tuning.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Tuning Spark",
+     "url": "https://spark.apache.org/docs/latest/tuning.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Adaptive Query Execution: Speeding Up Spark SQL at Runtime",
+     "url": "https://www.databricks.com/blog/2020/05/29/adaptive-query-execution-speeding-up-spark-sql-at-runtime.html",
+     "kind": "blog",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "orchestration",
+   "kind": "brick",
+   "module": "data",
+   "group": "batch",
+   "title": "Workflow Orchestration",
+   "subtitle": "Apache Airflow · Cloud Composer · Dagster · Argo Workflows",
+   "lego": "The foreman's schedule board: which crew builds which section, in what order, at what time, and what to redo when a section collapses.",
+   "summary": "An orchestrator defines pipelines as DAGs of tasks with dependencies, schedules them (cron, data-aware or event triggers), retries failures, backfills historical intervals, and records run state and lineage. Airflow (Cloud Composer on GCP) is the de facto standard. Dagster is asset-centric, and Argo runs Kubernetes-native steps. Tasks should call out to engines (Spark, BigQuery, Ray); the orchestrator coordinates, it doesn't compute.",
+   "sections": [
+    {
+     "title": "Best practices",
+     "items": [
+      "Make every task idempotent and parameterized by the logical date: overwrite the partition for that date, never append blindly.",
+      "Keep DAG files lightweight (no heavy imports or queries at parse time). Pass pointers such as GCS paths between tasks, not data.",
+      "Use sensors or deferrable operators for upstream data, set SLAs and alerting, and cap concurrency so backfills don't overload the warehouse."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Apache Airflow documentation",
+     "url": "https://airflow.apache.org/docs/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Airflow best practices",
+     "url": "https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Dagster documentation",
+     "url": "https://docs.dagster.io/",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "lakehouse",
+   "kind": "brick",
+   "module": "data",
+   "group": "batch",
+   "title": "Lakehouse Table Formats",
+   "subtitle": "Apache Iceberg · Delta Lake · Apache Hudi · BigLake",
+   "lego": "Adds an inventory ledger to the giant storage bins, so everyone agrees exactly which pieces make up version 42 of the model, even while others add pieces.",
+   "summary": "Open table formats put a transactional metadata layer (snapshots, manifests, a transaction log) over Parquet files in object storage. They provide ACID commits with concurrent writers, schema evolution, hidden partitioning, time travel ('as of' queries), row-level upserts and deletes (MERGE), and compaction. Spark, Flink, Trino and BigQuery can all share the same tables. That brings warehouse reliability to cheap lake storage.",
+   "sections": [
+    {
+     "title": "Use it for",
+     "items": [
+      "Bronze/silver/gold (raw → cleaned → aggregated) zones on GCS or S3. Streaming upserts from CDC. Reproducible training sets through time travel."
+     ]
+    },
+    {
+     "title": "Maintenance",
+     "items": [
+      "Compact small files, expire old snapshots, and clean up orphan files on a schedule. Otherwise metadata and storage costs balloon."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Apache Iceberg documentation",
+     "url": "https://iceberg.apache.org/docs/latest/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Delta Lake: High-Performance ACID Table Storage over Cloud Object Stores (VLDB 2020)",
+     "url": "https://www.vldb.org/pvldb/vol13/p3411-armbrust.pdf",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Lakehouse: A New Generation of Open Platforms (CIDR 2021)",
+     "url": "https://www.cidrdb.org/cidr2021/papers/cidr2021_paper17.pdf",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Apache Hudi overview",
+     "url": "https://hudi.apache.org/docs/overview",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "warehouse",
+   "kind": "brick",
+   "module": "data",
+   "group": "batch",
+   "title": "Columnar Formats & Warehouses",
+   "subtitle": "Parquet · ORC · BigQuery · Snowflake · Apache Pinot / Druid",
+   "lego": "Store all the red pieces together, all the blue pieces together, and so on, so a question about only red pieces never has to open the other drawers.",
+   "summary": "Columnar storage keeps each column contiguous and compressed (dictionary, run-length and bit-packing encodings), with min/max statistics per row group. Queries read only the columns they need and skip blocks that can't match. Warehouses such as BigQuery (built on Dremel) separate storage from compute and run massively parallel SQL. Real-time OLAP engines (Pinot, Druid, ClickHouse) serve sub-second analytics on fresh streaming data.",
+   "sections": [
+    {
+     "title": "Design tips",
+     "items": [
+      "Partition by date and cluster or sort by common filter columns. Avoid SELECT * on wide tables because you pay per byte scanned.",
+      "Use a warehouse for analysts and BI. Use OLAP engines for user-facing, high-QPS dashboards."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Apache Parquet documentation",
+     "url": "https://parquet.apache.org/docs/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Dremel: A Decade of Interactive SQL Analysis at Web Scale (VLDB 2020)",
+     "url": "https://www.vldb.org/pvldb/vol13/p3461-melnik.pdf",
+     "kind": "paper",
+     "note": "The engine behind BigQuery"
+    },
+    {
+     "title": "BigQuery overview",
+     "url": "https://cloud.google.com/bigquery/docs/introduction",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Apache Pinot documentation",
+     "url": "https://docs.pinot.apache.org/",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "batchprinciples",
+   "kind": "brick",
+   "module": "data",
+   "group": "batch",
+   "title": "Batch Pipeline Design Principles",
+   "subtitle": "Idempotency · backfills · late data · data quality · lineage",
+   "lego": "Instructions written so that any step can be redone from scratch on any day and produce exactly the same section of the model.",
+   "summary": "Reliable batch pipelines follow a few rules. Treat each run as a pure function of its input partitions: an idempotent overwrite of the output partition for the logical date. Keep raw data immutable so you can recompute anything. Make backfills a first-class operation. Handle late-arriving data by reprocessing a trailing window. Put data-quality checks (row counts, null rates, schema, freshness, distribution drift) as gates between stages. Record lineage so you know what to rerun when an upstream table is fixed.",
+   "sections": [
+    {
+     "title": "Checklist",
+     "items": [
+      "Write to a staging location, validate, then atomically swap or commit (table-format commit or partition overwrite).",
+      "Use data contracts and a schema registry between producing and consuming teams.",
+      "Set freshness SLAs per table, with alerts before consumers notice.",
+      "Size for the backfill case: 90 days at once, with capped concurrency."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Append-only reruns double-count. Silent schema changes produce null columns. A job that 'succeeds' on empty input overwrites good data with nothing."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Airflow best practices",
+     "url": "https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html",
+     "kind": "docs",
+     "note": "Idempotent, deterministic tasks"
+    },
+    {
+     "title": "Great Expectations documentation",
+     "url": "https://docs.greatexpectations.io/",
+     "kind": "docs",
+     "note": "Data-quality tests"
+    },
+    {
+     "title": "OpenLineage",
+     "url": "https://openlineage.io/",
+     "kind": "docs",
+     "note": "Open standard for lineage"
+    },
+    {
+     "title": "Questioning the Lambda Architecture",
+     "url": "https://www.oreilly.com/radar/questioning-the-lambda-architecture/",
+     "kind": "blog",
+     "note": "Reprocessing by replay"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "batch-etl",
+   "kind": "build",
+   "module": "data",
+   "group": "pipelinebuilds",
+   "title": "Daily Batch ETL to the Lakehouse",
+   "subtitle": "GCS + Spark + Iceberg + Airflow + BigQuery",
+   "lego": "Every night the crew unloads the day's delivery trucks, sorts the pieces into labelled bins, checks nothing is broken, and updates the showroom by morning.",
+   "summary": "Every night, ingest the previous day's orders, clickstream and inventory snapshots (about 5 TB) from operational systems. Clean, join and aggregate them into analytics tables and ML training features, available by 6 AM with guaranteed correctness and the ability to backfill any day.",
+   "steps": [
+    "Land raw data in a GCS bronze bucket partitioned by dt=YYYY-MM-DD: database exports or CDC from Kafka via Kafka Connect, plus event files. Raw data is immutable.",
+    "An Airflow (Cloud Composer) DAG runs per logical date, with sensors waiting for each upstream partition.",
+    "Spark jobs on Dataproc clean and deduplicate into silver Iceberg tables, using MERGE on business keys so reruns are idempotent.",
+    "Data-quality gates (row counts against the prior 7 days, null rates, schema, freshness) must pass. On failure, stop and alert rather than publish.",
+    "Gold aggregates and features are written as a partition overwrite for that date, then exposed to BigQuery as BigLake or external tables.",
+    "Publish a 'dataset ready' event (Pub/Sub or Kafka) that triggers downstream training and feature materialization. Lineage is recorded."
+   ],
+   "uses": [
+    "gcs",
+    "kafka",
+    "cdc",
+    "orchestration",
+    "spark",
+    "lakehouse",
+    "warehouse",
+    "batchprinciples"
+   ],
+   "sections": [
+    {
+     "title": "Numbers",
+     "items": [
+      "5 TB a day of raw input over a 4-hour window needs about 350 MB/s sustained, which is roughly 50–100 executors depending on the transforms."
+     ]
+    },
+    {
+     "title": "Break it",
+     "items": [
+      "An upstream table arrives 3 hours late: sensors wait, the freshness SLA alert fires, and the pipeline catches up without manual reruns.",
+      "A bug is found in the silver logic from last month: backfill 30 dates with capped concurrency. Every task overwrites its partition, so nothing is double-counted."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Airflow best practices",
+     "url": "https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Apache Iceberg documentation",
+     "url": "https://iceberg.apache.org/docs/latest/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Spark SQL performance tuning",
+     "url": "https://spark.apache.org/docs/latest/sql-performance-tuning.html",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "clickstream-realtime",
+   "kind": "build",
+   "module": "data",
+   "group": "pipelinebuilds",
+   "title": "Real-Time Clickstream Analytics",
+   "subtitle": "Kafka → Flink → OLAP + lakehouse",
+   "lego": "Count every visitor's footsteps as they walk through the store, and put the live tally on a big board at the entrance.",
+   "summary": "Show merchants live dashboards (views, add-to-carts and conversion per product in the last 1–60 minutes) over 500,000 events per second, while keeping the full history for batch analytics and ML.",
+   "steps": [
+    "Web and app SDKs send events to a collector behind the edge and gateway, which validates the schema and produces to Kafka keyed by session or product.",
+    "A Flink job deduplicates by event ID, enriches from a cached product dimension, and computes event-time windowed aggregates with watermarks.",
+    "Aggregates are upserted into a real-time OLAP store (Pinot or Druid) that serves dashboard queries in under a second.",
+    "Raw events also stream into an Iceberg table on GCS (the lake sink) for nightly batch jobs and ML features.",
+    "Late events inside the allowed lateness update the windows. Later ones are fixed by the nightly batch recompute."
+   ],
+   "uses": [
+    "apigateway",
+    "kafka",
+    "streamprocessing",
+    "distcache",
+    "warehouse",
+    "lakehouse",
+    "gcs",
+    "lambdakappa"
+   ],
+   "sections": [
+    {
+     "title": "Break it",
+     "items": [
+      "Kill a Flink TaskManager: the job restores from its checkpoint and reprocesses from committed Kafka offsets, with no double counts because the sink upserts.",
+      "A viral product creates a hot key: pre-aggregate locally before the keyed shuffle."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Streaming 101: The world beyond batch",
+     "url": "https://www.oreilly.com/radar/the-world-beyond-batch-streaming-101/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Apache Pinot documentation",
+     "url": "https://docs.pinot.apache.org/",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "drill-backfill",
+   "kind": "build",
+   "module": "data",
+   "group": "pipelinebuilds",
+   "title": "Drill: Bad Data & the Big Backfill",
+   "subtitle": "Break your batch pipeline on purpose",
+   "lego": "Sneak a box of wrong-coloured pieces into the delivery and see whether the night crew notices before the showroom opens.",
+   "summary": "In your batch pipeline, inject three faults: an empty upstream file, a column renamed upstream, and duplicated input records. Then run a 60-day backfill. Does bad data reach the gold tables and dashboards, and does the backfill overload anything?",
+   "steps": [
+    "Hypothesis: quality gates block all three faults, and the backfill finishes under the concurrency cap without hurting production jobs.",
+    "Inject the empty file. The row-count check against the trailing average must fail the run before the overwrite.",
+    "Inject the schema rename. Schema validation or the data contract must fail loudly, not produce null columns.",
+    "Inject duplicates. MERGE or deduplication on business keys must keep the gold counts unchanged.",
+    "Run the 60-day backfill with max_active_runs capped, and watch warehouse slots, the Spark cluster and the freshness of today's run."
+   ],
+   "uses": [
+    "batchprinciples",
+    "orchestration",
+    "spark",
+    "lakehouse",
+    "idempotency"
+   ],
+   "sections": [
+    {
+     "title": "The lesson",
+     "items": [
+      "Batch failures are usually silent. A pipeline that errors is better than one that publishes wrong numbers."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Great Expectations documentation",
+     "url": "https://docs.greatexpectations.io/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Airflow best practices",
+     "url": "https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "featurestore",
+   "kind": "brick",
+   "module": "ml",
+   "group": "mlplatform",
+   "title": "Feature Store",
+   "subtitle": "Feast · Vertex AI Feature Store · Tecton · Uber Michelangelo Palette",
+   "lego": "A labelled parts bin that the training crew and the live-build crew both draw from, so the model is trained on exactly the pieces it will see in production.",
+   "summary": "A feature store defines features once and serves them two ways. The offline store (BigQuery, Iceberg) provides point-in-time-correct historical values for training, meaning no future data leaks into past labels. The online store (Redis, Bigtable, Cassandra, DynamoDB) provides the latest values at millisecond latency for inference. Materialization jobs (batch from Spark, streaming from Flink or Kafka) keep the online store fresh. A registry makes features discoverable and reusable across teams.",
+   "sections": [
+    {
+     "title": "Why it exists",
+     "items": [
+      "Training/serving skew: features computed differently in the notebook and in the service silently wreck accuracy.",
+      "Point-in-time joins: each training label must see features as they were at that timestamp."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Stale online features when a materialization job fails. Monitor feature freshness like any SLO.",
+      "Online-store hot keys (a popular item) and cold misses. Serve defaults and alert on the fallback rate."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Meet Michelangelo: Uber's Machine Learning Platform",
+     "url": "https://www.uber.com/blog/michelangelo-machine-learning-platform/",
+     "kind": "blog",
+     "note": "Where the feature-store idea became mainstream"
+    },
+    {
+     "title": "Feast documentation",
+     "url": "https://docs.feast.dev/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Point-in-time joins (Feast)",
+     "url": "https://docs.feast.dev/getting-started/concepts/point-in-time-joins",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Vertex AI Feature Store overview",
+     "url": "https://cloud.google.com/vertex-ai/docs/featurestore/latest/overview",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "mlflow",
+   "kind": "brick",
+   "module": "ml",
+   "group": "mlplatform",
+   "title": "MLflow",
+   "subtitle": "Experiment tracking · Model Registry · packaging · LLM tracing and evaluation",
+   "lego": "The lab notebook and the certified-parts shelf: every experimental build is recorded, and only approved models get a version label and move to the showroom.",
+   "summary": "MLflow tracks experiments (params, metrics, artifacts, code version) and packages models in a standard 'MLmodel' flavor format. Its Model Registry versions models with aliases such as @champion and @challenger, and records lineage back to the run and data. It also provides LLM tracing and evaluation for GenAI apps. The registry is the handoff point between training pipelines and serving (KServe, Triton, Ray Serve, vLLM).",
+   "sections": [
+    {
+     "title": "Patterns",
+     "items": [
+      "CI/CD for models: a training pipeline registers a new version, evaluation gates promote it, and serving picks up the alias.",
+      "Keep training data snapshots (lakehouse time travel) linked to the run for reproducibility."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "MLflow documentation",
+     "url": "https://mlflow.org/docs/latest/index.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "MLflow Model Registry",
+     "url": "https://mlflow.org/docs/latest/model-registry.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Hidden Technical Debt in Machine Learning Systems (NeurIPS 2015)",
+     "url": "https://papers.nips.cc/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html",
+     "kind": "paper",
+     "note": "Why ML platforms exist"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "ray",
+   "kind": "brick",
+   "module": "ml",
+   "group": "mlplatform",
+   "title": "Ray",
+   "subtitle": "Ray Core · Ray Data · Ray Train · Ray Serve · KubeRay",
+   "lego": "A universal connector brick that lets you turn any Python function into a crew of builders spread across dozens of machines and GPUs.",
+   "summary": "Ray is a distributed Python runtime. Tasks are stateless remote functions and actors are stateful workers, scheduled over a cluster with CPU and GPU resource awareness and an object store for passing data. On top of it: Ray Data streams heterogeneous CPU and GPU pipelines (ideal for batch inference), Ray Train does distributed training, Ray Tune does hyperparameter search, and Ray Serve does online model serving with composition and autoscaling. It runs on Kubernetes via KubeRay, and many LLM stacks use it for multi-node vLLM.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Python-native ML workloads that Spark handles poorly: GPU batch inference, RL, many-model training, LLM fine-tuning, multi-model serving graphs."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Object store spilling or OOM from oversized objects. Head node as a single point of failure (use GCS fault tolerance). Idle GPUs from an under-fed CPU preprocessing stage."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Ray: A Distributed Framework for Emerging AI Applications (OSDI 2018)",
+     "url": "https://www.usenix.org/conference/osdi18/presentation/moritz",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Ray documentation",
+     "url": "https://docs.ray.io/en/latest/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Ray Data: batch inference",
+     "url": "https://docs.ray.io/en/latest/data/batch_inference.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Ray Serve",
+     "url": "https://docs.ray.io/en/latest/serve/index.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "KubeRay",
+     "url": "https://docs.ray.io/en/latest/cluster/kubernetes/index.html",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "mlpipelines",
+   "kind": "brick",
+   "module": "ml",
+   "group": "mlplatform",
+   "title": "ML Pipelines & Model Lifecycle",
+   "subtitle": "Kubeflow Pipelines · Vertex AI Pipelines · TFX · monitoring and drift",
+   "lego": "The assembly line from raw pieces to the showroom: prep, train, test, certify, ship, and keep watching whether customers still like it.",
+   "summary": "Production ML is a loop: ingest and validate data, compute features, train, evaluate against the current champion, register, deploy (shadow, canary, A/B), then monitor for data drift, prediction drift and business metrics, which triggers retraining. Pipelines as code (Kubeflow, Vertex AI, TFX) make every step reproducible and schedulable.",
+   "sections": [
+    {
+     "title": "Checklist",
+     "items": [
+      "Data validation before training. Evaluation gates on sliced metrics, not just the global average.",
+      "Shadow traffic before a canary. Keep the previous model warm for instant rollback.",
+      "Log features and predictions at serving time to build the next training set (with a feedback loop)."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "MLOps: Continuous delivery and automation pipelines in ML",
+     "url": "https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning",
+     "kind": "docs",
+     "note": "Google Cloud architecture guide"
+    },
+    {
+     "title": "Kubeflow Pipelines",
+     "url": "https://www.kubeflow.org/docs/components/pipelines/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "The ML Test Score: A Rubric for ML Production Readiness",
+     "url": "https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "llminference",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "LLM Inference Fundamentals",
+   "subtitle": "Prefill vs decode · KV cache · TTFT / TPOT · memory-bandwidth bound",
+   "lego": "The model reads the whole instruction booklet in one gulp (prefill), then adds one brick at a time (decode), keeping every page it has read open on the table (the KV cache).",
+   "summary": "Generation has two phases. Prefill processes the whole prompt in parallel. It is compute-bound and sets time-to-first-token (TTFT). Decode produces one token per step per sequence. It is memory-bandwidth-bound, because every step reads all the weights plus the KV cache, and it sets time-per-output-token (TPOT) or inter-token latency. The KV cache stores the attention keys and values of every past token. Its size is 2 × layers × kv_heads × head_dim × bytes × tokens, and it usually limits how many requests fit on a GPU. Throughput comes from batching many sequences so the weight reads are shared.",
+   "sections": [
+    {
+     "title": "Napkin math",
+     "items": [
+      "An 8B model in FP16 is about 16 GB of weights. At about 3.3 TB/s (H100), a single sequence's decode is limited to roughly 200 tokens/s.",
+      "Llama-3-8B KV cache (32 layers, 8 KV heads, 128 head dim, FP16) is about 128 KB per token, so a 4k-token context is about 0.5 GB per request.",
+      "Key metrics: TTFT, TPOT or ITL, end-to-end latency, tokens/s per GPU, goodput (requests meeting their SLO), and KV cache utilization."
+     ]
+    },
+    {
+     "title": "Levers",
+     "items": [
+      "Batch more (continuous batching), shrink the KV cache (GQA, FP8 KV), shrink the weights (quantization), reuse the KV cache (prefix caching), guess ahead (speculative decoding), and split phases (disaggregation)."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Efficiently Scaling Transformer Inference",
+     "url": "https://arxiv.org/abs/2211.05102",
+     "kind": "paper",
+     "note": "Google: the latency/throughput/memory trade-off space"
+    },
+    {
+     "title": "LLM Inference Performance Engineering: Best Practices",
+     "url": "https://www.databricks.com/blog/llm-inference-performance-engineering-best-practices",
+     "kind": "blog",
+     "note": "TTFT, TPOT, MBU explained"
+    },
+    {
+     "title": "Transformer Inference Arithmetic",
+     "url": "https://kipp.ly/transformer-inference-arithmetic/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Attention Is All You Need",
+     "url": "https://arxiv.org/abs/1706.03762",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "contbatching",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Continuous Batching & PagedAttention",
+   "subtitle": "Iteration-level scheduling · paged KV-cache memory",
+   "lego": "Instead of waiting for a whole tray of builds to finish, slot a new build into any seat the moment one finishes. And store every build's open pages in small numbered boxes, not one giant reserved shelf.",
+   "summary": "Static batching waits for the longest sequence, so the GPU idles. Continuous (in-flight) batching, from Orca, schedules at every decode iteration: finished sequences leave and new ones join immediately. PagedAttention (vLLM) stores the KV cache in fixed-size blocks with a block table, like OS virtual memory. That nearly eliminates fragmentation, lets many more sequences fit, and enables copy-on-write sharing for parallel sampling and shared prefixes. Chunked prefill splits long prompts so they don't stall ongoing decodes.",
+   "sections": [
+    {
+     "title": "Tuning knobs",
+     "items": [
+      "max_num_seqs and max_num_batched_tokens, gpu_memory_utilization, chunked prefill on or off, and the preemption mode (recompute or swap) when the KV cache runs out."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Efficient Memory Management for LLM Serving with PagedAttention (SOSP 2023)",
+     "url": "https://arxiv.org/abs/2309.06180",
+     "kind": "paper",
+     "note": "The vLLM paper"
+    },
+    {
+     "title": "Orca: A Distributed Serving System for Transformer-Based Generative Models (OSDI 2022)",
+     "url": "https://www.usenix.org/conference/osdi22/presentation/yu",
+     "kind": "paper",
+     "note": "Iteration-level scheduling"
+    },
+    {
+     "title": "How continuous batching enables 23x throughput in LLM inference",
+     "url": "https://www.anyscale.com/blog/continuous-batching-llm-inference",
+     "kind": "blog",
+     "note": "Anyscale"
+    },
+    {
+     "title": "SARATHI: chunked prefills",
+     "url": "https://arxiv.org/abs/2308.16369",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "vllm",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "vLLM",
+   "subtitle": "High-throughput open-source LLM inference engine",
+   "lego": "The standard motor brick for large models: snap in any open model and it runs fast on the GPUs you have.",
+   "summary": "vLLM is the most widely used open inference engine. It provides PagedAttention, continuous batching, chunked prefill, automatic prefix caching, speculative decoding, quantization (FP8, AWQ, GPTQ, INT4), tensor, pipeline and expert parallelism, LoRA multiplexing, structured output, and an OpenAI-compatible server. It runs on NVIDIA, AMD, TPU and other accelerators. It exposes Prometheus metrics (TTFT, TPOT, KV cache usage, queue depth) that autoscalers and routers consume. llm-d, Ray Serve and KServe all build on it.",
+   "sections": [
+    {
+     "title": "Operate it",
+     "items": [
+      "Size memory: weights plus KV cache (gpu_memory_utilization) plus activation headroom. Set max_model_len to what you really need.",
+      "Scale on queue depth and KV cache utilization rather than CPU. Use prefix-aware routing across replicas.",
+      "Cold starts: model weights are 10–100+ GB. Pre-pull images, cache weights on local NVMe or with GCS FUSE, and keep warm replicas."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "vLLM documentation",
+     "url": "https://docs.vllm.ai/en/latest/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "vLLM GitHub",
+     "url": "https://github.com/vllm-project/vllm",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "PagedAttention paper",
+     "url": "https://arxiv.org/abs/2309.06180",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "vLLM blog",
+     "url": "https://blog.vllm.ai/",
+     "kind": "blog",
+     "note": "Deep dives on the V1 engine, spec decode, disaggregation"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "sglang",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "SGLang",
+   "subtitle": "RadixAttention · structured generation · high-performance serving runtime",
+   "lego": "A motor brick with a memory for shared instruction pages: if a thousand builds start with the same page, it keeps just one copy in a tree.",
+   "summary": "SGLang is a fast serving runtime plus a frontend language for LLM programs. RadixAttention keeps the KV cache in a radix tree so any shared prefix (system prompts, few-shot examples, multi-turn history, agent loops) is reused automatically with LRU eviction, and its scheduler is cache-aware. It offers a fast constrained-decoding engine for JSON and regex output, an overlapped CPU scheduler, and strong DeepSeek/MoE support (data-parallel attention, expert parallelism, prefill/decode disaggregation).",
+   "sections": [
+    {
+     "title": "vLLM or SGLang?",
+     "items": [
+      "Both are production-grade and converging. Benchmark on your model, prompt mix and hardware. SGLang tends to shine with heavy prefix sharing and structured output."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "SGLang: Efficient Execution of Structured Language Model Programs",
+     "url": "https://arxiv.org/abs/2312.07104",
+     "kind": "paper",
+     "note": "RadixAttention"
+    },
+    {
+     "title": "SGLang documentation",
+     "url": "https://docs.sglang.io/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "SGLang GitHub",
+     "url": "https://github.com/sgl-project/sglang",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "Fast and Expressive LLM Inference with RadixAttention and SGLang",
+     "url": "https://lmsys.org/blog/2024-01-17-sglang/",
+     "kind": "blog",
+     "note": "LMSYS"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "triton",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "NVIDIA Triton Inference Server",
+   "subtitle": "Dynamic batching · model repository · ensembles · TensorRT-LLM backend",
+   "lego": "A multi-socket motor housing: plug in PyTorch, ONNX, TensorRT or Python models side by side and share one set of GPUs.",
+   "summary": "Triton serves models from many frameworks (TensorRT, ONNX Runtime, PyTorch, TensorFlow, Python, and TensorRT-LLM or vLLM for LLMs) out of a versioned model repository over HTTP or gRPC. The dynamic batcher groups incoming requests up to a max queue delay. Concurrent model instances share GPUs. Ensembles and BLS chain preprocessing, model and postprocessing steps. Model Analyzer finds the best batch and instance configuration. It exports Prometheus metrics and is deployed under KServe or directly on Kubernetes. NVIDIA Dynamo is its successor for large-scale distributed LLM serving.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Classic deep learning models (ranking, vision, embeddings) that need high QPS and low latency, multi-model GPU sharing, or NVIDIA-optimized TensorRT(-LLM) engines."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Triton Inference Server user guide",
+     "url": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/index.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Triton: dynamic batching and scheduling",
+     "url": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/batcher.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Triton: model repository",
+     "url": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_repository.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "TensorRT-LLM",
+     "url": "https://github.com/NVIDIA/TensorRT-LLM",
+     "kind": "tool",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "prefixrouting",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Prefix Caching & KV-Aware Routing",
+   "subtitle": "Automatic prefix caching · cache-aware load balancing · KV offload tiers",
+   "lego": "Send each builder the jobs whose first instruction pages are already open on their table.",
+   "summary": "Prefix caching reuses KV blocks for identical prompt prefixes (system prompts, RAG context, chat history), cutting TTFT and prefill compute dramatically. The cache lives per replica, though, so a round-robin load balancer throws the hits away. KV-aware or prefix-aware routers (llm-d's inference scheduler, the Gateway API Inference Extension endpoint picker, Dynamo's KV router, SGLang's router) score replicas on cached-prefix overlap, queue depth and KV utilization. Tiered KV offload (GPU HBM → CPU RAM → local SSD → remote store, as in LMCache and Mooncake) extends the reusable cache further.",
+   "sections": [
+    {
+     "title": "Design tips",
+     "items": [
+      "Put static content first in prompts (system prompt, tools, documents) and variable content last to maximize prefix hits.",
+      "Balance cache affinity against load: pure affinity creates hot replicas."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "vLLM automatic prefix caching",
+     "url": "https://docs.vllm.ai/en/latest/features/automatic_prefix_caching.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Gateway API Inference Extension",
+     "url": "https://github.com/kubernetes-sigs/gateway-api-inference-extension",
+     "kind": "tool",
+     "note": "Kubernetes-native model-aware routing"
+    },
+    {
+     "title": "llm-d",
+     "url": "https://github.com/llm-d/llm-d",
+     "kind": "tool",
+     "note": "Kubernetes-native distributed inference with KV-aware scheduling"
+    },
+    {
+     "title": "Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving",
+     "url": "https://arxiv.org/abs/2407.00079",
+     "kind": "paper",
+     "note": "Kimi / Moonshot AI"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "parallelism",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Model Parallelism for Serving",
+   "subtitle": "Tensor · pipeline · expert · data parallelism",
+   "lego": "When the model is too big for one baseplate, split each layer across plates (tensor), stack layers on different plates (pipeline), or give each specialist its own plate (experts).",
+   "summary": "When the weights plus KV cache exceed one GPU, split the model. Tensor parallelism (TP) shards each layer's matrices across GPUs and all-reduces every layer, so it needs NVLink and should stay within a node. Pipeline parallelism (PP) puts consecutive layers on different GPUs or nodes; it needs less communication but adds bubbles and latency. Expert parallelism (EP) spreads mixture-of-experts experts across GPUs with all-to-all token routing. Data parallelism (DP) runs replicas. Typical choice: TP within a node, PP or EP across nodes, DP for throughput.",
+   "sections": [
+    {
+     "title": "Napkin math",
+     "items": [
+      "A 70B model in FP16 is about 140 GB, so TP=4 on 80 GB GPUs leaves room for the KV cache. In FP8 it's about 70 GB, which fits TP=2 or a single 141 GB GPU."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism",
+     "url": "https://arxiv.org/abs/1909.08053",
+     "kind": "paper",
+     "note": "Tensor parallelism"
+    },
+    {
+     "title": "vLLM: parallelism and scaling",
+     "url": "https://docs.vllm.ai/en/latest/serving/parallelism_scaling.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Efficiently Scaling Transformer Inference",
+     "url": "https://arxiv.org/abs/2211.05102",
+     "kind": "paper",
+     "note": "Partitioning strategies for inference"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "quantization",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Quantization",
+   "subtitle": "FP8 · INT8 · INT4 (AWQ, GPTQ) · KV cache quantization",
+   "lego": "Swap heavy bricks for lighter ones that look almost the same: the model fits on fewer baseplates and moves faster.",
+   "summary": "Quantization stores weights (and optionally activations and the KV cache) in fewer bits. Decode is memory-bandwidth-bound, so halving the bytes roughly doubles tokens per second and halves the GPUs needed. FP8 (Hopper and newer) is nearly lossless for most models. INT4 weight-only methods (AWQ, GPTQ) fit big models on small GPUs at some accuracy cost. A quantized KV cache doubles the concurrent context.",
+   "sections": [
+    {
+     "title": "Rule",
+     "items": [
+      "Always evaluate on your own tasks after quantizing. Averaged benchmarks hide regressions on math, code and long context."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers",
+     "url": "https://arxiv.org/abs/2210.17323",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "AWQ: Activation-aware Weight Quantization",
+     "url": "https://arxiv.org/abs/2306.00978",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "SmoothQuant",
+     "url": "https://arxiv.org/abs/2211.10438",
+     "kind": "paper",
+     "note": "W8A8"
+    },
+    {
+     "title": "vLLM quantization",
+     "url": "https://docs.vllm.ai/en/latest/features/quantization/index.html",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "specdecoding",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Speculative Decoding",
+   "subtitle": "Draft models · Medusa · EAGLE · n-gram lookup",
+   "lego": "An apprentice quickly places the next few bricks, and the master checks them all in one glance, keeping the correct ones.",
+   "summary": "A cheap drafter (a small model, extra heads such as Medusa or EAGLE, or n-gram prompt lookup) proposes k tokens. The big model verifies all k in one forward pass, which costs about the same as one decode step because decode is memory-bound. Accepted tokens are kept, and the output distribution is mathematically unchanged. The result is 2–3× lower latency at low batch sizes. The gains shrink at high batch sizes, where the GPU is already compute-saturated.",
+   "sections": [
+    {
+     "title": "Use when",
+     "items": [
+      "Latency-sensitive, low-to-moderate concurrency. Predictable output (code, extraction, RAG with copying) gets high acceptance rates."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Fast Inference from Transformers via Speculative Decoding",
+     "url": "https://arxiv.org/abs/2211.17192",
+     "kind": "paper",
+     "note": "Google"
+    },
+    {
+     "title": "EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty",
+     "url": "https://arxiv.org/abs/2401.15077",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Medusa: Simple LLM Inference Acceleration with Multiple Decoding Heads",
+     "url": "https://arxiv.org/abs/2401.10774",
+     "kind": "paper",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "disaggregated",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Disaggregated Prefill / Decode",
+   "subtitle": "DistServe · Splitwise · Mooncake · NVIDIA Dynamo · llm-d",
+   "lego": "One crew only reads instruction booklets and hands the open pages to a second crew that only places bricks, so neither slows the other down.",
+   "summary": "Prefill (compute-heavy, bursty) and decode (bandwidth-heavy, steady) interfere when colocated: a long prompt stalls everyone's next token. Disaggregation runs them on separate GPU pools, each with its own parallelism and batch sizes. The KV cache is transferred from prefill to decode workers over NVLink or RDMA (NIXL). The pools scale independently to meet TTFT and TPOT SLOs, which maximizes goodput. It pays off at large scale and with long prompts; for small deployments, chunked prefill is simpler.",
+   "sections": [
+    {
+     "title": "Costs",
+     "items": [
+      "KV transfer bandwidth (high-speed interconnect required), more moving parts, and a router that must pair prefill and decode workers."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "DistServe: Disaggregating Prefill and Decoding for Goodput-optimized LLM Serving (OSDI 2024)",
+     "url": "https://arxiv.org/abs/2401.09670",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Splitwise: Efficient Generative LLM Inference Using Phase Splitting",
+     "url": "https://arxiv.org/abs/2311.18677",
+     "kind": "paper",
+     "note": "Microsoft"
+    },
+    {
+     "title": "Mooncake",
+     "url": "https://arxiv.org/abs/2407.00079",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "NVIDIA Dynamo",
+     "url": "https://github.com/ai-dynamo/dynamo",
+     "kind": "tool",
+     "note": "Distributed inference framework: disaggregation plus KV routing"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "k8sserving",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Kubernetes Model Serving & GPU Autoscaling",
+   "subtitle": "KServe · Gateway API Inference Extension · llm-d · KEDA · GKE GPU node pools",
+   "lego": "The baseplate manager for motor bricks: it knows which plates have GPUs, adds plates when the queue grows, and parks idle ones.",
+   "summary": "On Kubernetes, model servers (vLLM, SGLang, Triton) run as Deployments or LeaderWorkerSets on GPU node pools. KServe provides an InferenceService abstraction with canary rollouts and scale-to-zero. The Gateway API Inference Extension (GAIE) adds model-aware routing (InferencePool, endpoint picker) to Envoy- or Istio-based gateways. llm-d combines vLLM, GAIE, KV-aware scheduling and disaggregation. Autoscale on inference signals (queue length, KV cache utilization, TTFT) via KEDA or custom metrics, not CPU.",
+   "sections": [
+    {
+     "title": "Gotchas",
+     "items": [
+      "GPU scale-up is slow: node provisioning plus image pull plus weight load can take minutes. Keep headroom, use image streaming, and cache weights.",
+      "GPU scarcity: use reservations, multiple regions and zones, and fallback models. Bin-pack small models with MIG or time-slicing."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "KServe documentation",
+     "url": "https://kserve.github.io/website/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Gateway API Inference Extension",
+     "url": "https://github.com/kubernetes-sigs/gateway-api-inference-extension",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "llm-d",
+     "url": "https://github.com/llm-d/llm-d",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "Best practices for autoscaling LLM inference on GKE (GPUs)",
+     "url": "https://cloud.google.com/kubernetes-engine/docs/best-practices/machine-learning/inference/autoscaling",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "KEDA",
+     "url": "https://keda.sh/docs/latest/",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "aigateway",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "AI Gateway",
+   "subtitle": "LiteLLM · Envoy AI Gateway · token rate limiting · fallbacks · guardrails",
+   "lego": "The front desk for every model: one entrance, a badge check, a token budget per team, and a detour when a model is down.",
+   "summary": "An AI gateway sits in front of self-hosted and vendor models behind a single OpenAI-compatible API. It handles authentication and per-team quotas measured in tokens (not requests), routing by model and cost, retries and fallbacks across providers, semantic or exact response caching, guardrails (PII redaction, safety filters), and usage metering. It streams responses (SSE) and logs prompts and completions for evaluation.",
+   "sections": [
+    {
+     "title": "Design tips",
+     "items": [
+      "Rate-limit on estimated plus actual tokens. Set streaming-aware timeouts (on first token, and between tokens).",
+      "Fallback chain: self-hosted primary, then a smaller model, then a vendor API, then a graceful 'try later'."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "LiteLLM documentation",
+     "url": "https://docs.litellm.ai/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Envoy AI Gateway",
+     "url": "https://aigateway.envoyproxy.io/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Rate limiting best practices (Cloudflare)",
+     "url": "https://developers.cloudflare.com/waf/rate-limiting-rules/best-practices/",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "multilora",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Multi-LoRA Serving",
+   "subtitle": "S-LoRA · Punica · LoRAX · vLLM LoRA adapters",
+   "lego": "One big motor with a rack of tiny snap-on attachments: every customer gets their own custom tool head without needing their own motor.",
+   "summary": "LoRA fine-tunes add small low-rank adapter matrices (a few MB to a few hundred MB) to a shared base model. A multi-LoRA server keeps one copy of the base weights on the GPU and batches requests for different adapters together, using custom kernels (Punica's SGMV, S-LoRA's unified paging) so mixed-adapter batches stay efficient. Adapters are loaded on demand from object storage into CPU and GPU caches with LRU eviction. Thousands of fine-tuned 'models' can share one GPU pool.",
+   "sections": [
+    {
+     "title": "Reach for it when",
+     "items": [
+      "Fine-tuning as a service, per-customer or per-task specializations (per-merchant tone, per-language, per-domain), or A/B testing many fine-tunes cheaply."
+     ]
+    },
+    {
+     "title": "How it breaks",
+     "items": [
+      "Cold adapter loads add latency spikes. Pre-warm popular adapters and route by adapter affinity.",
+      "Too many distinct adapters in one batch slows the kernels. Cap max_loras per batch.",
+      "Adapter and base-model version mismatch after a base upgrade. Pin versions in the registry."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "S-LoRA: Serving Thousands of Concurrent LoRA Adapters",
+     "url": "https://arxiv.org/abs/2311.03285",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Punica: Multi-Tenant LoRA Serving",
+     "url": "https://arxiv.org/abs/2310.18547",
+     "kind": "paper",
+     "note": "The SGMV kernel"
+    },
+    {
+     "title": "LoRA: Low-Rank Adaptation of Large Language Models",
+     "url": "https://arxiv.org/abs/2106.09685",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "LoRAX",
+     "url": "https://github.com/predibase/lorax",
+     "kind": "tool",
+     "note": "Multi-LoRA inference server"
+    },
+    {
+     "title": "vLLM LoRA adapters",
+     "url": "https://docs.vllm.ai/en/latest/features/lora.html",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "structuredoutput",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Structured Output & Tool Calling",
+   "subtitle": "Constrained decoding · JSON schema · grammars · XGrammar · Outlines",
+   "lego": "A stencil laid over the baseplate: the model can only place bricks where the stencil has holes, so the result always fits the socket it's going into.",
+   "summary": "Constrained decoding masks the model's next-token probabilities so the output must match a JSON schema, a regex or a context-free grammar. Downstream code, and tool calls in agents, never receive malformed output. Modern engines (XGrammar, Outlines, llguidance) precompile the grammar into token masks so the per-token overhead is negligible, and vLLM and SGLang expose it through OpenAI-style response_format and tool schemas.",
+   "sections": [
+    {
+     "title": "Design tips",
+     "items": [
+      "Keep schemas small and flat. Deeply nested or huge enum schemas slow mask compilation, so cache compiled grammars per schema.",
+      "Constraints guarantee the shape, not correctness. Still validate the values and retry on semantic errors."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "XGrammar: Flexible and Efficient Structured Generation Engine for LLMs",
+     "url": "https://arxiv.org/abs/2411.15100",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Efficient Guided Generation for Large Language Models (Outlines)",
+     "url": "https://arxiv.org/abs/2307.09702",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "SGLang: Efficient Execution of Structured Language Model Programs",
+     "url": "https://arxiv.org/abs/2312.07104",
+     "kind": "paper",
+     "note": "Compressed finite-state machines for fast JSON decoding"
+    },
+    {
+     "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+     "url": "https://arxiv.org/abs/2210.03629",
+     "kind": "paper",
+     "note": "The tool-calling agent loop"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "tokenstreaming",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Token Streaming & Cancellation",
+   "subtitle": "Server-Sent Events · WebSockets · gRPC streams · WebRTC · request cancellation",
+   "lego": "Hand each brick to the customer the moment it's placed instead of shipping the finished model, and stop building the instant they walk away.",
+   "summary": "LLM responses are streamed token by token so perceived latency is the time to first token, not the full generation time. Chat APIs mostly use Server-Sent Events over HTTP. Bidirectional apps (voice, collaborative editing) use WebSockets or WebRTC. Every hop (CDN, gateway, service mesh, load balancer) must support long-lived streaming connections without buffering. A client disconnect must propagate to the engine so it frees the sequence's KV cache and stops wasting GPU time.",
+   "sections": [
+    {
+     "title": "Gotchas",
+     "items": [
+      "Proxies that buffer responses (default nginx and some CDNs) destroy streaming. Disable buffering for these routes.",
+      "Idle and read timeouts must allow for long generations. Heartbeat comments keep connections alive.",
+      "Cancelled requests that keep decoding are a silent capacity leak. Monitor aborted versus completed requests.",
+      "Retries after partial output need care: resume or restart, and tell the client which."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Server-sent events (MDN)",
+     "url": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "OpenAI API: streaming responses",
+     "url": "https://platform.openai.com/docs/api-reference/streaming",
+     "kind": "docs",
+     "note": "The de facto streaming format"
+    },
+    {
+     "title": "LLM Inference Performance Engineering: Best Practices",
+     "url": "https://www.databricks.com/blog/llm-inference-performance-engineering-best-practices",
+     "kind": "blog",
+     "note": "Why TTFT dominates perceived latency"
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "inferencecaching",
+   "kind": "brick",
+   "module": "ml",
+   "group": "serving",
+   "title": "Inference Caching: Prompt, Exact & Semantic",
+   "subtitle": "Provider prompt caching · response caches · GPTCache · LMCache",
+   "lego": "Keep photos of models you've already built: if someone asks for the same model (or one that looks the same) you show them the photo instead of rebuilding.",
+   "summary": "There are three layers of reuse. Prompt (KV) caching reuses the computed attention state for a shared prefix, so answers stay fresh but prefill is skipped. Exact-response caching returns a stored completion for an identical request, which is safe only with deterministic settings (temperature 0) and non-personal content. Semantic caching embeds the query and returns a cached answer when a previous query is similar enough. It is cheap but risky: similar-looking questions can need different answers. Cross-instance KV caches (LMCache, Mooncake) share prefix state across replicas and tiers.",
+   "sections": [
+    {
+     "title": "Rules",
+     "items": [
+      "Scope caches per tenant and per model version, and never serve one user's personal answer to another.",
+      "Tune semantic similarity thresholds on real traffic and track the false-hit rate, not just the hit rate.",
+      "Invalidate on model, prompt-template or source-data changes."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Prompt caching (Anthropic docs)",
+     "url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "GPTCache",
+     "url": "https://github.com/zilliztech/GPTCache",
+     "kind": "tool",
+     "note": "Semantic cache for LLM responses"
+    },
+    {
+     "title": "LMCache",
+     "url": "https://github.com/LMCache/LMCache",
+     "kind": "tool",
+     "note": "KV cache sharing and offload across engines"
+    },
+    {
+     "title": "vLLM automatic prefix caching",
+     "url": "https://docs.vllm.ai/en/latest/features/automatic_prefix_caching.html",
+     "kind": "docs",
+     "note": null
+    }
+   ],
+   "steps": null,
+   "uses": null
+  },
+  {
+   "id": "code-completion",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Code Completion (Copilot-style)",
+   "subtitle": "Ghost-text suggestions on every keystroke",
+   "lego": "A builder watching over your shoulder who has to hand you the next brick before your hand reaches the pile, or not bother at all.",
+   "summary": "Suggest the next lines of code inline in the IDE for 1M active developers. Suggestions must appear within about 300 ms end to end or they are useless. Most requests are cancelled because the user keeps typing, and context (surrounding files) is large.",
+   "steps": [
+    "The IDE plugin debounces keystrokes (about 50–100 ms), builds a fill-in-the-middle prompt (code before and after the cursor, plus snippets from open tabs and similar files), and caches recent completions locally.",
+    "Requests go to the nearest region over a persistent HTTP/2 connection (Torbit or CDN edge, then the AI gateway for auth and quotas). A new keystroke cancels the in-flight request all the way down to the engine.",
+    "A small, fast code model (1–15B, FP8) runs on vLLM or TensorRT-LLM with prefix caching. Consecutive requests from the same file share most of their prefix, so route by user or file affinity.",
+    "Speculative decoding with n-gram or prompt lookup is highly effective because code often copies nearby text. Cap output at a few lines and stop at the block end.",
+    "Post-filter suggestions (syntax check, duplicate and license filters) and stream the first lines as soon as they're ready.",
+    "Log accept, reject and partial-accept events to Kafka. The acceptance rate is the key product metric and feeds evaluation and fine-tuning."
+   ],
+   "uses": [
+    "torbit",
+    "aigateway",
+    "tokenstreaming",
+    "prefixrouting",
+    "vllm",
+    "specdecoding",
+    "quantization",
+    "kafka",
+    "prometheus",
+    "latency"
+   ],
+   "sections": [
+    {
+     "title": "Numbers",
+     "items": [
+      "Budget roughly 300 ms: about 50 ms network, about 100 ms prefill of a 2–4k-token prompt, about 100 ms for 20–40 output tokens with speculation, and the rest for the plugin.",
+      "With 1M developers at a few requests a minute, 30–60% are cancelled. Cancellation is a capacity feature, not an edge case."
+     ]
+    },
+    {
+     "title": "Break it",
+     "items": [
+      "Disable cancellation propagation: GPU load jumps and p95 latency explodes, which shows why aborts must reach the engine.",
+      "Route round-robin instead of by affinity: the prefix-cache hit rate collapses and TTFT doubles."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Inside GitHub: Working with the LLMs behind GitHub Copilot",
+     "url": "https://github.blog/2023-05-17-inside-github-working-with-the-llms-behind-github-copilot/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "How GitHub Copilot is getting better at understanding your code",
+     "url": "https://github.blog/2023-05-17-how-github-copilot-is-getting-better-at-understanding-your-code/",
+     "kind": "blog",
+     "note": "Prompt construction from neighboring tabs"
+    },
+    {
+     "title": "The lifecycle of a code AI completion",
+     "url": "https://sourcegraph.com/blog/the-lifecycle-of-a-code-ai-completion",
+     "kind": "blog",
+     "note": "Sourcegraph Cody: debounce, context, post-processing"
+    },
+    {
+     "title": "Efficient Training of Language Models to Fill in the Middle",
+     "url": "https://arxiv.org/abs/2207.14255",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Prompt lookup decoding",
+     "url": "https://github.com/apoorvumang/prompt-lookup-decoding",
+     "kind": "tool",
+     "note": "N-gram speculation"
+    }
+   ]
+  },
+  {
+   "id": "multitenant-lora",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Fine-Tuning as a Service: Thousands of LoRA Models",
+   "subtitle": "One base model, 5,000 customer adapters, one GPU pool",
+   "lego": "Instead of a motor per customer, one row of motors with a wall of snap-on tool heads fetched as each order arrives.",
+   "summary": "Customers upload data, get a fine-tuned 'model' and call it by name. There are 5,000 fine-tunes, most rarely used and a few very hot. Dedicated GPUs per fine-tune would cost 5,000× too much; serve them all from a shared pool with p95 TTFT under 1 s.",
+   "steps": [
+    "Fine-tuning jobs (Ray Train) produce LoRA adapters that are registered in MLflow with their base-model version and stored in GCS.",
+    "The AI gateway maps the customer model name to (base model, adapter ID) and enforces per-tenant token quotas.",
+    "An adapter-aware router sends a request to a replica that already has the adapter loaded, falling back to the least-loaded replica with free adapter slots.",
+    "vLLM or LoRAX replicas hold the base model once, keep hot adapters in GPU memory and warm ones in CPU memory, and fetch cold ones from GCS through a local disk cache. Mixed-adapter batches use SGMV kernels.",
+    "Very hot adapters are merged into dedicated replicas, and idle ones age out of every cache. Per-tenant metering feeds billing."
+   ],
+   "uses": [
+    "aigateway",
+    "multilora",
+    "prefixrouting",
+    "vllm",
+    "k8sserving",
+    "mlflow",
+    "gcs",
+    "ray",
+    "ratelimiting",
+    "prometheus"
+   ],
+   "sections": [
+    {
+     "title": "Napkin",
+     "items": [
+      "Llama-3-8B adapters at rank 16 on attention layers are about 20–50 MB each. 5,000 adapters is 100–250 GB total: too much for one GPU, easy for a CPU plus NVMe tier."
+     ]
+    },
+    {
+     "title": "Break it",
+     "items": [
+      "A noisy tenant floods its adapter: per-tenant token-rate limits and fair queuing must protect the others.",
+      "Upgrade the base model: every adapter must be retrained or pinned to the old base. Run both bases side by side during migration."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "S-LoRA: Serving Thousands of Concurrent LoRA Adapters",
+     "url": "https://arxiv.org/abs/2311.03285",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Punica: Multi-Tenant LoRA Serving",
+     "url": "https://arxiv.org/abs/2310.18547",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "LoRAX",
+     "url": "https://github.com/predibase/lorax",
+     "kind": "tool",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "fraud-scoring",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Real-Time Payment Fraud Scoring",
+   "subtitle": "Classic online inference in the checkout critical path",
+   "lego": "A security guard at the checkout who has 50 ms to look at the customer's history and decide: wave through, ask for ID, or stop.",
+   "summary": "Score every payment authorization (20,000 per second at peak) for fraud before approving it. The p99 must be under 50 ms because this is inside checkout, availability must be 99.99%, and new fraud patterns must be caught within minutes.",
+   "steps": [
+    "The checkout service calls the scoring service synchronously with a strict timeout. On timeout, fall back to a rules-only decision rather than failing the payment.",
+    "The scoring service fetches features in one batched call: real-time velocity features (card attempts in the last 10 minutes, new device, amount versus the user's norm) from the online feature store (Redis or Cassandra), plus precomputed batch features.",
+    "Streaming features are maintained by Flink over the payment event stream in Kafka. Batch features come from nightly Spark jobs, materialized online.",
+    "The model is a gradient-boosted tree ensemble (CPU, or Triton's FIL backend), optionally combined with a small neural model. A rules engine applies hard blocks and allows. The output is approve, challenge (3-D Secure) or decline.",
+    "Every decision, with its features and model version, is logged to Kafka. Chargebacks arrive weeks later as labels for retraining. New models run in shadow, then canary, gated on precision, recall and dollars saved."
+   ],
+   "uses": [
+    "featurestore",
+    "distcache",
+    "cassandra",
+    "streamprocessing",
+    "kafka",
+    "spark",
+    "triton",
+    "mlflow",
+    "mlpipelines",
+    "circuitbreaker",
+    "latency",
+    "slo"
+   ],
+   "sections": [
+    {
+     "title": "Numbers",
+     "items": [
+      "50 ms p99 splits into about 5 ms network, 10–15 ms feature fetch (one round trip, parallel), 5–10 ms model, and the rest as headroom. No LLM fits this path."
+     ]
+    },
+    {
+     "title": "Break it",
+     "items": [
+      "The feature store is slow: the timeout plus fallback to rules keeps checkout up. Alert on the fallback rate.",
+      "The streaming job lags: velocity features go stale and fraud slips through. Alert on feature freshness, not just latency."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "How we built it: Stripe Radar",
+     "url": "https://stripe.com/blog/how-we-built-it-stripe-radar",
+     "kind": "blog",
+     "note": "1,000+ features scored in under 100 ms; moved from XGBoost + DNN to a DNN-only model"
+    },
+    {
+     "title": "Meet Michelangelo: Uber's Machine Learning Platform",
+     "url": "https://www.uber.com/blog/michelangelo-machine-learning-platform/",
+     "kind": "blog",
+     "note": "Online serving with feature-store lookups"
+    },
+    {
+     "title": "Triton FIL backend (tree models on GPU/CPU)",
+     "url": "https://github.com/triton-inference-server/fil_backend",
+     "kind": "tool",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "semantic-search",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Semantic Product Search",
+   "subtitle": "Embedding service + ANN retrieval + cross-encoder reranker",
+   "lego": "Translate the shopper's words into coordinates on a map of all products, grab the nearest ones, and let an expert reorder the shortlist.",
+   "summary": "Improve search for 'shoes for a rainy hike' over 100M products at 30,000 queries per second with p95 under 150 ms, combining keyword and semantic matches.",
+   "steps": [
+    "Offline: embed every product title and description with a batch job (Ray Data on GPUs), then build a sharded ANN index (HNSW or ScaNN) plus the keyword index. CDC and Kafka keep both fresh.",
+    "Online: the query goes to an embedding service (a small encoder on Triton or Text Embeddings Inference with dynamic batching; queries are short, so batches are large and cheap). Popular query embeddings are cached.",
+    "Run keyword search and ANN search in parallel, fetching about 200 candidates each, then fuse them (reciprocal rank fusion).",
+    "A cross-encoder reranker on GPU scores the top about 100 (query, product) pairs, and business rules (stock, sponsored slots) apply. Return the top 40.",
+    "Log queries, results and clicks. Evaluate offline with NDCG and online with A/B tests, and retrain the encoder on click data."
+   ],
+   "uses": [
+    "apigateway",
+    "distcache",
+    "vectordb",
+    "searchindex",
+    "triton",
+    "ray",
+    "cdc",
+    "kafka",
+    "latency"
+   ],
+   "sections": [
+    {
+     "title": "Break it",
+     "items": [
+      "The reranker pool is saturated: skip reranking (the degraded but fast path) instead of timing out the whole search.",
+      "An embedding model upgrade: new query vectors don't match the old index. Re-embed the corpus and swap indexes atomically (blue/green)."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+     "url": "https://arxiv.org/abs/1908.10084",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Dense Passage Retrieval for Open-Domain Question Answering",
+     "url": "https://arxiv.org/abs/2004.04906",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "Text Embeddings Inference",
+     "url": "https://github.com/huggingface/text-embeddings-inference",
+     "kind": "tool",
+     "note": "Hugging Face embedding and reranker server"
+    },
+    {
+     "title": "Efficient and robust approximate nearest neighbor search using HNSW",
+     "url": "https://arxiv.org/abs/1603.09320",
+     "kind": "paper",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "agent-serving",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Agentic Assistant with Tool Calling",
+   "subtitle": "Multi-turn, long-context, many model calls per user request",
+   "lego": "A builder who keeps going back to the parts catalog, the order system and the calculator, dozens of times, before handing you the finished model.",
+   "summary": "A customer-support agent that looks up orders, checks policies, issues refunds and answers in chat. One user turn can trigger 5–20 LLM calls with growing context (up to 50k tokens), and it must stay responsive and never take unsafe actions.",
+   "steps": [
+    "Sessions are sticky: the gateway routes every call in a session to the same engine replica (or the KV-aware router finds it), so the ever-growing conversation prefix stays cached.",
+    "Each step's LLM call uses structured output (a JSON tool-call schema) on SGLang or vLLM. The orchestrator validates the arguments and executes the tool (order API, policy search, refund service) with idempotency keys and timeouts.",
+    "Tool results are appended to the context. Stable content (system prompt, tool definitions) sits at the front for maximum prefix reuse. Long sessions offload KV to CPU or SSD (LMCache) instead of recomputing.",
+    "Guardrails check risky actions (refunds above $X need confirmation or human approval), and every step is traced with OpenTelemetry (prompt, tool, latency, tokens).",
+    "Intermediate progress ('Checking your order…') streams to the user so perceived latency stays low. Cap steps and tokens per turn to bound cost."
+   ],
+   "uses": [
+    "aigateway",
+    "prefixrouting",
+    "inferencecaching",
+    "structuredoutput",
+    "sglang",
+    "vllm",
+    "tokenstreaming",
+    "idempotency",
+    "tracing",
+    "ratelimiting"
+   ],
+   "sections": [
+    {
+     "title": "Numbers",
+     "items": [
+      "Ten calls over a 30k-token context without prefix caching means about 300k prefill tokens per turn. With a 95% hit rate it's about 15k: a 20× cost difference."
+     ]
+    },
+    {
+     "title": "Break it",
+     "items": [
+      "A tool hangs: the step timeout makes the agent tell the user rather than spin. A replica restart mid-session: KV is lost, so the next call re-prefills (slow, but correct)."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+     "url": "https://arxiv.org/abs/2210.03629",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "SGLang: Efficient Execution of Structured Language Model Programs",
+     "url": "https://arxiv.org/abs/2312.07104",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "XGrammar",
+     "url": "https://arxiv.org/abs/2411.15100",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "LMCache",
+     "url": "https://github.com/LMCache/LMCache",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "Prompt caching (Anthropic docs)",
+     "url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "voice-agent",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Real-Time Voice Assistant",
+   "subtitle": "Streaming speech-to-text → LLM → text-to-speech in under a second",
+   "lego": "Three builders passing bricks hand to hand so fast that the customer hears the answer start before they've finished blinking.",
+   "summary": "A phone and app voice assistant for order status and returns. Voice-to-voice latency must be under about 800 ms to feel natural, users interrupt ('barge in'), and 5,000 concurrent calls are expected at peak.",
+   "steps": [
+    "Audio flows over WebRTC (or telephony via SIP) to a media server in the nearest region. Voice activity detection spots the end of the user's turn.",
+    "Streaming ASR (a Whisper-class or streaming Conformer model on GPU) emits partial transcripts continuously, so the final transcript is ready about 100–200 ms after speech ends.",
+    "The LLM (a small, fast model on vLLM, with the conversation prefix cached per call) starts generating immediately. Tokens stream out.",
+    "Streaming TTS starts synthesizing from the first sentence fragment. Audio frames go back over WebRTC.",
+    "Barge-in: when the user speaks, stop TTS playback and cancel the LLM generation instantly. The pipeline is orchestrated by LiveKit Agents or Pipecat."
+   ],
+   "uses": [
+    "tokenstreaming",
+    "vllm",
+    "prefixrouting",
+    "triton",
+    "k8sserving",
+    "quantization",
+    "latency",
+    "loadbalancer"
+   ],
+   "sections": [
+    {
+     "title": "Latency budget",
+     "items": [
+      "About 800 ms: VAD end-of-turn about 200 ms, ASR finalization about 100 ms, LLM TTFT about 200 ms, TTS first audio about 150 ms, network about 100 ms. Every stage must stream."
+     ]
+    },
+    {
+     "title": "Break it",
+     "items": [
+      "Add 300 ms of RTT by serving from a far region: conversation feels broken. Regional placement matters more than model size here."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Robust Speech Recognition via Large-Scale Weak Supervision (Whisper)",
+     "url": "https://arxiv.org/abs/2212.04356",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "LiveKit Agents",
+     "url": "https://github.com/livekit/agents",
+     "kind": "tool",
+     "note": "Realtime voice agent framework over WebRTC"
+    },
+    {
+     "title": "Pipecat",
+     "url": "https://github.com/pipecat-ai/pipecat",
+     "kind": "tool",
+     "note": "Open-source voice and multimodal pipeline framework"
+    }
+   ]
+  },
+  {
+   "id": "moe-serving",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Serving a Giant Mixture-of-Experts Model",
+   "subtitle": "DeepSeek-V3/R1-class (671B total, ~37B active) at scale",
+   "lego": "A factory with 256 specialist builders where each brick is handed to only a few of them, so the factory is huge but each step is fast, as long as the hand-offs are quick.",
+   "summary": "Serve a 671B-parameter MoE model (256 routed experts, about 37B active per token) as a public API with high throughput per GPU. The model doesn't fit on one 8-GPU node in FP16, and expert routing creates all-to-all communication.",
+   "steps": [
+    "Store weights in FP8 (about 700 GB). A prefill cluster and a decode cluster are sized separately (disaggregated), with KV transferred over RDMA.",
+    "Decode uses wide expert parallelism across many nodes (for example EP across 2–4+ nodes), so each GPU holds a few experts and gets large per-expert batches. Attention uses data parallelism to avoid duplicating KV.",
+    "All-to-all dispatch and combine of tokens to experts uses optimized kernels (DeepEP) and overlaps communication with compute (two-batch overlap).",
+    "An expert-parallel load balancer replicates hot experts on extra GPUs, because expert popularity is skewed and shifts with traffic.",
+    "Multi-token prediction heads serve as a built-in speculative drafter to boost decode speed. Prefix caching on disk or SSD serves repeated contexts."
+   ],
+   "uses": [
+    "disaggregated",
+    "parallelism",
+    "quantization",
+    "specdecoding",
+    "sglang",
+    "vllm",
+    "prefixrouting",
+    "k8sserving",
+    "prometheus"
+   ],
+   "sections": [
+    {
+     "title": "Why it's hard",
+     "items": [
+      "Communication, not FLOPs, becomes the bottleneck. Interconnect topology (NVLink domain, InfiniBand or RoCE) decides the design.",
+      "Tiny per-expert batches waste GPUs, so wide EP needs lots of concurrent traffic to pay off."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "DeepSeek-V3 Technical Report",
+     "url": "https://arxiv.org/abs/2412.19437",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "DeepSeek Open Infra Index (inference system overview)",
+     "url": "https://github.com/deepseek-ai/open-infra-index",
+     "kind": "tool",
+     "note": "Day-6 write-up: prefill/decode EP, costs and throughput"
+    },
+    {
+     "title": "DeepEP",
+     "url": "https://github.com/deepseek-ai/DeepEP",
+     "kind": "tool",
+     "note": "Expert-parallel all-to-all kernels"
+    },
+    {
+     "title": "Switch Transformers: Scaling to Trillion Parameter Models",
+     "url": "https://arxiv.org/abs/2101.03961",
+     "kind": "paper",
+     "note": "MoE fundamentals"
+    },
+    {
+     "title": "Deploying DeepSeek with PD Disaggregation and Large-Scale Expert Parallelism",
+     "url": "https://lmsys.org/blog/2025-05-05-large-scale-ep/",
+     "kind": "blog",
+     "note": "SGLang on 96 H100s"
+    }
+   ]
+  },
+  {
+   "id": "global-llm-api",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Multi-Region LLM API with Fallbacks",
+   "subtitle": "Capacity-aware global routing when GPUs are the scarce resource",
+   "lego": "Motor rooms in several cities: a dispatcher sends each job to whichever room has free motors, and to a rented room across town when all are full.",
+   "summary": "Run a company-wide LLM API across 3 regions with a 99.95% availability SLO. GPU capacity per region is fixed (reservations), traffic has daily peaks, and a region or an entire model pool can fail.",
+   "steps": [
+    "Global DNS or anycast (Torbit or Cloud Load Balancing) sends users to the nearest healthy region's AI gateway.",
+    "Each gateway knows the real-time capacity of every region (queue depth, KV utilization, error rates) and spills over to another region when local pools are saturated. Streaming latency rises slightly; availability holds.",
+    "Priority classes: interactive traffic is served first. Batch and offline traffic go to a separate queue that absorbs idle capacity (off-peak) and is shed first under load.",
+    "The fallback chain per model: self-hosted primary, then a secondary region, then a smaller model, then an external vendor API (contractually approved), then a clear 'busy, retry later' with Retry-After.",
+    "The model registry and weights are replicated to every region (GCS multi-region or dual-region buckets). Rollouts go region by region, and SLO burn-rate alerts gate each step."
+   ],
+   "uses": [
+    "dns",
+    "torbit",
+    "aigateway",
+    "k8sserving",
+    "vllm",
+    "gcs",
+    "backpressure",
+    "ratelimiting",
+    "circuitbreaker",
+    "retries",
+    "slo",
+    "prometheus"
+   ],
+   "sections": [
+    {
+     "title": "Break it",
+     "items": [
+      "Drain a whole region: the others must absorb the load. Plan N+1 regional capacity or accept shedding low-priority traffic.",
+      "A vendor fallback outage at the same time: the last line of defense is graceful degradation, not unbounded retries."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Handling Overload (Google SRE book)",
+     "url": "https://sre.google/sre-book/handling-overload/",
+     "kind": "book",
+     "note": "Criticality, client-side throttling, load shedding"
+    },
+    {
+     "title": "LiteLLM routing and fallbacks",
+     "url": "https://docs.litellm.ai/docs/routing",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "Llumnix: Dynamic Scheduling for LLM Serving (OSDI 2024)",
+     "url": "https://arxiv.org/abs/2406.03243",
+     "kind": "paper",
+     "note": "Live migration of requests across instances"
+    },
+    {
+     "title": "The Tail at Scale",
+     "url": "https://research.google/pubs/the-tail-at-scale/",
+     "kind": "paper",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "llm-guardrails",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Inline Safety & Moderation Guardrails",
+   "subtitle": "Classifiers on every prompt and response without doubling latency",
+   "lego": "Inspectors at both doors of the motor room who check every order coming in and every model going out, without making the line longer.",
+   "summary": "Every chat request and response for customer-facing LLM features must be checked for prompt injection, PII, toxicity and policy violations. Guardrails may add at most about 50 ms to TTFT and must scale with all LLM traffic.",
+   "steps": [
+    "Input checks run in parallel with the start of generation: a fast PII detector plus a small injection and safety classifier (on Triton, or a Llama Guard-class model on vLLM). If a check fails, cancel the generation before anything reaches the user.",
+    "Output checks run on streamed chunks (every sentence or N tokens) so the stream isn't held until the end. Unsafe text is stopped mid-stream with a replacement message.",
+    "Deterministic rules (regex for card numbers, allowlists and blocklists) run first because they're cheap. Model-based checks come next. Only escalations go to a larger judge model asynchronously.",
+    "Violations and near-misses are logged to Kafka for review. Policies are versioned, and classifier updates go through shadow evaluation."
+   ],
+   "uses": [
+    "aigateway",
+    "tokenstreaming",
+    "triton",
+    "vllm",
+    "kafka",
+    "prometheus",
+    "circuitbreaker"
+   ],
+   "sections": [
+    {
+     "title": "Break it",
+     "items": [
+      "The guardrail service is down: fail closed for high-risk features and fail open with extra logging for low-risk ones. Decide per feature in advance."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Llama Guard: LLM-based Input-Output Safeguard",
+     "url": "https://arxiv.org/abs/2312.06674",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "A Holistic Approach to Undesired Content Detection in the Real World",
+     "url": "https://arxiv.org/abs/2208.03274",
+     "kind": "paper",
+     "note": "OpenAI moderation model"
+    },
+    {
+     "title": "NeMo Guardrails",
+     "url": "https://github.com/NVIDIA/NeMo-Guardrails",
+     "kind": "tool",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "moc-kvrouter",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Mini-MOC: Prefix-Aware Router vs Round Robin",
+   "subtitle": "Hands-on: prove why routing matters for LLMs",
+   "lego": "Run two dispatchers side by side, one random and one who remembers which builder has which pages open, and time them.",
+   "summary": "Run 2–4 small vLLM replicas (one GPU each, or CPU with a tiny model) and write a simple router in about 100 lines: hash the first N prompt tokens to a replica, with a load cap. Compare it against round robin on a chat workload with shared system prompts and multi-turn sessions.",
+   "steps": [
+    "Generate a workload: 20 system prompts × 200 users × 5 turns, with each turn appending to the conversation.",
+    "Baseline: round robin via nginx or Envoy. Record TTFT p50/p95, the prefix-cache hit rate (vLLM metrics), and throughput.",
+    "Your router: consistent hashing on (system prompt plus session ID), falling back to the least-loaded replica when the chosen one's queue exceeds a threshold.",
+    "Bonus: try the Gateway API Inference Extension or llm-d's scheduler on kind or minikube and compare it with yours.",
+    "Write up the results: the hit-rate and TTFT improvement, and what happens when one replica gets a hot system prompt."
+   ],
+   "uses": [
+    "prefixrouting",
+    "consistenthashing",
+    "vllm",
+    "loadbalancer",
+    "inferencecaching",
+    "prometheus"
+   ],
+   "sections": [],
+   "links": [
+    {
+     "title": "Gateway API Inference Extension",
+     "url": "https://github.com/kubernetes-sigs/gateway-api-inference-extension",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "llm-d",
+     "url": "https://github.com/llm-d/llm-d",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "vLLM automatic prefix caching",
+     "url": "https://docs.vllm.ai/en/latest/features/automatic_prefix_caching.html",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "drill-badmodel",
+   "kind": "build",
+   "module": "ml",
+   "group": "inferencebuilds",
+   "title": "Drill: Bad Model Rollout & Noisy Tenant",
+   "subtitle": "Chaos engineering for the model layer, not just the infrastructure",
+   "lego": "Slip a slightly miswired motor into the line and let one customer hog the dispatcher, then see whether anyone notices before the customers do.",
+   "summary": "Infrastructure is healthy, but the model is wrong: a new version that is 30% slower, emits malformed JSON 5% of the time, or has a broken chat template. Meanwhile one tenant sends 10× its normal traffic. Do your canaries, evaluations and quotas catch it?",
+   "steps": [
+    "Hypothesis: the canary at 5% traffic detects the regression within 10 minutes and rolls back automatically, and other tenants' p95 TTFT stays within SLO during the noisy-tenant spike.",
+    "Deploy a deliberately degraded model version (a wrong quantization, a missing stop token, or a bad template) as the canary through the Istio or KServe traffic split.",
+    "Watch the signals: TPOT and TTFT per version, structured-output parse-failure rate, average output length (runaway generations), user thumbs-down rate, and guardrail triggers.",
+    "Simultaneously replay 10× traffic from one tenant key. Per-tenant token limits and fair queuing must contain it.",
+    "Record the time to detect and the time to roll back, and which dashboard or alert fired first. Add the missing ones."
+   ],
+   "uses": [
+    "mlflow",
+    "mlpipelines",
+    "istio",
+    "k8sserving",
+    "aigateway",
+    "structuredoutput",
+    "ratelimiting",
+    "prometheus",
+    "slo"
+   ],
+   "sections": [
+    {
+     "title": "The lesson",
+     "items": [
+      "Model regressions return HTTP 200. You need quality and behavior metrics per model version, not just error rates."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Principles of Chaos Engineering",
+     "url": "https://principlesofchaos.org/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "The ML Test Score: A Rubric for ML Production Readiness",
+     "url": "https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/",
+     "kind": "paper",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "llm-platform",
+   "kind": "build",
+   "module": "ml",
+   "group": "mlbuilds",
+   "title": "Online LLM Serving Platform",
+   "subtitle": "Serve a 70B chat model to 10,000 concurrent users",
+   "lego": "The full motor room: front desk, smart dispatcher, racks of motor bricks, and gauges on every wall.",
+   "summary": "Design an internal platform serving open models (for example, a 70B instruct model plus an 8B) to many product teams with an OpenAI-compatible API, streaming, a p95 TTFT under 1 s, TPOT under 50 ms, per-team quotas, and cost efficiency.",
+   "steps": [
+    "Clients call the AI gateway (auth, per-team token quotas, model routing, fallbacks, usage metering) behind Torbit or the CDN edge and Istio.",
+    "The gateway forwards to a Kubernetes inference gateway (GAIE or llm-d) whose endpoint picker scores vLLM or SGLang replicas on prefix-cache overlap, queue depth and KV utilization.",
+    "The 70B model runs in FP8 with TP=2 per replica on H100 or H200 nodes, with continuous batching, chunked prefill and prefix caching. At large scale, split into prefill and decode pools (disaggregation).",
+    "Weights come from the MLflow registry into GCS, and are cached on local NVMe or via GCS FUSE for fast cold starts. Images are pre-pulled on GPU node pools.",
+    "KEDA or HPA scales on queue depth and KV cache utilization, with minimum warm replicas. The cluster autoscaler adds GPU nodes, and GPU reservations cover the baseline.",
+    "Prometheus and DCGM track TTFT, TPOT, goodput, KV usage, GPU utilization and power. OpenTelemetry traces cover gateway → router → engine. Prompts and completions are logged to Kafka and the lake for evaluation."
+   ],
+   "uses": [
+    "aigateway",
+    "torbit",
+    "istio",
+    "k8sserving",
+    "prefixrouting",
+    "vllm",
+    "sglang",
+    "contbatching",
+    "parallelism",
+    "quantization",
+    "disaggregated",
+    "mlflow",
+    "gcs",
+    "prometheus",
+    "tracing",
+    "kafka"
+   ],
+   "sections": [
+    {
+     "title": "Capacity napkin",
+     "items": [
+      "10,000 concurrent streams at about 30 tokens/s each is 300k output tokens/s. If one TP=2 FP8 70B replica sustains about 3k tokens/s at the SLO, you need about 100 replicas (200 GPUs) plus headroom. Measure; don't guess.",
+      "KV cache: 70B with GQA (80 layers, 8 KV heads, 128 head dim, FP8) is about 160 KB per token, so a 4k context is about 0.65 GB per stream."
+     ]
+    },
+    {
+     "title": "Break it",
+     "items": [
+      "Kill a GPU node mid-stream: clients get a retriable error and resume via the gateway retry. The router drains the dead endpoints.",
+      "A 100k-token prompt flood: chunked prefill or disaggregation protects the TPOT of other users, and gateway limits on max input tokens apply."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "vLLM documentation",
+     "url": "https://docs.vllm.ai/en/latest/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "llm-d",
+     "url": "https://github.com/llm-d/llm-d",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "NVIDIA Dynamo",
+     "url": "https://github.com/ai-dynamo/dynamo",
+     "kind": "tool",
+     "note": null
+    },
+    {
+     "title": "DistServe (OSDI 2024)",
+     "url": "https://arxiv.org/abs/2401.09670",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "LLM Inference Performance Engineering: Best Practices",
+     "url": "https://www.databricks.com/blog/llm-inference-performance-engineering-best-practices",
+     "kind": "blog",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "realtime-recs",
+   "kind": "build",
+   "module": "ml",
+   "group": "mlbuilds",
+   "title": "Real-Time Recommendations",
+   "subtitle": "Feature store + two-stage retrieval and ranking + Triton",
+   "lego": "Grab a handful of likely pieces from a huge bin fast, then have an expert sort that handful into the perfect order, in under 100 ms.",
+   "summary": "Personalized product recommendations on the home page for 100M users, with p99 under 100 ms, reacting to clicks within seconds, and retrained daily.",
+   "steps": [
+    "Clickstream goes to Kafka, then Flink computes real-time features (the last N items viewed, session category affinity) and writes them to the online feature store (Redis, Bigtable or Cassandra).",
+    "The nightly Spark batch computes long-term user and item features into the offline store, then materializes them online.",
+    "Retrieval: embed the user and run ANN search over item embeddings (vector DB or ScaNN/FAISS) to get about 500 candidates, plus rule-based candidates.",
+    "Ranking: fetch features for the user and candidates from the online store, then score them on Triton (dynamic batching, GPU), rerank for diversity and business rules, and return the top 20.",
+    "Log served features and outcomes to Kafka and the lake. Daily training with point-in-time joins, registered in MLflow, rolled out as a canary with an A/B test."
+   ],
+   "uses": [
+    "kafka",
+    "streamprocessing",
+    "featurestore",
+    "cassandra",
+    "distcache",
+    "vectordb",
+    "triton",
+    "spark",
+    "mlflow",
+    "mlpipelines"
+   ],
+   "sections": [
+    {
+     "title": "Break it",
+     "items": [
+      "The feature store times out: fall back to cached popular items (a degraded but fast default). The circuit breaker opens."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Deep Neural Networks for YouTube Recommendations (RecSys 2016)",
+     "url": "https://research.google/pubs/deep-neural-networks-for-youtube-recommendations/",
+     "kind": "paper",
+     "note": "Candidate generation plus ranking"
+    },
+    {
+     "title": "Meet Michelangelo: Uber's Machine Learning Platform",
+     "url": "https://www.uber.com/blog/michelangelo-machine-learning-platform/",
+     "kind": "blog",
+     "note": null
+    },
+    {
+     "title": "Triton: dynamic batching",
+     "url": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/batcher.html",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "batch-inference",
+   "kind": "build",
+   "module": "ml",
+   "group": "mlbuilds",
+   "title": "Batch LLM Inference Pipeline",
+   "subtitle": "Ray Data + vLLM over 100M product descriptions",
+   "lego": "Run the motor room overnight on a giant pile of jobs: nobody is waiting for any single one, so pack the GPUs completely full.",
+   "summary": "Every week, generate enriched attributes and embeddings for 100M catalog items with an 8B LLM, maximizing tokens per dollar with no latency SLO, and write the results back to the lakehouse.",
+   "steps": [
+    "Airflow triggers the job and reads a snapshot of the item table (Iceberg on GCS) with Ray Data, streaming in blocks.",
+    "CPU stages build prompts. GPU stages run vLLM engines as Ray actors (one per GPU) with large batches, prefix caching for the shared instruction, and FP8.",
+    "Use spot or preemptible GPUs with Ray task retries. Write output per block, idempotently, keyed by item ID.",
+    "Write results to an Iceberg table and publish a 'ready' event. The search index and feature store pick up the changes."
+   ],
+   "uses": [
+    "orchestration",
+    "lakehouse",
+    "gcs",
+    "ray",
+    "vllm",
+    "quantization",
+    "batchprinciples"
+   ],
+   "sections": [
+    {
+     "title": "Napkin",
+     "items": [
+      "100M items × about 300 tokens is about 30B tokens. At about 20k tokens/s per GPU for a batch-optimized 8B model, that's about 420 GPU-hours."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Ray Data: batch inference",
+     "url": "https://docs.ray.io/en/latest/data/batch_inference.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "vLLM offline inference",
+     "url": "https://docs.vllm.ai/en/latest/serving/offline_inference.html",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "rag-assistant",
+   "kind": "build",
+   "module": "ml",
+   "group": "mlbuilds",
+   "title": "RAG Shopping Assistant",
+   "subtitle": "Retrieval + LLM + guardrails",
+   "lego": "Before answering, the builder runs to the parts catalog, grabs the relevant pages, and builds the answer from them.",
+   "summary": "A chat assistant that answers product and policy questions grounded in the catalog and help-center documents, with citations, streaming, and under 2 s to first token.",
+   "steps": [
+    "An offline pipeline (Airflow, Spark or Ray) chunks documents, embeds them, and indexes them into a vector DB plus a keyword index (hybrid search). CDC keeps prices and stock fresh.",
+    "Online: the AI gateway authenticates and applies guardrails, then query rewriting, then hybrid retrieval and a reranker, then a prompt with a stable system prefix (for prefix caching) plus the retrieved context.",
+    "The LLM is served on vLLM or SGLang behind the inference gateway. Responses stream via SSE with citations.",
+    "Log everything, run offline evaluations (groundedness, answer quality), and collect user feedback in MLflow and the lake."
+   ],
+   "uses": [
+    "aigateway",
+    "vectordb",
+    "searchindex",
+    "cdc",
+    "vllm",
+    "prefixrouting",
+    "distcache",
+    "mlflow",
+    "tracing"
+   ],
+   "sections": [
+    {
+     "title": "Break it",
+     "items": [
+      "The vector DB is slow: time out and fall back to keyword search only. The LLM pool is saturated: queue with a clear message, or fall back to a smaller model."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+     "url": "https://arxiv.org/abs/2005.11401",
+     "kind": "paper",
+     "note": null
+    },
+    {
+     "title": "SGLang documentation",
+     "url": "https://docs.sglang.io/",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "train-to-deploy",
+   "kind": "build",
+   "module": "ml",
+   "group": "mlbuilds",
+   "title": "Training-to-Deployment Pipeline",
+   "subtitle": "Lakehouse → Spark features → Ray Train → MLflow → canary",
+   "lego": "The full assembly line from raw pieces to a certified model on the showroom floor, with a rollback lever at every stage.",
+   "summary": "Automate weekly retraining of a ranking model (or a LoRA fine-tune of an LLM) from fresh data, with evaluation gates, safe rollout and automatic rollback.",
+   "steps": [
+    "The Airflow or Kubeflow pipeline builds a point-in-time training set from the feature store's offline store (Spark), pinned to an Iceberg snapshot.",
+    "Distributed training on GPUs with Ray Train (or PyTorch on KubeRay). Parameters, metrics and artifacts are logged to MLflow.",
+    "Evaluation gates: sliced metrics must beat the champion, bias and safety checks pass, and a latency benchmark is run on the serving engine.",
+    "Register the version, set the @challenger alias, then shadow it, then canary it (Istio or KServe traffic split) while watching business metrics and SLOs. Promote to @champion or roll back automatically."
+   ],
+   "uses": [
+    "orchestration",
+    "featurestore",
+    "spark",
+    "lakehouse",
+    "ray",
+    "mlflow",
+    "mlpipelines",
+    "istio",
+    "k8sserving",
+    "prometheus"
+   ],
+   "sections": [],
+   "links": [
+    {
+     "title": "MLOps: Continuous delivery and automation pipelines in ML",
+     "url": "https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "MLflow Model Registry",
+     "url": "https://mlflow.org/docs/latest/model-registry.html",
+     "kind": "docs",
+     "note": null
+    }
+   ]
+  },
+  {
+   "id": "moc-vllm",
+   "kind": "build",
+   "module": "ml",
+   "group": "mlbuilds",
+   "title": "Mini-MOC: Serve & Benchmark a Model with vLLM",
+   "subtitle": "Hands-on: one GPU, one weekend",
+   "lego": "Build a small working motor yourself and put it on the test bench before designing the whole factory.",
+   "summary": "Serve a small open model (1–8B) with vLLM, or SGLang if you want to compare, on one GPU (cloud or local). Load-test it and plot how TTFT, TPOT and throughput trade off as concurrency rises.",
+   "steps": [
+    "Run `vllm serve <model>` with an OpenAI-compatible endpoint. Scrape `/metrics` with Prometheus and graph it in Grafana.",
+    "Benchmark at concurrency 1, 8, 32, 128 (vLLM bench serve or a Locust script) with a fixed prompt and output length. Record TTFT, TPOT, tokens/s and KV cache usage.",
+    "Toggle one lever at a time: prefix caching (shared system prompt), FP8 quantization, max_num_seqs, and a speculative-decoding drafter. Compare the curves.",
+    "Write a one-page capacity model: GPUs needed for X users at a Y ms TTFT SLO."
+   ],
+   "uses": [
+    "vllm",
+    "sglang",
+    "llminference",
+    "contbatching",
+    "quantization",
+    "specdecoding",
+    "prometheus"
+   ],
+   "sections": [],
+   "links": [
+    {
+     "title": "vLLM quickstart",
+     "url": "https://docs.vllm.ai/en/latest/getting_started/quickstart.html",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "vLLM GitHub",
+     "url": "https://github.com/vllm-project/vllm",
+     "kind": "tool",
+     "note": "See benchmarks/ for the serving benchmark"
+    }
+   ]
+  },
+  {
+   "id": "drill-gpu",
+   "kind": "build",
+   "module": "ml",
+   "group": "mlbuilds",
+   "title": "Drill: GPU Loss & KV-Cache Exhaustion",
+   "subtitle": "Chaos engineering for model serving",
+   "lego": "Pull a motor brick out while the machine is running, then overload the rest, and watch whether the gauges and dispatcher react in time.",
+   "summary": "Test that the serving platform degrades gracefully when GPUs disappear or the KV cache fills up, and that you see it coming on dashboards before users do.",
+   "steps": [
+    "Hypothesis: losing one replica keeps p95 TTFT within SLO, and a traffic spike triggers queueing and scale-up, not errors.",
+    "Kill a vLLM pod or cordon a GPU node. The router must stop sending traffic to it within seconds, and in-flight streams must fail cleanly and be retried by the gateway.",
+    "Spike traffic with long prompts until KV cache usage reaches 100%. Watch preemptions, queue depth and TTFT. The autoscaler should fire on the queue metric, and the gateway should shed low-priority tenants first.",
+    "Check the alerts: KV cache above 90%, TTFT SLO burn rate, and GPU XID or DCGM errors. Record how long GPU scale-up really takes, from node to image to weights to ready."
+   ],
+   "uses": [
+    "vllm",
+    "k8sserving",
+    "prefixrouting",
+    "aigateway",
+    "prometheus",
+    "backpressure",
+    "ratelimiting"
+   ],
+   "sections": [
+    {
+     "title": "The lesson",
+     "items": [
+      "GPU capacity is slow to add. Protect it with admission control and keep warm headroom, rather than relying on autoscaling alone."
+     ]
+    }
+   ],
+   "links": [
+    {
+     "title": "Principles of Chaos Engineering",
+     "url": "https://principlesofchaos.org/",
+     "kind": "docs",
+     "note": null
+    },
+    {
+     "title": "NVIDIA DCGM exporter",
+     "url": "https://github.com/NVIDIA/dcgm-exporter",
      "kind": "tool",
      "note": null
     }

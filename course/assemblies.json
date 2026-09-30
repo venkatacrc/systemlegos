@@ -16,7 +16,7 @@
       "The match goes into a message queue, and a notifier sends the driver a push notification with retries and a timeout. If the driver declines or doesn't answer, the lock is released and the next candidate is offered.",
       "The confirmed trip is written to a durable database (sharded by city or trip ID) as the system of record for billing and history."
     ],
-    "uses": ["apigateway", "stream", "containers", "cache", "serverless", "queue", "nosql", "idempotency"],
+    "uses": ["apigateway", "stream", "kafka", "containers", "cache", "serverless", "queue", "nosql", "cassandra", "idempotency"],
     "sections": [
       {"title": "Why these bricks", "items": [
         "Location is high-volume and short-lived. Keep only the latest position in memory; the stream holds history for replay and analytics.",
@@ -61,7 +61,7 @@
       "Isolated order-processing workers pull jobs at a steady pace the database can handle. Each worker writes the order to the relational database in a transaction, calls the payment gateway with the same idempotency key, and acknowledges the message only after both succeed.",
       "Messages that keep failing go to a dead-letter queue for inspection. An outbox table publishes OrderConfirmed events for email, fulfilment and analytics."
     ],
-    "uses": ["cdn", "apigateway", "ratelimiting", "loadbalancer", "containers", "cache", "queue", "rdbms", "idempotency", "sagas"],
+    "uses": ["cdn", "apigateway", "ratelimiting", "loadbalancer", "containers", "cache", "queue", "rdbms", "idempotency", "sagas", "distcache", "istio", "prometheus"],
     "sections": [
       {"title": "Why these bricks", "items": [
         "The queue turns a spike the database can't survive into a steady flow it can (load leveling).",
@@ -162,7 +162,7 @@
       "The message is published to a stream or pub/sub topic. The gateways holding recipients' connections push it down their sockets.",
       "Offline recipients get a push notification through a notification queue, and clients sync missed messages on reconnect using their last seen sequence number."
     ],
-    "uses": ["loadbalancer", "containers", "cache", "nosql", "stream", "queue", "sharding"],
+    "uses": ["loadbalancer", "containers", "cache", "nosql", "cassandra", "stream", "queue", "sharding"],
     "sections": [
       {"title": "Break it", "items": [
         "A gateway server dies: all its clients reconnect at once. Add jittered reconnect backoff, or they stampede the survivors.",

@@ -6,7 +6,8 @@
       {"id": "compute", "label": "Compute — the Workers", "color": "orange"},
       {"id": "storage", "label": "Storage & Databases — the Memory", "color": "blue"},
       {"id": "networking", "label": "Networking & Routing — the Connectors", "color": "green"},
-      {"id": "integration", "label": "Integration & Communication — the Glue", "color": "purple"}
+      {"id": "integration", "label": "Integration & Communication — the Glue", "color": "purple"},
+      {"id": "observability", "label": "Observability — the Inspectors", "color": "brown"}
     ]
   },
   {
@@ -36,6 +37,25 @@
       {"id": "cad", "label": "Step 2 · Virtual CAD Tools", "color": "teal"},
       {"id": "mocs", "label": "Step 3 · Mini-MOCs (My Own Creations)", "color": "green"},
       {"id": "chaos", "label": "Step 4 · Break Your Models", "color": "red"}
+    ]
+  },
+  {
+    "id": "data",
+    "title": "5 · Data & Batch Pipelines",
+    "groups": [
+      {"id": "streaming", "label": "Streaming Pipelines", "color": "purple"},
+      {"id": "batch", "label": "Batch Processing & the Lakehouse", "color": "blue"},
+      {"id": "pipelinebuilds", "label": "Pipeline Builds & Drills", "color": "yellow"}
+    ]
+  },
+  {
+    "id": "ml",
+    "title": "6 · ML Platform & LLM Serving",
+    "groups": [
+      {"id": "mlplatform", "label": "ML Platform", "color": "teal"},
+      {"id": "serving", "label": "Online Large-Model Serving", "color": "red"},
+      {"id": "inferencebuilds", "label": "Online Inference Case Studies", "color": "orange"},
+      {"id": "mlbuilds", "label": "ML Builds, Projects & Drills", "color": "pink"}
     ]
   }
 ]

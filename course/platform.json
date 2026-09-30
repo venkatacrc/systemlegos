@@ -1,0 +1,380 @@
+[
+  {
+    "id": "cassandra",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "storage",
+    "title": "Wide-Column Stores: Cassandra",
+    "subtitle": "Apache Cassandra · ScyllaDB · Google Bigtable · HBase",
+    "lego": "A huge rack of labelled drawers spread over many tables. Every table can take new pieces at any moment, and each drawer keeps its pieces sorted.",
+    "summary": "A masterless, Dynamo-style cluster with a Bigtable-style data model. Rows are placed on a consistent-hash ring by partition key and replicated to N nodes (typically 3, across racks or zones). Any node can coordinate a request, and the consistency level is chosen per query (ONE, QUORUM, LOCAL_QUORUM, ALL). Writes go to a commit log and memtable and are flushed to immutable SSTables that are compacted later (an LSM tree), so writes are very fast. Inside a partition, rows are sorted by clustering columns, which makes 'latest N items for X' queries cheap.",
+    "sections": [
+      {"title": "Reach for it when", "items": [
+        "Write-heavy, always-on workloads: messages, events, time series, activity feeds, IoT, audit logs.",
+        "Multi-datacenter active-active with local-quorum latency.",
+        "Access patterns are known up front: design one table per query."
+      ]},
+      {"title": "Data modeling rules", "items": [
+        "Primary key = (partition key, clustering columns…). The partition key spreads load; clustering columns sort rows inside it.",
+        "Bound partition size (roughly under 100 MB) by adding a time bucket to the key, for example (channel_id, day).",
+        "Denormalize: write the same data into several query-shaped tables. There are no joins."
+      ]},
+      {"title": "Trade-offs", "items": [
+        "No joins, limited secondary indexes, and ad-hoc queries are expensive.",
+        "Lightweight transactions (Paxos-based compare-and-set) exist but are slow. Use them sparingly.",
+        "Repairs, compaction tuning, JVM garbage collection pauses (Cassandra) and tombstones take real operational care."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Hot or oversized partitions (a mega-channel or celebrity key) overload a few replicas.",
+        "Tombstone buildup from heavy deletes makes reads scan dead data and time out.",
+        "Skipped anti-entropy repair leaves replicas silently diverged, and deleted data can reappear."
+      ]},
+      {"title": "Similar blocks", "items": [
+        "ScyllaDB: Cassandra-compatible, rewritten in C++ with a shard-per-core design. Discord moved to it from Cassandra.",
+        "Google Bigtable and HBase: range-partitioned wide-column stores with a single master for metadata. Row-key design is the whole game.",
+        "Amazon DynamoDB: a managed service with similar partition and sort-key modeling."
+      ]}
+    ],
+    "links": [
+      {"title": "Cassandra: A Decentralized Structured Storage System (LADIS 2009)", "url": "https://www.cs.cornell.edu/projects/ladis2009/papers/lakshman-ladis2009.pdf", "kind": "paper", "note": "Lakshman and Malik, Facebook"},
+      {"title": "Apache Cassandra: Dynamo architecture", "url": "https://cassandra.apache.org/doc/latest/cassandra/architecture/dynamo.html", "kind": "docs", "note": "Ring, replication, tunable consistency"},
+      {"title": "Apache Cassandra documentation", "url": "https://cassandra.apache.org/doc/latest/", "kind": "docs", "note": "Includes the data-modeling guide"},
+      {"title": "How Discord Stores Trillions of Messages", "url": "https://discord.com/blog/how-discord-stores-trillions-of-messages", "kind": "blog", "note": "Cassandra to ScyllaDB, hot partitions"},
+      {"title": "Bigtable: A Distributed Storage System for Structured Data", "url": "https://static.googleusercontent.com/media/research.google.com/en//archive/bigtable-osdi06.pdf", "kind": "paper", "note": null}
+    ]
+  },
+  {
+    "id": "distributedsql",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "storage",
+    "title": "Distributed SQL (NewSQL)",
+    "subtitle": "Google Spanner · CockroachDB · YugabyteDB · Amazon Aurora",
+    "lego": "The rigid LEGO grid, but built from many baseplates snapped together, and it still feels like one board.",
+    "summary": "Relational databases that keep SQL and ACID transactions but scale out horizontally. Data is split into ranges or tablets, each replicated with Raft or Paxos, and transactions that span ranges use a distributed commit protocol. Spanner uses TrueTime for external consistency; CockroachDB and YugabyteDB use hybrid logical clocks. Aurora takes a different route: one writer, with a shared, replicated storage layer that scales reads and durability.",
+    "sections": [
+      {"title": "Reach for it when", "items": [
+        "You've outgrown a single Postgres or MySQL primary but still need transactions and SQL.",
+        "Multi-region deployments with strong consistency and automatic failover.",
+        "You want to avoid hand-rolled application-level sharding."
+      ]},
+      {"title": "Trade-offs", "items": [
+        "Every write pays for consensus. Cross-region transactions add tens to hundreds of milliseconds.",
+        "Hot ranges (sequential primary keys) still bottleneck. Use hashed or UUID keys.",
+        "Costs more and has more moving parts than a single-node database."
+      ]}
+    ],
+    "links": [
+      {"title": "Spanner: Google's Globally-Distributed Database", "url": "https://static.googleusercontent.com/media/research.google.com/en//archive/spanner-osdi2012.pdf", "kind": "paper", "note": null},
+      {"title": "CockroachDB: The Resilient Geo-Distributed SQL Database (SIGMOD 2020)", "url": "https://dl.acm.org/doi/10.1145/3318464.3386134", "kind": "paper", "note": null},
+      {"title": "Amazon Aurora: Design Considerations for High Throughput Cloud-Native Relational Databases (SIGMOD 2017)", "url": "https://dl.acm.org/doi/10.1145/3035918.3056101", "kind": "paper", "note": "The log is the database"},
+      {"title": "YugabyteDB documentation", "url": "https://docs.yugabyte.com/", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "searchindex",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "storage",
+    "title": "Search Engines",
+    "subtitle": "Elasticsearch · OpenSearch · Apache Solr · Lucene",
+    "lego": "The index at the back of the instruction booklet: look up a word and it tells you every page it appears on.",
+    "summary": "Search engines build an inverted index (term → list of documents), plus BM25 relevance scoring, analyzers for tokenizing and stemming, facets and aggregations, and increasingly vector search too. An index is split into shards with replicas across nodes. It is fed from the source-of-truth database, usually asynchronously through change data capture or events, and is almost never the system of record.",
+    "sections": [
+      {"title": "Reach for it when", "items": [
+        "Full-text product and catalog search, typeahead, log search and analytics, faceted filtering."
+      ]},
+      {"title": "Trade-offs", "items": [
+        "Near-real-time rather than instant: refresh intervals of about 1 s. Reindexing after a mapping change is costly.",
+        "The index drifts from the database if the update pipeline drops events. Plan full rebuilds."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Too many small shards overload the cluster state. Deep pagination and heavy aggregations exhaust memory.",
+        "Split-brain from bad quorum settings on older versions."
+      ]}
+    ],
+    "links": [
+      {"title": "Elasticsearch", "url": "https://www.elastic.co/elasticsearch", "kind": "docs", "note": null},
+      {"title": "OpenSearch documentation", "url": "https://opensearch.org/docs/latest/", "kind": "docs", "note": null},
+      {"title": "Apache Lucene", "url": "https://lucene.apache.org/", "kind": "docs", "note": "The library under Elasticsearch, OpenSearch and Solr"},
+      {"title": "How we rebuilt the Walmart Autocomplete Backend", "url": "https://medium.com/walmartglobaltech/how-we-rebuilt-the-walmart-autocomplete-backend-10efe71d624a", "kind": "blog", "note": "Walmart Global Tech: a prefix index served from a distributed cache"}
+    ]
+  },
+  {
+    "id": "vectordb",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "storage",
+    "title": "Vector Databases",
+    "subtitle": "pgvector · Milvus · Vertex AI Vector Search · FAISS · Pinecone",
+    "lego": "A bin sorted by shape-similarity instead of by label: hold up a piece and it hands you the ones that look most like it.",
+    "summary": "Vector databases store embeddings (dense vectors from a model) and answer 'k nearest neighbours' queries with approximate nearest neighbour (ANN) indexes. HNSW is a graph index: fast with high recall, but memory-hungry. IVF plus product quantization clusters and compresses vectors, so it is cheaper at billion scale. Metadata filters and hybrid search (combined with BM25) narrow the results. They are the retrieval brick behind RAG, semantic search, recommendations and deduplication.",
+    "sections": [
+      {"title": "Reach for it when", "items": [
+        "Retrieval-augmented generation (RAG) for LLM apps, semantic or product search, similar-item recommendations.",
+        "Start with pgvector if you already run Postgres. Move to a dedicated engine for more than about 100 million vectors or very high QPS."
+      ]},
+      {"title": "Trade-offs", "items": [
+        "Recall vs latency vs memory is tuned through index parameters (HNSW M and efSearch, IVF nlist and nprobe).",
+        "Re-embedding the whole corpus when the embedding model changes is a batch job to plan for."
+      ]}
+    ],
+    "links": [
+      {"title": "Efficient and robust approximate nearest neighbor search using HNSW graphs", "url": "https://arxiv.org/abs/1603.09320", "kind": "paper", "note": "Malkov and Yashunin"},
+      {"title": "Billion-scale similarity search with GPUs (FAISS)", "url": "https://arxiv.org/abs/1702.08734", "kind": "paper", "note": null},
+      {"title": "pgvector", "url": "https://github.com/pgvector/pgvector", "kind": "tool", "note": null},
+      {"title": "Milvus documentation", "url": "https://milvus.io/docs", "kind": "docs", "note": null},
+      {"title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks", "url": "https://arxiv.org/abs/2005.11401", "kind": "paper", "note": "The original RAG paper"}
+    ]
+  },
+  {
+    "id": "coordination",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "storage",
+    "title": "Coordination Services",
+    "subtitle": "ZooKeeper · etcd · Consul · Google Chubby",
+    "lego": "The small, trusted referee's notebook that every builder checks to find out who's in charge and which instructions are current.",
+    "summary": "Coordination services are small, strongly consistent (consensus-replicated) key-value stores for coordination, not bulk data. They provide leader election, distributed locks and leases, service discovery, configuration, and cluster membership through watches and ephemeral keys. etcd stores all Kubernetes state. ZooKeeper historically coordinated Kafka, HBase and Hadoop; Kafka has replaced it with its own KRaft quorum.",
+    "sections": [
+      {"title": "Use it well", "items": [
+        "Keep data tiny (KBs to MBs), and keep writes infrequent.",
+        "A lock needs a fencing token (a monotonic number checked by the resource). Otherwise a paused client can act on an expired lease."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Losing quorum (for example 2 of 3 nodes) blocks all writes and leader changes. Run 3 or 5 nodes across zones.",
+        "Abusing it as a general database causes slow disks, huge snapshots and election storms."
+      ]}
+    ],
+    "links": [
+      {"title": "ZooKeeper: Wait-free coordination for Internet-scale systems (USENIX ATC 2010)", "url": "https://www.usenix.org/conference/usenix-atc-10/zookeeper-wait-free-coordination-internet-scale-systems", "kind": "paper", "note": null},
+      {"title": "The Chubby lock service for loosely-coupled distributed systems", "url": "https://research.google/pubs/the-chubby-lock-service-for-loosely-coupled-distributed-systems/", "kind": "paper", "note": "Mike Burrows, OSDI 2006"},
+      {"title": "etcd documentation", "url": "https://etcd.io/docs/", "kind": "docs", "note": null},
+      {"title": "How to do distributed locking", "url": "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html", "kind": "blog", "note": "Martin Kleppmann on fencing tokens"}
+    ]
+  },
+  {
+    "id": "gcs",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "storage",
+    "title": "Google Cloud Storage Buckets",
+    "subtitle": "GCS · gs:// · the data lake and model store on GCP",
+    "lego": "Google's version of the giant storage bins, with a choice of how close to the front door each bin sits (and what it costs to open).",
+    "summary": "GCS is Google Cloud's object store. Objects live in buckets under a flat namespace with '/' only as a naming convention. Location types are region, dual-region and multi-region. Storage classes are Standard, Nearline (30-day minimum), Coldline (90-day) and Archive (365-day), with Autoclass available to tier automatically. It offers strong global consistency for object reads, writes and listing, IAM with uniform bucket-level access, signed URLs, object versioning, lifecycle rules, and Pub/Sub notifications. It is the default landing zone for data lakes, Spark and Dataproc jobs, BigQuery external tables, training data and model artifacts.",
+    "sections": [
+      {"title": "Reach for it when", "items": [
+        "Raw and curated data-lake zones (Parquet or Iceberg files), batch pipeline inputs and outputs.",
+        "ML datasets, checkpoints and model weights. Mount with Cloud Storage FUSE, or stream with parallel readers.",
+        "Media and static assets behind Cloud CDN. Backups and logs with lifecycle rules to cheaper classes."
+      ]},
+      {"title": "Design tips", "items": [
+        "Co-locate buckets with compute (same region) to avoid egress cost and latency.",
+        "Ramp request rates gradually. Very high QPS on sequential names (timestamps) can hot-spot, so prefer random or hashed prefixes.",
+        "Use Pub/Sub notifications or Eventarc to trigger pipelines when objects land. Delivery is at-least-once, so make consumers idempotent.",
+        "Many small files hurt Spark and BigQuery. Compact them into files of about 128 MB to 1 GB."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Early deletion fees and retrieval costs on cold classes surprise batch jobs that reread old data.",
+        "A publicly readable bucket through a mistaken IAM binding. Enforce public access prevention.",
+        "Loading model weights from GCS on every pod start slows GPU autoscaling. Cache or pre-stage the weights."
+      ]}
+    ],
+    "links": [
+      {"title": "Storage classes", "url": "https://cloud.google.com/storage/docs/storage-classes", "kind": "docs", "note": "Google Cloud"},
+      {"title": "Bucket locations", "url": "https://cloud.google.com/storage/docs/locations", "kind": "docs", "note": null},
+      {"title": "Request rate and access distribution guidelines", "url": "https://cloud.google.com/storage/docs/request-rate", "kind": "docs", "note": "Avoiding hot-spotting"},
+      {"title": "Cloud Storage consistency", "url": "https://cloud.google.com/storage/docs/consistency", "kind": "docs", "note": null},
+      {"title": "Pub/Sub notifications for Cloud Storage", "url": "https://cloud.google.com/storage/docs/pubsub-notifications", "kind": "docs", "note": null},
+      {"title": "Object Lifecycle Management", "url": "https://cloud.google.com/storage/docs/lifecycle", "kind": "docs", "note": null},
+      {"title": "Signed URLs", "url": "https://cloud.google.com/storage/docs/access-signed-urls", "kind": "docs", "note": null},
+      {"title": "Cloud Storage FUSE", "url": "https://cloud.google.com/storage/docs/gcs-fuse", "kind": "docs", "note": "Mount buckets for training and serving"}
+    ]
+  },
+  {
+    "id": "istio",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "networking",
+    "title": "Service Mesh: Istio",
+    "subtitle": "Istio · Envoy · Linkerd · ambient mode",
+    "lego": "A clip-on connector attached to every brick, so every connection between bricks is locked, counted and steerable without redesigning the bricks themselves.",
+    "summary": "A service mesh moves service-to-service networking out of application code into a proxy layer. In sidecar mode an Envoy proxy runs next to every pod; in ambient mode per-node ztunnel proxies handle L4 and optional waypoint proxies handle L7. The control plane (istiod) pushes configuration to the proxies. You get mutual TLS and workload identity, fine-grained traffic management (weighted canaries, header routing, retries, timeouts, circuit breaking, fault injection, mirroring), authorization policy, and uniform metrics and traces.",
+    "sections": [
+      {"title": "Reach for it when", "items": [
+        "Many microservices on Kubernetes need zero-trust mTLS and consistent retries, timeouts and telemetry.",
+        "Progressive delivery: shift 1% → 10% → 100% of traffic to a new version, or mirror production traffic to a shadow model.",
+        "Chaos drills: inject delays and aborts with a VirtualService, no code changes needed."
+      ]},
+      {"title": "Key resources", "items": [
+        "Gateway (ingress and egress), VirtualService (routing rules), DestinationRule (subsets, load balancing, outlier detection), PeerAuthentication and AuthorizationPolicy (mTLS and access)."
+      ]},
+      {"title": "Trade-offs", "items": [
+        "Sidecars add memory and CPU per pod and extra latency per hop, which ambient mode reduces.",
+        "Mesh-level retries stacked on client retries multiply load. Own retries in one layer.",
+        "A bad mesh config push can break traffic cluster-wide. Canary your control-plane changes."
+      ]}
+    ],
+    "links": [
+      {"title": "What is Istio?", "url": "https://istio.io/latest/docs/concepts/what-is-istio/", "kind": "docs", "note": null},
+      {"title": "Istio traffic management", "url": "https://istio.io/latest/docs/concepts/traffic-management/", "kind": "docs", "note": null},
+      {"title": "Istio security (mTLS, identity, authorization)", "url": "https://istio.io/latest/docs/concepts/security/", "kind": "docs", "note": null},
+      {"title": "Istio ambient mode overview", "url": "https://istio.io/latest/docs/ambient/overview/", "kind": "docs", "note": "Sidecar-less mesh"},
+      {"title": "What is Envoy", "url": "https://www.envoyproxy.io/docs/envoy/latest/intro/what_is_envoy", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "torbit",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "networking",
+    "title": "Torbit: Walmart's Edge Platform",
+    "subtitle": "Edge proxy · L7 routing · edge caching and security",
+    "lego": "Walmart's own front gate and sorting station at the edge of the city. Every visitor passes through it before reaching any building, and it decides which building they go to.",
+    "summary": "Torbit began as a web-performance startup (real-user monitoring and dynamic front-end optimization) that Walmart Labs acquired in 2013. The team went on to build Walmart's in-house edge infrastructure: proxies, load balancers, edge security and real-user monitoring. Walmart engineers use Torbit for edge traffic control such as path-based routing between legacy and new services. Conceptually it plays the role of a CDN or edge proxy plus L7 load balancer in front of the origin: TLS termination, caching, request routing and rewriting, bot and WAF protection, and gradual traffic shifting.",
+    "sections": [
+      {"title": "Where it sits", "items": [
+        "Client → DNS → Torbit edge (TLS, cache, security, routing) → regional load balancers or ingress (Istio gateway) → services.",
+        "The public equivalent is Cloudflare, Akamai or Fastly, combined with an Envoy or NGINX edge tier."
+      ]},
+      {"title": "Use it for", "items": [
+        "Path-based migration: route /api/cart/* to the new microservice at 10%, then increase, with instant rollback at the edge.",
+        "Shielding origins from flash-sale spikes with caching, rate limits and request collapsing."
+      ]},
+      {"title": "How it breaks", "items": [
+        "An edge misconfiguration affects everything behind it. Stage and canary routing changes.",
+        "Caching personalized responses leaks data. Split what is cacheable from what is personalized."
+      ]}
+    ],
+    "links": [
+      {"title": "Walmart Labs scoops up site-speed optimizer Torbit (TechCrunch, 2013)", "url": "https://techcrunch.com/2013/07/24/walmart-labs-scoops-up-website-optimization-startup-torbit-to-help-it-keep-pace-with-amazon/", "kind": "blog", "note": null},
+      {"title": "Faster is Better: How We Are Optimizing Walmart.com", "url": "https://walmartlabs.blogspot.com/2013/07/fasterisbetter.html", "kind": "blog", "note": "@WalmartLabs announcement"},
+      {"title": "Farewell Torbit / Walmart", "url": "https://www.jonefox.com/farewell-torbit-walmart/", "kind": "blog", "note": "Co-founder on proxies, load balancers, edge infrastructure and edge security"},
+      {"title": "Fine-Grained Traffic Routing for Microservice Migration", "url": "https://medium.com/walmartglobaltech/fine-grained-traffic-routing-for-microservice-migration-065bab8460ca", "kind": "blog", "note": "Walmart Global Tech: path-based routing with Torbit"}
+    ]
+  },
+  {
+    "id": "kafka",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "integration",
+    "title": "Apache Kafka Deep Dive",
+    "subtitle": "Brokers · topics · partitions · consumer groups · KRaft",
+    "lego": "The master conveyor belt, split into parallel lanes (partitions). Each lane keeps its pieces in order, and every station bookmarks how far down each lane it has read.",
+    "summary": "A topic is split into partitions. Each partition is an ordered, append-only log stored on a leader broker and replicated to followers; the in-sync replica set is the ISR. Producers choose the partition by key hash, and batch and compress records. Consumers in a group split the partitions between them (one partition to at most one consumer in the group) and commit offsets. Retention is by time or size, or by compaction to the latest value per key. KRaft (a Raft metadata quorum) has replaced ZooKeeper. Kafka Connect moves data in and out; Kafka Streams and Flink process it.",
+    "sections": [
+      {"title": "Durability knobs", "items": [
+        "Producer acks=all, enable.idempotence=true, and topic min.insync.replicas=2 with replication factor 3 means no loss if one broker dies.",
+        "Transactions plus read_committed consumers give exactly-once read-process-write within Kafka."
+      ]},
+      {"title": "Sizing and scaling", "items": [
+        "Partitions cap consumer parallelism. Choose for peak throughput per consumer, with headroom, because adding partitions later reshuffles key-to-partition mapping.",
+        "Key by the entity whose events must stay ordered (order_id, driver_id), and watch for skew."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Consumer rebalances: a slow handler exceeds max.poll.interval.ms, the consumer is kicked out, partitions move, lag spikes. Decouple polling from processing.",
+        "Under-replicated partitions and unclean leader election lead to data loss. Keep unclean.leader.election.enable=false.",
+        "Poison messages block a partition. Route them to a dead-letter topic after N retries."
+      ]},
+      {"title": "At Walmart", "items": [
+        "Walmart describes 25,000+ Kafka consumers processing trillions of messages a day. Its Messaging Proxy Service decouples consumption from processing to avoid rebalance-driven lag."
+      ]}
+    ],
+    "links": [
+      {"title": "Apache Kafka documentation", "url": "https://kafka.apache.org/documentation/", "kind": "docs", "note": "Design, replication, delivery semantics"},
+      {"title": "KIP-500: Replace ZooKeeper with a Self-Managed Metadata Quorum", "url": "https://cwiki.apache.org/confluence/display/KAFKA/KIP-500%3A+Replace+ZooKeeper+with+a+Self-Managed+Metadata+Quorum", "kind": "docs", "note": "KRaft"},
+      {"title": "Reliably Processing Trillions of Kafka Messages Per Day", "url": "https://medium.com/walmartglobaltech/reliably-processing-trillions-of-kafka-messages-per-day-23494f553ef9", "kind": "blog", "note": "Walmart Global Tech"},
+      {"title": "Apache Kafka for Item Setup", "url": "https://medium.com/walmartglobaltech/apache-kafka-for-item-setup-3fe8f4ba5967", "kind": "blog", "note": "Walmart Global Tech"},
+      {"title": "The Log: What every software engineer should know about real-time data's unifying abstraction", "url": "https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying", "kind": "blog", "note": "Jay Kreps"},
+      {"title": "Exactly-once Semantics Are Possible: Here's How Kafka Does It", "url": "https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/", "kind": "blog", "note": "Confluent"}
+    ]
+  },
+  {
+    "id": "distcache",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "integration",
+    "title": "Distributed Cache",
+    "subtitle": "Redis Cluster · Memcached pools · Netflix EVCache · client-side sharding",
+    "lego": "Many arm's-reach shelves spread down a long table, with a rule that tells every builder which shelf a given piece lives on, and spare shelves that hold copies.",
+    "summary": "When one cache node isn't enough memory or throughput, keys are partitioned across many nodes. Redis Cluster uses 16,384 hash slots assigned to primaries with replicas; Memcached uses client-side consistent hashing, often through a proxy such as mcrouter or twemproxy. Replicas and zone-aware copies add availability, and cross-region replication (for example through Kafka, as in Netflix EVCache) keeps global caches warm. A near cache (in-process L1) in front of the distributed L2 absorbs the hottest keys.",
+    "sections": [
+      {"title": "Design choices", "items": [
+        "Sharding: Redis Cluster hash slots or consistent hashing, so adding a node moves only about 1/N of keys.",
+        "Replication: a replica per shard for failover, and copies in each zone so reads stay local.",
+        "Consistency: invalidate on write (preferably driven by change data capture), TTL as a safety net, versioned keys for immutable data."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Hot keys: one shard melts while the rest idle. Replicate hot keys, add an L1 near cache, or split the key.",
+        "Node loss or resharding means a cold slice and a database spike. Warm the cache gradually and coalesce requests.",
+        "Big values or keys (multi-MB) cause latency spikes and network saturation.",
+        "Multi-key operations fail across slots in Redis Cluster. Use hash tags {user42}:… to co-locate keys."
+      ]}
+    ],
+    "links": [
+      {"title": "Redis cluster specification", "url": "https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/", "kind": "docs", "note": "Hash slots, failover, redirection"},
+      {"title": "A large scale analysis of hundreds of in-memory cache clusters at Twitter (OSDI 2020)", "url": "https://www.usenix.org/conference/osdi20/presentation/yang", "kind": "paper", "note": null},
+      {"title": "Caching for a Global Netflix", "url": "https://netflixtechblog.com/caching-for-a-global-netflix-7bcc457012f1", "kind": "blog", "note": "EVCache cross-region replication through Kafka"},
+      {"title": "How we rebuilt the Walmart Autocomplete Backend", "url": "https://medium.com/walmartglobaltech/how-we-rebuilt-the-walmart-autocomplete-backend-10efe71d624a", "kind": "blog", "note": "Walmart: Memcached-backed index, daily writer, geo-replicated readers"},
+      {"title": "Scaling Memcache at Facebook", "url": "https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala", "kind": "paper", "note": null},
+      {"title": "twemproxy", "url": "https://github.com/twitter/twemproxy", "kind": "tool", "note": "Sharding proxy for Memcached and Redis"}
+    ]
+  },
+  {
+    "id": "prometheus",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "observability",
+    "title": "Metrics & Alerting: Prometheus",
+    "subtitle": "Prometheus · Grafana · Alertmanager · Thanos / Mimir",
+    "lego": "Gauges clipped onto every brick, read every few seconds and written into a logbook, with an alarm bell when a needle crosses the red line.",
+    "summary": "Prometheus pulls (scrapes) metrics over HTTP from /metrics endpoints every 15–60 s and stores them as time series identified by a metric name and labels, in a compressed time-series database. The metric types are counters, gauges, histograms and summaries. You query with PromQL, for example rate(http_requests_total[5m]) and histogram_quantile(0.99, …). Alertmanager deduplicates and routes alerts. Grafana draws dashboards. Thanos, Cortex or Mimir add long-term, global, highly available storage.",
+    "sections": [
+      {"title": "What to measure", "items": [
+        "RED for services: request Rate, Errors, Duration (as histograms, for p50/p95/p99).",
+        "USE for resources: Utilization, Saturation, Errors (CPU, memory, disk, GPU, queue depth).",
+        "The four golden signals: latency, traffic, errors, saturation. Alert on SLO burn rate, not on raw CPU."
+      ]},
+      {"title": "For LLM serving", "items": [
+        "Time to first token (TTFT), time per output token (TPOT), tokens per second, running and waiting requests, KV-cache usage, GPU utilization (DCGM exporter). vLLM, SGLang and Triton expose Prometheus metrics."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Cardinality explosion: putting user_id or request_id in labels creates millions of series and exhausts memory.",
+        "Averages hide tails. Averaging precomputed quantiles across instances is mathematically wrong; aggregate histograms instead."
+      ]}
+    ],
+    "links": [
+      {"title": "Prometheus overview", "url": "https://prometheus.io/docs/introduction/overview/", "kind": "docs", "note": null},
+      {"title": "Histograms and summaries", "url": "https://prometheus.io/docs/practices/histograms/", "kind": "docs", "note": null},
+      {"title": "Monitoring Distributed Systems (Google SRE book)", "url": "https://sre.google/sre-book/monitoring-distributed-systems/", "kind": "book", "note": "The four golden signals"},
+      {"title": "Gorilla: A Fast, Scalable, In-Memory Time Series Database (VLDB 2015)", "url": "https://www.vldb.org/pvldb/vol8/p1816-teller.pdf", "kind": "paper", "note": "Compression used by Prometheus's TSDB"},
+      {"title": "The RED Method: how to instrument your services", "url": "https://grafana.com/blog/2018/08/02/the-red-method-how-to-instrument-your-services/", "kind": "blog", "note": "Tom Wilkie"},
+      {"title": "The USE Method", "url": "https://www.brendangregg.com/usemethod.html", "kind": "blog", "note": "Brendan Gregg"},
+      {"title": "Thanos", "url": "https://thanos.io/", "kind": "tool", "note": "Highly available, long-term Prometheus"}
+    ]
+  },
+  {
+    "id": "tracing",
+    "kind": "brick",
+    "module": "bricks",
+    "group": "observability",
+    "title": "Distributed Tracing & Logs",
+    "subtitle": "OpenTelemetry · Jaeger · Tempo · structured logging",
+    "lego": "A tracer dye on one peg, so you can watch exactly which bricks it passed through and how long it paused at each.",
+    "summary": "A trace follows one request across services as a tree of spans (with service, operation, duration and attributes), linked by a trace ID propagated in headers (W3C traceparent). OpenTelemetry is the vendor-neutral standard: SDKs plus a Collector for traces, metrics and logs. Sampling (head-based or tail-based) keeps costs sane. Structured JSON logs that carry the trace ID tie the three signals together.",
+    "sections": [
+      {"title": "Use it for", "items": [
+        "Finding which hop inflated the p99, spotting fan-out N+1 calls, and tracing a request through gateway, mesh, model server and database."
+      ]},
+      {"title": "Watch out", "items": [
+        "Missing context propagation (async queues, thread pools) breaks traces. Pass the context through Kafka headers.",
+        "Log volume costs: sample debug logs and never log prompts or PII by default."
+      ]}
+    ],
+    "links": [
+      {"title": "OpenTelemetry documentation", "url": "https://opentelemetry.io/docs/", "kind": "docs", "note": null},
+      {"title": "Dapper, a Large-Scale Distributed Systems Tracing Infrastructure", "url": "https://research.google/pubs/dapper-a-large-scale-distributed-systems-tracing-infrastructure/", "kind": "paper", "note": "Google, 2010"},
+      {"title": "Jaeger", "url": "https://www.jaegertracing.io/", "kind": "tool", "note": null}
+    ]
+  }
+]

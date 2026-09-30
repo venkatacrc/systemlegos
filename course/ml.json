@@ -1,0 +1,542 @@
+[
+  {
+    "id": "featurestore",
+    "kind": "brick",
+    "module": "ml",
+    "group": "mlplatform",
+    "title": "Feature Store",
+    "subtitle": "Feast · Vertex AI Feature Store · Tecton · Uber Michelangelo Palette",
+    "lego": "A labelled parts bin that the training crew and the live-build crew both draw from, so the model is trained on exactly the pieces it will see in production.",
+    "summary": "A feature store defines features once and serves them two ways. The offline store (BigQuery, Iceberg) provides point-in-time-correct historical values for training, meaning no future data leaks into past labels. The online store (Redis, Bigtable, Cassandra, DynamoDB) provides the latest values at millisecond latency for inference. Materialization jobs (batch from Spark, streaming from Flink or Kafka) keep the online store fresh. A registry makes features discoverable and reusable across teams.",
+    "sections": [
+      {"title": "Why it exists", "items": [
+        "Training/serving skew: features computed differently in the notebook and in the service silently wreck accuracy.",
+        "Point-in-time joins: each training label must see features as they were at that timestamp."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Stale online features when a materialization job fails. Monitor feature freshness like any SLO.",
+        "Online-store hot keys (a popular item) and cold misses. Serve defaults and alert on the fallback rate."
+      ]}
+    ],
+    "links": [
+      {"title": "Meet Michelangelo: Uber's Machine Learning Platform", "url": "https://www.uber.com/blog/michelangelo-machine-learning-platform/", "kind": "blog", "note": "Where the feature-store idea became mainstream"},
+      {"title": "Feast documentation", "url": "https://docs.feast.dev/", "kind": "docs", "note": null},
+      {"title": "Point-in-time joins (Feast)", "url": "https://docs.feast.dev/getting-started/concepts/point-in-time-joins", "kind": "docs", "note": null},
+      {"title": "Vertex AI Feature Store overview", "url": "https://cloud.google.com/vertex-ai/docs/featurestore/latest/overview", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "mlflow",
+    "kind": "brick",
+    "module": "ml",
+    "group": "mlplatform",
+    "title": "MLflow",
+    "subtitle": "Experiment tracking · Model Registry · packaging · LLM tracing and evaluation",
+    "lego": "The lab notebook and the certified-parts shelf: every experimental build is recorded, and only approved models get a version label and move to the showroom.",
+    "summary": "MLflow tracks experiments (params, metrics, artifacts, code version) and packages models in a standard 'MLmodel' flavor format. Its Model Registry versions models with aliases such as @champion and @challenger, and records lineage back to the run and data. It also provides LLM tracing and evaluation for GenAI apps. The registry is the handoff point between training pipelines and serving (KServe, Triton, Ray Serve, vLLM).",
+    "sections": [
+      {"title": "Patterns", "items": [
+        "CI/CD for models: a training pipeline registers a new version, evaluation gates promote it, and serving picks up the alias.",
+        "Keep training data snapshots (lakehouse time travel) linked to the run for reproducibility."
+      ]}
+    ],
+    "links": [
+      {"title": "MLflow documentation", "url": "https://mlflow.org/docs/latest/index.html", "kind": "docs", "note": null},
+      {"title": "MLflow Model Registry", "url": "https://mlflow.org/docs/latest/model-registry.html", "kind": "docs", "note": null},
+      {"title": "Hidden Technical Debt in Machine Learning Systems (NeurIPS 2015)", "url": "https://papers.nips.cc/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html", "kind": "paper", "note": "Why ML platforms exist"}
+    ]
+  },
+  {
+    "id": "ray",
+    "kind": "brick",
+    "module": "ml",
+    "group": "mlplatform",
+    "title": "Ray",
+    "subtitle": "Ray Core · Ray Data · Ray Train · Ray Serve · KubeRay",
+    "lego": "A universal connector brick that lets you turn any Python function into a crew of builders spread across dozens of machines and GPUs.",
+    "summary": "Ray is a distributed Python runtime. Tasks are stateless remote functions and actors are stateful workers, scheduled over a cluster with CPU and GPU resource awareness and an object store for passing data. On top of it: Ray Data streams heterogeneous CPU and GPU pipelines (ideal for batch inference), Ray Train does distributed training, Ray Tune does hyperparameter search, and Ray Serve does online model serving with composition and autoscaling. It runs on Kubernetes via KubeRay, and many LLM stacks use it for multi-node vLLM.",
+    "sections": [
+      {"title": "Reach for it when", "items": [
+        "Python-native ML workloads that Spark handles poorly: GPU batch inference, RL, many-model training, LLM fine-tuning, multi-model serving graphs."
+      ]},
+      {"title": "How it breaks", "items": [
+        "Object store spilling or OOM from oversized objects. Head node as a single point of failure (use GCS fault tolerance). Idle GPUs from an under-fed CPU preprocessing stage."
+      ]}
+    ],
+    "links": [
+      {"title": "Ray: A Distributed Framework for Emerging AI Applications (OSDI 2018)", "url": "https://www.usenix.org/conference/osdi18/presentation/moritz", "kind": "paper", "note": null},
+      {"title": "Ray documentation", "url": "https://docs.ray.io/en/latest/", "kind": "docs", "note": null},
+      {"title": "Ray Data: batch inference", "url": "https://docs.ray.io/en/latest/data/batch_inference.html", "kind": "docs", "note": null},
+      {"title": "Ray Serve", "url": "https://docs.ray.io/en/latest/serve/index.html", "kind": "docs", "note": null},
+      {"title": "KubeRay", "url": "https://docs.ray.io/en/latest/cluster/kubernetes/index.html", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "mlpipelines",
+    "kind": "brick",
+    "module": "ml",
+    "group": "mlplatform",
+    "title": "ML Pipelines & Model Lifecycle",
+    "subtitle": "Kubeflow Pipelines · Vertex AI Pipelines · TFX · monitoring and drift",
+    "lego": "The assembly line from raw pieces to the showroom: prep, train, test, certify, ship, and keep watching whether customers still like it.",
+    "summary": "Production ML is a loop: ingest and validate data, compute features, train, evaluate against the current champion, register, deploy (shadow, canary, A/B), then monitor for data drift, prediction drift and business metrics, which triggers retraining. Pipelines as code (Kubeflow, Vertex AI, TFX) make every step reproducible and schedulable.",
+    "sections": [
+      {"title": "Checklist", "items": [
+        "Data validation before training. Evaluation gates on sliced metrics, not just the global average.",
+        "Shadow traffic before a canary. Keep the previous model warm for instant rollback.",
+        "Log features and predictions at serving time to build the next training set (with a feedback loop)."
+      ]}
+    ],
+    "links": [
+      {"title": "MLOps: Continuous delivery and automation pipelines in ML", "url": "https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning", "kind": "docs", "note": "Google Cloud architecture guide"},
+      {"title": "Kubeflow Pipelines", "url": "https://www.kubeflow.org/docs/components/pipelines/", "kind": "docs", "note": null},
+      {"title": "The ML Test Score: A Rubric for ML Production Readiness", "url": "https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/", "kind": "paper", "note": null}
+    ]
+  },
+  {
+    "id": "llminference",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "LLM Inference Fundamentals",
+    "subtitle": "Prefill vs decode · KV cache · TTFT / TPOT · memory-bandwidth bound",
+    "lego": "The model reads the whole instruction booklet in one gulp (prefill), then adds one brick at a time (decode), keeping every page it has read open on the table (the KV cache).",
+    "summary": "Generation has two phases. Prefill processes the whole prompt in parallel. It is compute-bound and sets time-to-first-token (TTFT). Decode produces one token per step per sequence. It is memory-bandwidth-bound, because every step reads all the weights plus the KV cache, and it sets time-per-output-token (TPOT) or inter-token latency. The KV cache stores the attention keys and values of every past token. Its size is 2 × layers × kv_heads × head_dim × bytes × tokens, and it usually limits how many requests fit on a GPU. Throughput comes from batching many sequences so the weight reads are shared.",
+    "sections": [
+      {"title": "Napkin math", "items": [
+        "An 8B model in FP16 is about 16 GB of weights. At about 3.3 TB/s (H100), a single sequence's decode is limited to roughly 200 tokens/s.",
+        "Llama-3-8B KV cache (32 layers, 8 KV heads, 128 head dim, FP16) is about 128 KB per token, so a 4k-token context is about 0.5 GB per request.",
+        "Key metrics: TTFT, TPOT or ITL, end-to-end latency, tokens/s per GPU, goodput (requests meeting their SLO), and KV cache utilization."
+      ]},
+      {"title": "Levers", "items": [
+        "Batch more (continuous batching), shrink the KV cache (GQA, FP8 KV), shrink the weights (quantization), reuse the KV cache (prefix caching), guess ahead (speculative decoding), and split phases (disaggregation)."
+      ]}
+    ],
+    "links": [
+      {"title": "Efficiently Scaling Transformer Inference", "url": "https://arxiv.org/abs/2211.05102", "kind": "paper", "note": "Google: the latency/throughput/memory trade-off space"},
+      {"title": "LLM Inference Performance Engineering: Best Practices", "url": "https://www.databricks.com/blog/llm-inference-performance-engineering-best-practices", "kind": "blog", "note": "TTFT, TPOT, MBU explained"},
+      {"title": "Transformer Inference Arithmetic", "url": "https://kipp.ly/transformer-inference-arithmetic/", "kind": "blog", "note": null},
+      {"title": "Attention Is All You Need", "url": "https://arxiv.org/abs/1706.03762", "kind": "paper", "note": null}
+    ]
+  },
+  {
+    "id": "contbatching",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Continuous Batching & PagedAttention",
+    "subtitle": "Iteration-level scheduling · paged KV-cache memory",
+    "lego": "Instead of waiting for a whole tray of builds to finish, slot a new build into any seat the moment one finishes. And store every build's open pages in small numbered boxes, not one giant reserved shelf.",
+    "summary": "Static batching waits for the longest sequence, so the GPU idles. Continuous (in-flight) batching, from Orca, schedules at every decode iteration: finished sequences leave and new ones join immediately. PagedAttention (vLLM) stores the KV cache in fixed-size blocks with a block table, like OS virtual memory. That nearly eliminates fragmentation, lets many more sequences fit, and enables copy-on-write sharing for parallel sampling and shared prefixes. Chunked prefill splits long prompts so they don't stall ongoing decodes.",
+    "sections": [
+      {"title": "Tuning knobs", "items": [
+        "max_num_seqs and max_num_batched_tokens, gpu_memory_utilization, chunked prefill on or off, and the preemption mode (recompute or swap) when the KV cache runs out."
+      ]}
+    ],
+    "links": [
+      {"title": "Efficient Memory Management for LLM Serving with PagedAttention (SOSP 2023)", "url": "https://arxiv.org/abs/2309.06180", "kind": "paper", "note": "The vLLM paper"},
+      {"title": "Orca: A Distributed Serving System for Transformer-Based Generative Models (OSDI 2022)", "url": "https://www.usenix.org/conference/osdi22/presentation/yu", "kind": "paper", "note": "Iteration-level scheduling"},
+      {"title": "How continuous batching enables 23x throughput in LLM inference", "url": "https://www.anyscale.com/blog/continuous-batching-llm-inference", "kind": "blog", "note": "Anyscale"},
+      {"title": "SARATHI: chunked prefills", "url": "https://arxiv.org/abs/2308.16369", "kind": "paper", "note": null}
+    ]
+  },
+  {
+    "id": "vllm",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "vLLM",
+    "subtitle": "High-throughput open-source LLM inference engine",
+    "lego": "The standard motor brick for large models: snap in any open model and it runs fast on the GPUs you have.",
+    "summary": "vLLM is the most widely used open inference engine. It provides PagedAttention, continuous batching, chunked prefill, automatic prefix caching, speculative decoding, quantization (FP8, AWQ, GPTQ, INT4), tensor, pipeline and expert parallelism, LoRA multiplexing, structured output, and an OpenAI-compatible server. It runs on NVIDIA, AMD, TPU and other accelerators. It exposes Prometheus metrics (TTFT, TPOT, KV cache usage, queue depth) that autoscalers and routers consume. llm-d, Ray Serve and KServe all build on it.",
+    "sections": [
+      {"title": "Operate it", "items": [
+        "Size memory: weights plus KV cache (gpu_memory_utilization) plus activation headroom. Set max_model_len to what you really need.",
+        "Scale on queue depth and KV cache utilization rather than CPU. Use prefix-aware routing across replicas.",
+        "Cold starts: model weights are 10–100+ GB. Pre-pull images, cache weights on local NVMe or with GCS FUSE, and keep warm replicas."
+      ]}
+    ],
+    "links": [
+      {"title": "vLLM documentation", "url": "https://docs.vllm.ai/en/latest/", "kind": "docs", "note": null},
+      {"title": "vLLM GitHub", "url": "https://github.com/vllm-project/vllm", "kind": "tool", "note": null},
+      {"title": "PagedAttention paper", "url": "https://arxiv.org/abs/2309.06180", "kind": "paper", "note": null},
+      {"title": "vLLM blog", "url": "https://blog.vllm.ai/", "kind": "blog", "note": "Deep dives on the V1 engine, spec decode, disaggregation"}
+    ]
+  },
+  {
+    "id": "sglang",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "SGLang",
+    "subtitle": "RadixAttention · structured generation · high-performance serving runtime",
+    "lego": "A motor brick with a memory for shared instruction pages: if a thousand builds start with the same page, it keeps just one copy in a tree.",
+    "summary": "SGLang is a fast serving runtime plus a frontend language for LLM programs. RadixAttention keeps the KV cache in a radix tree so any shared prefix (system prompts, few-shot examples, multi-turn history, agent loops) is reused automatically with LRU eviction, and its scheduler is cache-aware. It offers a fast constrained-decoding engine for JSON and regex output, an overlapped CPU scheduler, and strong DeepSeek/MoE support (data-parallel attention, expert parallelism, prefill/decode disaggregation).",
+    "sections": [
+      {"title": "vLLM or SGLang?", "items": [
+        "Both are production-grade and converging. Benchmark on your model, prompt mix and hardware. SGLang tends to shine with heavy prefix sharing and structured output."
+      ]}
+    ],
+    "links": [
+      {"title": "SGLang: Efficient Execution of Structured Language Model Programs", "url": "https://arxiv.org/abs/2312.07104", "kind": "paper", "note": "RadixAttention"},
+      {"title": "SGLang documentation", "url": "https://docs.sglang.io/", "kind": "docs", "note": null},
+      {"title": "SGLang GitHub", "url": "https://github.com/sgl-project/sglang", "kind": "tool", "note": null},
+      {"title": "Fast and Expressive LLM Inference with RadixAttention and SGLang", "url": "https://lmsys.org/blog/2024-01-17-sglang/", "kind": "blog", "note": "LMSYS"}
+    ]
+  },
+  {
+    "id": "triton",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "NVIDIA Triton Inference Server",
+    "subtitle": "Dynamic batching · model repository · ensembles · TensorRT-LLM backend",
+    "lego": "A multi-socket motor housing: plug in PyTorch, ONNX, TensorRT or Python models side by side and share one set of GPUs.",
+    "summary": "Triton serves models from many frameworks (TensorRT, ONNX Runtime, PyTorch, TensorFlow, Python, and TensorRT-LLM or vLLM for LLMs) out of a versioned model repository over HTTP or gRPC. The dynamic batcher groups incoming requests up to a max queue delay. Concurrent model instances share GPUs. Ensembles and BLS chain preprocessing, model and postprocessing steps. Model Analyzer finds the best batch and instance configuration. It exports Prometheus metrics and is deployed under KServe or directly on Kubernetes. NVIDIA Dynamo is its successor for large-scale distributed LLM serving.",
+    "sections": [
+      {"title": "Reach for it when", "items": [
+        "Classic deep learning models (ranking, vision, embeddings) that need high QPS and low latency, multi-model GPU sharing, or NVIDIA-optimized TensorRT(-LLM) engines."
+      ]}
+    ],
+    "links": [
+      {"title": "Triton Inference Server user guide", "url": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/index.html", "kind": "docs", "note": null},
+      {"title": "Triton: dynamic batching and scheduling", "url": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/batcher.html", "kind": "docs", "note": null},
+      {"title": "Triton: model repository", "url": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_repository.html", "kind": "docs", "note": null},
+      {"title": "TensorRT-LLM", "url": "https://github.com/NVIDIA/TensorRT-LLM", "kind": "tool", "note": null}
+    ]
+  },
+  {
+    "id": "prefixrouting",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Prefix Caching & KV-Aware Routing",
+    "subtitle": "Automatic prefix caching · cache-aware load balancing · KV offload tiers",
+    "lego": "Send each builder the jobs whose first instruction pages are already open on their table.",
+    "summary": "Prefix caching reuses KV blocks for identical prompt prefixes (system prompts, RAG context, chat history), cutting TTFT and prefill compute dramatically. The cache lives per replica, though, so a round-robin load balancer throws the hits away. KV-aware or prefix-aware routers (llm-d's inference scheduler, the Gateway API Inference Extension endpoint picker, Dynamo's KV router, SGLang's router) score replicas on cached-prefix overlap, queue depth and KV utilization. Tiered KV offload (GPU HBM → CPU RAM → local SSD → remote store, as in LMCache and Mooncake) extends the reusable cache further.",
+    "sections": [
+      {"title": "Design tips", "items": [
+        "Put static content first in prompts (system prompt, tools, documents) and variable content last to maximize prefix hits.",
+        "Balance cache affinity against load: pure affinity creates hot replicas."
+      ]}
+    ],
+    "links": [
+      {"title": "vLLM automatic prefix caching", "url": "https://docs.vllm.ai/en/latest/features/automatic_prefix_caching.html", "kind": "docs", "note": null},
+      {"title": "Gateway API Inference Extension", "url": "https://github.com/kubernetes-sigs/gateway-api-inference-extension", "kind": "tool", "note": "Kubernetes-native model-aware routing"},
+      {"title": "llm-d", "url": "https://github.com/llm-d/llm-d", "kind": "tool", "note": "Kubernetes-native distributed inference with KV-aware scheduling"},
+      {"title": "Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving", "url": "https://arxiv.org/abs/2407.00079", "kind": "paper", "note": "Kimi / Moonshot AI"}
+    ]
+  },
+  {
+    "id": "parallelism",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Model Parallelism for Serving",
+    "subtitle": "Tensor · pipeline · expert · data parallelism",
+    "lego": "When the model is too big for one baseplate, split each layer across plates (tensor), stack layers on different plates (pipeline), or give each specialist its own plate (experts).",
+    "summary": "When the weights plus KV cache exceed one GPU, split the model. Tensor parallelism (TP) shards each layer's matrices across GPUs and all-reduces every layer, so it needs NVLink and should stay within a node. Pipeline parallelism (PP) puts consecutive layers on different GPUs or nodes; it needs less communication but adds bubbles and latency. Expert parallelism (EP) spreads mixture-of-experts experts across GPUs with all-to-all token routing. Data parallelism (DP) runs replicas. Typical choice: TP within a node, PP or EP across nodes, DP for throughput.",
+    "sections": [
+      {"title": "Napkin math", "items": [
+        "A 70B model in FP16 is about 140 GB, so TP=4 on 80 GB GPUs leaves room for the KV cache. In FP8 it's about 70 GB, which fits TP=2 or a single 141 GB GPU."
+      ]}
+    ],
+    "links": [
+      {"title": "Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism", "url": "https://arxiv.org/abs/1909.08053", "kind": "paper", "note": "Tensor parallelism"},
+      {"title": "vLLM: parallelism and scaling", "url": "https://docs.vllm.ai/en/latest/serving/parallelism_scaling.html", "kind": "docs", "note": null},
+      {"title": "Efficiently Scaling Transformer Inference", "url": "https://arxiv.org/abs/2211.05102", "kind": "paper", "note": "Partitioning strategies for inference"}
+    ]
+  },
+  {
+    "id": "quantization",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Quantization",
+    "subtitle": "FP8 · INT8 · INT4 (AWQ, GPTQ) · KV cache quantization",
+    "lego": "Swap heavy bricks for lighter ones that look almost the same: the model fits on fewer baseplates and moves faster.",
+    "summary": "Quantization stores weights (and optionally activations and the KV cache) in fewer bits. Decode is memory-bandwidth-bound, so halving the bytes roughly doubles tokens per second and halves the GPUs needed. FP8 (Hopper and newer) is nearly lossless for most models. INT4 weight-only methods (AWQ, GPTQ) fit big models on small GPUs at some accuracy cost. A quantized KV cache doubles the concurrent context.",
+    "sections": [
+      {"title": "Rule", "items": [
+        "Always evaluate on your own tasks after quantizing. Averaged benchmarks hide regressions on math, code and long context."
+      ]}
+    ],
+    "links": [
+      {"title": "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers", "url": "https://arxiv.org/abs/2210.17323", "kind": "paper", "note": null},
+      {"title": "AWQ: Activation-aware Weight Quantization", "url": "https://arxiv.org/abs/2306.00978", "kind": "paper", "note": null},
+      {"title": "SmoothQuant", "url": "https://arxiv.org/abs/2211.10438", "kind": "paper", "note": "W8A8"},
+      {"title": "vLLM quantization", "url": "https://docs.vllm.ai/en/latest/features/quantization/index.html", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "specdecoding",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Speculative Decoding",
+    "subtitle": "Draft models · Medusa · EAGLE · n-gram lookup",
+    "lego": "An apprentice quickly places the next few bricks, and the master checks them all in one glance, keeping the correct ones.",
+    "summary": "A cheap drafter (a small model, extra heads such as Medusa or EAGLE, or n-gram prompt lookup) proposes k tokens. The big model verifies all k in one forward pass, which costs about the same as one decode step because decode is memory-bound. Accepted tokens are kept, and the output distribution is mathematically unchanged. The result is 2–3× lower latency at low batch sizes. The gains shrink at high batch sizes, where the GPU is already compute-saturated.",
+    "sections": [
+      {"title": "Use when", "items": [
+        "Latency-sensitive, low-to-moderate concurrency. Predictable output (code, extraction, RAG with copying) gets high acceptance rates."
+      ]}
+    ],
+    "links": [
+      {"title": "Fast Inference from Transformers via Speculative Decoding", "url": "https://arxiv.org/abs/2211.17192", "kind": "paper", "note": "Google"},
+      {"title": "EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty", "url": "https://arxiv.org/abs/2401.15077", "kind": "paper", "note": null},
+      {"title": "Medusa: Simple LLM Inference Acceleration with Multiple Decoding Heads", "url": "https://arxiv.org/abs/2401.10774", "kind": "paper", "note": null}
+    ]
+  },
+  {
+    "id": "disaggregated",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Disaggregated Prefill / Decode",
+    "subtitle": "DistServe · Splitwise · Mooncake · NVIDIA Dynamo · llm-d",
+    "lego": "One crew only reads instruction booklets and hands the open pages to a second crew that only places bricks, so neither slows the other down.",
+    "summary": "Prefill (compute-heavy, bursty) and decode (bandwidth-heavy, steady) interfere when colocated: a long prompt stalls everyone's next token. Disaggregation runs them on separate GPU pools, each with its own parallelism and batch sizes. The KV cache is transferred from prefill to decode workers over NVLink or RDMA (NIXL). The pools scale independently to meet TTFT and TPOT SLOs, which maximizes goodput. It pays off at large scale and with long prompts; for small deployments, chunked prefill is simpler.",
+    "sections": [
+      {"title": "Costs", "items": [
+        "KV transfer bandwidth (high-speed interconnect required), more moving parts, and a router that must pair prefill and decode workers."
+      ]}
+    ],
+    "links": [
+      {"title": "DistServe: Disaggregating Prefill and Decoding for Goodput-optimized LLM Serving (OSDI 2024)", "url": "https://arxiv.org/abs/2401.09670", "kind": "paper", "note": null},
+      {"title": "Splitwise: Efficient Generative LLM Inference Using Phase Splitting", "url": "https://arxiv.org/abs/2311.18677", "kind": "paper", "note": "Microsoft"},
+      {"title": "Mooncake", "url": "https://arxiv.org/abs/2407.00079", "kind": "paper", "note": null},
+      {"title": "NVIDIA Dynamo", "url": "https://github.com/ai-dynamo/dynamo", "kind": "tool", "note": "Distributed inference framework: disaggregation plus KV routing"}
+    ]
+  },
+  {
+    "id": "k8sserving",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "Kubernetes Model Serving & GPU Autoscaling",
+    "subtitle": "KServe · Gateway API Inference Extension · llm-d · KEDA · GKE GPU node pools",
+    "lego": "The baseplate manager for motor bricks: it knows which plates have GPUs, adds plates when the queue grows, and parks idle ones.",
+    "summary": "On Kubernetes, model servers (vLLM, SGLang, Triton) run as Deployments or LeaderWorkerSets on GPU node pools. KServe provides an InferenceService abstraction with canary rollouts and scale-to-zero. The Gateway API Inference Extension (GAIE) adds model-aware routing (InferencePool, endpoint picker) to Envoy- or Istio-based gateways. llm-d combines vLLM, GAIE, KV-aware scheduling and disaggregation. Autoscale on inference signals (queue length, KV cache utilization, TTFT) via KEDA or custom metrics, not CPU.",
+    "sections": [
+      {"title": "Gotchas", "items": [
+        "GPU scale-up is slow: node provisioning plus image pull plus weight load can take minutes. Keep headroom, use image streaming, and cache weights.",
+        "GPU scarcity: use reservations, multiple regions and zones, and fallback models. Bin-pack small models with MIG or time-slicing."
+      ]}
+    ],
+    "links": [
+      {"title": "KServe documentation", "url": "https://kserve.github.io/website/", "kind": "docs", "note": null},
+      {"title": "Gateway API Inference Extension", "url": "https://github.com/kubernetes-sigs/gateway-api-inference-extension", "kind": "tool", "note": null},
+      {"title": "llm-d", "url": "https://github.com/llm-d/llm-d", "kind": "tool", "note": null},
+      {"title": "Best practices for autoscaling LLM inference on GKE (GPUs)", "url": "https://cloud.google.com/kubernetes-engine/docs/best-practices/machine-learning/inference/autoscaling", "kind": "docs", "note": null},
+      {"title": "KEDA", "url": "https://keda.sh/docs/latest/", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "aigateway",
+    "kind": "brick",
+    "module": "ml",
+    "group": "serving",
+    "title": "AI Gateway",
+    "subtitle": "LiteLLM · Envoy AI Gateway · token rate limiting · fallbacks · guardrails",
+    "lego": "The front desk for every model: one entrance, a badge check, a token budget per team, and a detour when a model is down.",
+    "summary": "An AI gateway sits in front of self-hosted and vendor models behind a single OpenAI-compatible API. It handles authentication and per-team quotas measured in tokens (not requests), routing by model and cost, retries and fallbacks across providers, semantic or exact response caching, guardrails (PII redaction, safety filters), and usage metering. It streams responses (SSE) and logs prompts and completions for evaluation.",
+    "sections": [
+      {"title": "Design tips", "items": [
+        "Rate-limit on estimated plus actual tokens. Set streaming-aware timeouts (on first token, and between tokens).",
+        "Fallback chain: self-hosted primary, then a smaller model, then a vendor API, then a graceful 'try later'."
+      ]}
+    ],
+    "links": [
+      {"title": "LiteLLM documentation", "url": "https://docs.litellm.ai/", "kind": "docs", "note": null},
+      {"title": "Envoy AI Gateway", "url": "https://aigateway.envoyproxy.io/", "kind": "docs", "note": null},
+      {"title": "Rate limiting best practices (Cloudflare)", "url": "https://developers.cloudflare.com/waf/rate-limiting-rules/best-practices/", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "llm-platform",
+    "kind": "build",
+    "module": "ml",
+    "group": "mlbuilds",
+    "title": "Online LLM Serving Platform",
+    "subtitle": "Serve a 70B chat model to 10,000 concurrent users",
+    "lego": "The full motor room: front desk, smart dispatcher, racks of motor bricks, and gauges on every wall.",
+    "summary": "Design an internal platform serving open models (for example, a 70B instruct model plus an 8B) to many product teams with an OpenAI-compatible API, streaming, a p95 TTFT under 1 s, TPOT under 50 ms, per-team quotas, and cost efficiency.",
+    "steps": [
+      "Clients call the AI gateway (auth, per-team token quotas, model routing, fallbacks, usage metering) behind Torbit or the CDN edge and Istio.",
+      "The gateway forwards to a Kubernetes inference gateway (GAIE or llm-d) whose endpoint picker scores vLLM or SGLang replicas on prefix-cache overlap, queue depth and KV utilization.",
+      "The 70B model runs in FP8 with TP=2 per replica on H100 or H200 nodes, with continuous batching, chunked prefill and prefix caching. At large scale, split into prefill and decode pools (disaggregation).",
+      "Weights come from the MLflow registry into GCS, and are cached on local NVMe or via GCS FUSE for fast cold starts. Images are pre-pulled on GPU node pools.",
+      "KEDA or HPA scales on queue depth and KV cache utilization, with minimum warm replicas. The cluster autoscaler adds GPU nodes, and GPU reservations cover the baseline.",
+      "Prometheus and DCGM track TTFT, TPOT, goodput, KV usage, GPU utilization and power. OpenTelemetry traces cover gateway → router → engine. Prompts and completions are logged to Kafka and the lake for evaluation."
+    ],
+    "uses": ["aigateway", "torbit", "istio", "k8sserving", "prefixrouting", "vllm", "sglang", "contbatching", "parallelism", "quantization", "disaggregated", "mlflow", "gcs", "prometheus", "tracing", "kafka"],
+    "sections": [
+      {"title": "Capacity napkin", "items": [
+        "10,000 concurrent streams at about 30 tokens/s each is 300k output tokens/s. If one TP=2 FP8 70B replica sustains about 3k tokens/s at the SLO, you need about 100 replicas (200 GPUs) plus headroom. Measure; don't guess.",
+        "KV cache: 70B with GQA (80 layers, 8 KV heads, 128 head dim, FP8) is about 160 KB per token, so a 4k context is about 0.65 GB per stream."
+      ]},
+      {"title": "Break it", "items": [
+        "Kill a GPU node mid-stream: clients get a retriable error and resume via the gateway retry. The router drains the dead endpoints.",
+        "A 100k-token prompt flood: chunked prefill or disaggregation protects the TPOT of other users, and gateway limits on max input tokens apply."
+      ]}
+    ],
+    "links": [
+      {"title": "vLLM documentation", "url": "https://docs.vllm.ai/en/latest/", "kind": "docs", "note": null},
+      {"title": "llm-d", "url": "https://github.com/llm-d/llm-d", "kind": "tool", "note": null},
+      {"title": "NVIDIA Dynamo", "url": "https://github.com/ai-dynamo/dynamo", "kind": "tool", "note": null},
+      {"title": "DistServe (OSDI 2024)", "url": "https://arxiv.org/abs/2401.09670", "kind": "paper", "note": null},
+      {"title": "LLM Inference Performance Engineering: Best Practices", "url": "https://www.databricks.com/blog/llm-inference-performance-engineering-best-practices", "kind": "blog", "note": null}
+    ]
+  },
+  {
+    "id": "realtime-recs",
+    "kind": "build",
+    "module": "ml",
+    "group": "mlbuilds",
+    "title": "Real-Time Recommendations",
+    "subtitle": "Feature store + two-stage retrieval and ranking + Triton",
+    "lego": "Grab a handful of likely pieces from a huge bin fast, then have an expert sort that handful into the perfect order, in under 100 ms.",
+    "summary": "Personalized product recommendations on the home page for 100M users, with p99 under 100 ms, reacting to clicks within seconds, and retrained daily.",
+    "steps": [
+      "Clickstream goes to Kafka, then Flink computes real-time features (the last N items viewed, session category affinity) and writes them to the online feature store (Redis, Bigtable or Cassandra).",
+      "The nightly Spark batch computes long-term user and item features into the offline store, then materializes them online.",
+      "Retrieval: embed the user and run ANN search over item embeddings (vector DB or ScaNN/FAISS) to get about 500 candidates, plus rule-based candidates.",
+      "Ranking: fetch features for the user and candidates from the online store, then score them on Triton (dynamic batching, GPU), rerank for diversity and business rules, and return the top 20.",
+      "Log served features and outcomes to Kafka and the lake. Daily training with point-in-time joins, registered in MLflow, rolled out as a canary with an A/B test."
+    ],
+    "uses": ["kafka", "streamprocessing", "featurestore", "cassandra", "distcache", "vectordb", "triton", "spark", "mlflow", "mlpipelines"],
+    "sections": [
+      {"title": "Break it", "items": [
+        "The feature store times out: fall back to cached popular items (a degraded but fast default). The circuit breaker opens."
+      ]}
+    ],
+    "links": [
+      {"title": "Deep Neural Networks for YouTube Recommendations (RecSys 2016)", "url": "https://research.google/pubs/deep-neural-networks-for-youtube-recommendations/", "kind": "paper", "note": "Candidate generation plus ranking"},
+      {"title": "Meet Michelangelo: Uber's Machine Learning Platform", "url": "https://www.uber.com/blog/michelangelo-machine-learning-platform/", "kind": "blog", "note": null},
+      {"title": "Triton: dynamic batching", "url": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/batcher.html", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "batch-inference",
+    "kind": "build",
+    "module": "ml",
+    "group": "mlbuilds",
+    "title": "Batch LLM Inference Pipeline",
+    "subtitle": "Ray Data + vLLM over 100M product descriptions",
+    "lego": "Run the motor room overnight on a giant pile of jobs: nobody is waiting for any single one, so pack the GPUs completely full.",
+    "summary": "Every week, generate enriched attributes and embeddings for 100M catalog items with an 8B LLM, maximizing tokens per dollar with no latency SLO, and write the results back to the lakehouse.",
+    "steps": [
+      "Airflow triggers the job and reads a snapshot of the item table (Iceberg on GCS) with Ray Data, streaming in blocks.",
+      "CPU stages build prompts. GPU stages run vLLM engines as Ray actors (one per GPU) with large batches, prefix caching for the shared instruction, and FP8.",
+      "Use spot or preemptible GPUs with Ray task retries. Write output per block, idempotently, keyed by item ID.",
+      "Write results to an Iceberg table and publish a 'ready' event. The search index and feature store pick up the changes."
+    ],
+    "uses": ["orchestration", "lakehouse", "gcs", "ray", "vllm", "quantization", "batchprinciples"],
+    "sections": [
+      {"title": "Napkin", "items": [
+        "100M items × about 300 tokens is about 30B tokens. At about 20k tokens/s per GPU for a batch-optimized 8B model, that's about 420 GPU-hours."
+      ]}
+    ],
+    "links": [
+      {"title": "Ray Data: batch inference", "url": "https://docs.ray.io/en/latest/data/batch_inference.html", "kind": "docs", "note": null},
+      {"title": "vLLM offline inference", "url": "https://docs.vllm.ai/en/latest/serving/offline_inference.html", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "rag-assistant",
+    "kind": "build",
+    "module": "ml",
+    "group": "mlbuilds",
+    "title": "RAG Shopping Assistant",
+    "subtitle": "Retrieval + LLM + guardrails",
+    "lego": "Before answering, the builder runs to the parts catalog, grabs the relevant pages, and builds the answer from them.",
+    "summary": "A chat assistant that answers product and policy questions grounded in the catalog and help-center documents, with citations, streaming, and under 2 s to first token.",
+    "steps": [
+      "An offline pipeline (Airflow, Spark or Ray) chunks documents, embeds them, and indexes them into a vector DB plus a keyword index (hybrid search). CDC keeps prices and stock fresh.",
+      "Online: the AI gateway authenticates and applies guardrails, then query rewriting, then hybrid retrieval and a reranker, then a prompt with a stable system prefix (for prefix caching) plus the retrieved context.",
+      "The LLM is served on vLLM or SGLang behind the inference gateway. Responses stream via SSE with citations.",
+      "Log everything, run offline evaluations (groundedness, answer quality), and collect user feedback in MLflow and the lake."
+    ],
+    "uses": ["aigateway", "vectordb", "searchindex", "cdc", "vllm", "prefixrouting", "distcache", "mlflow", "tracing"],
+    "sections": [
+      {"title": "Break it", "items": [
+        "The vector DB is slow: time out and fall back to keyword search only. The LLM pool is saturated: queue with a clear message, or fall back to a smaller model."
+      ]}
+    ],
+    "links": [
+      {"title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks", "url": "https://arxiv.org/abs/2005.11401", "kind": "paper", "note": null},
+      {"title": "SGLang documentation", "url": "https://docs.sglang.io/", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "train-to-deploy",
+    "kind": "build",
+    "module": "ml",
+    "group": "mlbuilds",
+    "title": "Training-to-Deployment Pipeline",
+    "subtitle": "Lakehouse → Spark features → Ray Train → MLflow → canary",
+    "lego": "The full assembly line from raw pieces to a certified model on the showroom floor, with a rollback lever at every stage.",
+    "summary": "Automate weekly retraining of a ranking model (or a LoRA fine-tune of an LLM) from fresh data, with evaluation gates, safe rollout and automatic rollback.",
+    "steps": [
+      "The Airflow or Kubeflow pipeline builds a point-in-time training set from the feature store's offline store (Spark), pinned to an Iceberg snapshot.",
+      "Distributed training on GPUs with Ray Train (or PyTorch on KubeRay). Parameters, metrics and artifacts are logged to MLflow.",
+      "Evaluation gates: sliced metrics must beat the champion, bias and safety checks pass, and a latency benchmark is run on the serving engine.",
+      "Register the version, set the @challenger alias, then shadow it, then canary it (Istio or KServe traffic split) while watching business metrics and SLOs. Promote to @champion or roll back automatically."
+    ],
+    "uses": ["orchestration", "featurestore", "spark", "lakehouse", "ray", "mlflow", "mlpipelines", "istio", "k8sserving", "prometheus"],
+    "sections": [],
+    "links": [
+      {"title": "MLOps: Continuous delivery and automation pipelines in ML", "url": "https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning", "kind": "docs", "note": null},
+      {"title": "MLflow Model Registry", "url": "https://mlflow.org/docs/latest/model-registry.html", "kind": "docs", "note": null}
+    ]
+  },
+  {
+    "id": "moc-vllm",
+    "kind": "build",
+    "module": "ml",
+    "group": "mlbuilds",
+    "title": "Mini-MOC: Serve & Benchmark a Model with vLLM",
+    "subtitle": "Hands-on: one GPU, one weekend",
+    "lego": "Build a small working motor yourself and put it on the test bench before designing the whole factory.",
+    "summary": "Serve a small open model (1–8B) with vLLM, or SGLang if you want to compare, on one GPU (cloud or local). Load-test it and plot how TTFT, TPOT and throughput trade off as concurrency rises.",
+    "steps": [
+      "Run `vllm serve <model>` with an OpenAI-compatible endpoint. Scrape `/metrics` with Prometheus and graph it in Grafana.",
+      "Benchmark at concurrency 1, 8, 32, 128 (vLLM bench serve or a Locust script) with a fixed prompt and output length. Record TTFT, TPOT, tokens/s and KV cache usage.",
+      "Toggle one lever at a time: prefix caching (shared system prompt), FP8 quantization, max_num_seqs, and a speculative-decoding drafter. Compare the curves.",
+      "Write a one-page capacity model: GPUs needed for X users at a Y ms TTFT SLO."
+    ],
+    "uses": ["vllm", "sglang", "llminference", "contbatching", "quantization", "specdecoding", "prometheus"],
+    "sections": [],
+    "links": [
+      {"title": "vLLM quickstart", "url": "https://docs.vllm.ai/en/latest/getting_started/quickstart.html", "kind": "docs", "note": null},
+      {"title": "vLLM GitHub", "url": "https://github.com/vllm-project/vllm", "kind": "tool", "note": "See benchmarks/ for the serving benchmark"}
+    ]
+  },
+  {
+    "id": "drill-gpu",
+    "kind": "build",
+    "module": "ml",
+    "group": "mlbuilds",
+    "title": "Drill: GPU Loss & KV-Cache Exhaustion",
+    "subtitle": "Chaos engineering for model serving",
+    "lego": "Pull a motor brick out while the machine is running, then overload the rest, and watch whether the gauges and dispatcher react in time.",
+    "summary": "Test that the serving platform degrades gracefully when GPUs disappear or the KV cache fills up, and that you see it coming on dashboards before users do.",
+    "steps": [
+      "Hypothesis: losing one replica keeps p95 TTFT within SLO, and a traffic spike triggers queueing and scale-up, not errors.",
+      "Kill a vLLM pod or cordon a GPU node. The router must stop sending traffic to it within seconds, and in-flight streams must fail cleanly and be retried by the gateway.",
+      "Spike traffic with long prompts until KV cache usage reaches 100%. Watch preemptions, queue depth and TTFT. The autoscaler should fire on the queue metric, and the gateway should shed low-priority tenants first.",
+      "Check the alerts: KV cache above 90%, TTFT SLO burn rate, and GPU XID or DCGM errors. Record how long GPU scale-up really takes, from node to image to weights to ready."
+    ],
+    "uses": ["vllm", "k8sserving", "prefixrouting", "aigateway", "prometheus", "backpressure", "ratelimiting"],
+    "sections": [
+      {"title": "The lesson", "items": [
+        "GPU capacity is slow to add. Protect it with admission control and keep warm headroom, rather than relying on autoscaling alone."
+      ]}
+    ],
+    "links": [
+      {"title": "Principles of Chaos Engineering", "url": "https://principlesofchaos.org/", "kind": "docs", "note": null},
+      {"title": "NVIDIA DCGM exporter", "url": "https://github.com/NVIDIA/dcgm-exporter", "kind": "tool", "note": null}
+    ]
+  }
+]

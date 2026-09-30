@@ -11,13 +11,15 @@ reading in depth.
 
 | Module | Groups | Cards |
 | --- | --- | --- |
-| 1 · The Bricks | Compute (VMs, containers, orchestration, serverless) · Storage (relational, NoSQL, object storage) · Networking (DNS, load balancers, API gateways, CDNs) · Integration (queues, streams, caches) | 14 |
+| 1 · The Bricks | Compute (VMs, containers, orchestration, serverless) · Storage (relational, NoSQL, object storage, Cassandra and its wide-column cousins, distributed SQL, search, vector DBs, ZooKeeper/etcd, Google Cloud Storage buckets) · Networking (DNS, load balancers, API gateways, CDNs, Istio, Torbit) · Integration (queues, streams, caches, Kafka deep dive, distributed cache) · Observability (Prometheus, tracing) | 26 |
 | 2 · Building Rules | Scaling (vertical vs horizontal, statelessness, replication, sharding, consistent hashing) · Data (CAP/PACELC, consistency models, caching patterns, sagas and outbox, ID generation) · Reliability (idempotency, retries and jitter, circuit breakers, rate limiting, load shedding, delivery semantics) · Numbers (latency, estimation, SLOs) | 19 |
 | 3 · Assemblies | Worked examples: Uber-like ride hailing, flash-sale checkout · Classic builds: URL shortener, news feed, chat, video streaming, rate limiter, notifications | 8 |
 | 4 · Master Builder Path | Step 1 Trace the Blueprints (primers, Alex Xu, DDIA, Netflix, Uber, Airbnb, Segment, SRE) · Foundational papers (GFS, MapReduce, Bigtable, Dynamo, the Log/Kafka, Spanner, Raft/Paxos, Memcache, Tail at Scale) · Step 2 Virtual CAD (tools, traffic-flow mapping, the 45-minute framework) · Step 3 Mini-MOCs (URL shortener, thumbnail generator, order queue) · Step 4 Break Your Models (chaos engineering and five drills) | 29 |
+| 5 · Data & Batch Pipelines | Streaming (stream processing with Flink/Spark/Dataflow, CDC, Lambda vs Kappa) · Batch & lakehouse (Apache Spark, Airflow orchestration, Iceberg/Delta/Hudi, Parquet and BigQuery, batch design principles) · Pipeline builds (daily batch ETL, real-time clickstream, bad-data and backfill drill) | 11 |
+| 6 · ML Platform & LLM Serving | ML platform (feature store, MLflow, Ray, ML pipelines) · Online large-model serving (inference fundamentals, continuous batching and PagedAttention, vLLM, SGLang, Triton, prefix caching and KV-aware routing, parallelism, quantization, speculative decoding, disaggregated prefill/decode, Kubernetes serving and GPU autoscaling, AI gateway, multi-LoRA serving, structured output, token streaming, inference caching) · Online inference case studies (code completion, thousands of LoRA fine-tunes, payment fraud scoring, semantic search, agentic assistant, real-time voice, giant MoE serving, multi-region LLM API, inline guardrails, prefix-aware router Mini-MOC, bad-model and noisy-tenant drill) · ML builds (LLM serving platform, real-time recommendations, batch LLM inference, RAG assistant, training-to-deploy, vLLM Mini-MOC, GPU chaos drill) | 38 |
 
-That is 51 **brick** cards (single concepts) and 19 **build** cards (assemblies, projects
-and chaos drills), with about 190 reading links.
+That is 91 **brick** cards (single concepts) and 40 **build** cards (assemblies, projects
+and chaos drills), with about 425 reading links.
 
 ## Build and run
 
