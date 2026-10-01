@@ -215,8 +215,8 @@
      "note": "Amazon Builders' Library"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "containers",
@@ -280,8 +280,8 @@
      "note": "The whole checklist for container-friendly services"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "kubernetes",
@@ -337,8 +337,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "serverless",
@@ -402,8 +402,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "rdbms",
@@ -473,8 +473,8 @@
      "note": "Horizontally sharding Postgres"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "nosql",
@@ -543,8 +543,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "objectstore",
@@ -608,8 +608,8 @@
      "note": "The ancestor of large-scale blob storage"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "cassandra",
@@ -694,8 +694,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "distributedsql",
@@ -750,8 +750,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "searchindex",
@@ -810,8 +810,8 @@
      "note": "Walmart Global Tech: a prefix index served from a distributed cache"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "vectordb",
@@ -870,8 +870,8 @@
      "note": "The original RAG paper"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "coordination",
@@ -924,8 +924,8 @@
      "note": "Martin Kleppmann on fencing tokens"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "gcs",
@@ -1013,8 +1013,8 @@
      "note": "Mount buckets for training and serving"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "dns",
@@ -1063,8 +1063,8 @@
      "note": "Latency, geolocation, weighted, failover"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "loadbalancer",
@@ -1131,8 +1131,8 @@
      "note": "The L7 proxy behind most service meshes"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "apigateway",
@@ -1187,8 +1187,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "cdn",
@@ -1243,8 +1243,8 @@
      "note": "Netflix's own CDN, placed inside ISPs"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "istio",
@@ -1311,8 +1311,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "torbit",
@@ -1372,8 +1372,8 @@
      "note": "Walmart Global Tech: path-based routing with Torbit"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "queue",
@@ -1442,8 +1442,8 @@
      "note": "Work queues, pub/sub, routing, RPC"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "stream",
@@ -1513,8 +1513,8 @@
      "note": "Martin Fowler: four different patterns under one name"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "cache",
@@ -1584,8 +1584,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "kafka",
@@ -1664,8 +1664,8 @@
      "note": "Confluent"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "distcache",
@@ -1733,8 +1733,8 @@
      "note": "Sharding proxy for Memcached and Redis"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "prometheus",
@@ -1812,8 +1812,8 @@
      "note": "Highly available, long-term Prometheus"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "tracing",
@@ -1859,8 +1859,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "scaling",
@@ -1901,8 +1901,8 @@
      "note": "Jeff Dean, LADIS 2009 keynote"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "stateless",
@@ -1937,8 +1937,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "replication",
@@ -1985,8 +1985,8 @@
      "note": "Sloppy quorums and hinted handoff"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "sharding",
@@ -2040,8 +2040,8 @@
      "note": "Sharding middleware for MySQL, from YouTube"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "consistenthashing",
@@ -2081,8 +2081,8 @@
      "note": "Maglev hashing"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "cap",
@@ -2123,8 +2123,8 @@
      "note": "Daniel Abadi, IEEE Computer 2012"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "consistency",
@@ -2159,8 +2159,8 @@
      "note": "A clickable map of the hierarchy"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "cachingpatterns",
@@ -2208,8 +2208,8 @@
      "note": "Request coalescing at the edge for Facebook Live"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "sagas",
@@ -2256,8 +2256,8 @@
      "note": "Pat Helland, ACM Queue"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "idgen",
@@ -2303,8 +2303,8 @@
      "note": "IDs generated inside Postgres"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "idempotency",
@@ -2345,8 +2345,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "retries",
@@ -2386,8 +2386,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "circuitbreaker",
@@ -2427,8 +2427,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "ratelimiting",
@@ -2463,8 +2463,8 @@
      "note": "Cloudflare's sliding-window approximation"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "backpressure",
@@ -2505,8 +2505,8 @@
      "note": "Fred Hebert"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "delivery",
@@ -2539,8 +2539,8 @@
      "note": "Amazon Builders' Library: the eight failure points of one request"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "latency",
@@ -2580,8 +2580,8 @@
      "note": "Jeff Dean, LADIS 2009"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "estimation",
@@ -2665,8 +2665,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "uber",
@@ -3201,8 +3201,8 @@
      "note": "Weekly deep dives"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "read-alexxu",
@@ -3230,8 +3230,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "read-ddia",
@@ -3265,8 +3265,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "read-netflix",
@@ -3306,8 +3306,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "read-uber",
@@ -3353,8 +3353,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "read-airbnb",
@@ -3382,8 +3382,8 @@
      "note": "Search for 'Building Services at Airbnb' and 'Avoiding Double Payments'"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "read-counterpoint",
@@ -3417,8 +3417,8 @@
      "note": "James Lewis and Martin Fowler"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "read-sre",
@@ -3458,8 +3458,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "paper-gfs",
@@ -3487,8 +3487,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "paper-mapreduce",
@@ -3515,8 +3515,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "paper-bigtable",
@@ -3544,8 +3544,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "paper-dynamo",
@@ -3579,8 +3579,8 @@
      "note": "How the managed service differs from the 2007 design"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "paper-log",
@@ -3614,8 +3614,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "paper-spanner",
@@ -3642,8 +3642,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "paper-raft",
@@ -3682,8 +3682,8 @@
      "note": "Leslie Lamport"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "paper-memcache",
@@ -3711,8 +3711,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "paper-tail",
@@ -3739,8 +3739,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "cad-tools",
@@ -3793,8 +3793,8 @@
      "note": "Simon Brown"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "cad-trafficflow",
@@ -4124,8 +4124,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "chaos-dbcrash",
@@ -4434,8 +4434,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "cdc",
@@ -4481,8 +4481,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "lambdakappa",
@@ -4516,8 +4516,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "spark",
@@ -4585,8 +4585,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "orchestration",
@@ -4627,8 +4627,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "lakehouse",
@@ -4679,8 +4679,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "warehouse",
@@ -4726,8 +4726,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "batchprinciples",
@@ -4781,8 +4781,8 @@
      "note": "Reprocessing by replay"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "batch-etl",
@@ -4994,8 +4994,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "mlflow",
@@ -5035,8 +5035,8 @@
      "note": "Why ML platforms exist"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "ray",
@@ -5093,8 +5093,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "mlpipelines",
@@ -5135,8 +5135,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "llminference",
@@ -5189,8 +5189,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "contbatching",
@@ -5235,8 +5235,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "vllm",
@@ -5283,8 +5283,8 @@
      "note": "Deep dives on the V1 engine, spec decode, disaggregation"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "sglang",
@@ -5329,8 +5329,8 @@
      "note": "LMSYS"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "triton",
@@ -5375,8 +5375,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "prefixrouting",
@@ -5422,8 +5422,8 @@
      "note": "Kimi / Moonshot AI"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "parallelism",
@@ -5462,8 +5462,8 @@
      "note": "Partitioning strategies for inference"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "quantization",
@@ -5508,8 +5508,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "specdecoding",
@@ -5548,8 +5548,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "disaggregated",
@@ -5594,8 +5594,8 @@
      "note": "Distributed inference framework: disaggregation plus KV routing"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "k8sserving",
@@ -5647,8 +5647,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "aigateway",
@@ -5688,8 +5688,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "multilora",
@@ -5748,8 +5748,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "structuredoutput",
@@ -5795,8 +5795,8 @@
      "note": "The tool-calling agent loop"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "tokenstreaming",
@@ -5838,8 +5838,8 @@
      "note": "Why TTFT dominates perceived latency"
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "inferencecaching",
@@ -5886,8 +5886,8 @@
      "note": null
     }
    ],
-   "steps": null,
-   "uses": null
+   "uses": null,
+   "steps": null
   },
   {
    "id": "code-completion",

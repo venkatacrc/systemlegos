@@ -1,0 +1,17 @@
+{
+    "name": "System Legos",
+    "short_name": "System Legos",
+    "description": "System design flash cards: the bricks of modern systems and how real systems snap them together.",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#f4f2ee",
+    "theme_color": "#d01012",
+    "categories": ["education", "productivity"],
+    "icons": [
+        { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}

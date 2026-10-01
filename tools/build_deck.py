@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 COURSE = ROOT / "course"
 CARD_FILES = ["bricks.json", "rules.json", "assemblies.json", "path.json", "platform.json", "data.json", "ml.json", "inference.json"]
 DECK = ROOT / "app" / "Sources" / "SystemLegos" / "Resources" / "deck.json"
+WEB_DECK = ROOT / "web" / "deck.json"
 
 REQUIRED = {"id", "kind", "module", "group", "title", "summary", "sections", "links"}
 OPTIONAL = {"subtitle", "lego", "steps", "uses"}
@@ -117,10 +118,13 @@ def main():
     with open(DECK, "w", encoding="utf-8") as f:
         json.dump({"modules": modules, "cards": cards}, f, ensure_ascii=False, indent=1)
         f.write("\n")
+    with open(WEB_DECK, "w", encoding="utf-8") as f:
+        json.dump({"modules": modules, "cards": cards}, f, ensure_ascii=False, separators=(",", ":"))
 
     bricks = sum(c["kind"] == "brick" for c in cards)
     links = sum(len(c["links"]) for c in cards)
-    print(f"Wrote {DECK.relative_to(ROOT)}: {bricks} bricks, {len(cards) - bricks} builds, {links} reading links")
+    print(f"Wrote {DECK.relative_to(ROOT)} and {WEB_DECK.relative_to(ROOT)}: "
+          f"{bricks} bricks, {len(cards) - bricks} builds, {links} reading links")
     for m in modules:
         n = sum(c["module"] == m["id"] for c in cards)
         print(f"  {m['title']}: {n} cards")

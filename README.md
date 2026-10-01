@@ -32,6 +32,30 @@ open build/SystemLegos.app
 
 For development you can also run `swift run --package-path app`.
 
+## Phone and web app
+
+`web/` holds an installable, offline-capable web app (plain HTML, CSS and JavaScript) with the
+same cards, laid out for phones like Sloka Words: Bricks/Builds and Learn/Test switches,
+swipe between cards, tap to reveal, Known/Review marks, a drawer for modules and options,
+notes with a Markdown build-journal export, brick peeks, and print or save as PDF.
+
+It is published with GitHub Pages from the `main` branch at
+<https://venkatacrc.github.io/systemlegos/> (the root `index.html` redirects to `web/`). On a
+phone, open it once online, then use **Add to Home Screen** (iOS Safari: Share → Add to Home
+Screen; Android Chrome: ⋮ → Install app). After that it works offline.
+
+`python3 tools/build_deck.py` writes `web/deck.json` alongside the Mac app's deck, so
+commit and push after editing the course to update the web app. To try it locally:
+
+```sh
+python3 -m http.server 8000   # then open http://localhost:8000/web/
+```
+
+Progress, notes and preferences are saved in the browser's local storage. **Back up notes**
+in the menu downloads them as `notes.json`, the same format as the Mac app's
+`~/Library/Application Support/SystemLegos/notes.json`, and **Import notes** reads either file.
+To regenerate the icons, run `swift scripts/make_icon.swift --web web/icons`.
+
 ## Using the app
 
 - **Bricks / Builds** (top left of the toolbar): practice single concepts, or whole
@@ -108,7 +132,9 @@ rebuild the app, or load `app/Sources/SystemLegos/Resources/deck.json` with **Im
 app/                   Swift package (SwiftUI app)
   Sources/SystemLegos/Resources/deck.json   generated deck bundled into the app
 course/                course content (source of truth)
-tools/build_deck.py    validates course/ and writes deck.json
+tools/build_deck.py    validates course/ and writes deck.json (app and web)
+web/                   phone and web app (PWA) served by GitHub Pages
+index.html             redirects the Pages site root to web/
 scripts/build_app.sh   builds build/SystemLegos.app
-scripts/make_icon.swift draws the LEGO-brick app icon
+scripts/make_icon.swift draws the LEGO-brick icon (Mac iconset, or --web PNGs)
 ```
