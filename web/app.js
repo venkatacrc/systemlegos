@@ -343,8 +343,8 @@ function renderActions() {
     const card = deck ? currentCard() : null;
     if (!card || (prefs.study === 'test' && session.finished)) return;
     const id = card.id;
-    const prev = h('button', { class: 'btn small', onclick: () => move(-1), 'aria-label': 'Previous card' }, '‹');
-    const next = h('button', { class: 'btn small', onclick: () => move(1), 'aria-label': 'Next card' }, '›');
+    const prev = h('button', { class: 'btn nav', onclick: () => move(-1), 'aria-label': 'Previous card' }, '‹');
+    const next = h('button', { class: 'btn nav', onclick: () => move(1), 'aria-label': 'Next card' }, '›');
     if (prefs.study === 'learn') {
         bar.append(prev,
             h('button', {
@@ -359,12 +359,12 @@ function renderActions() {
     } else if (!session.flipped) {
         bar.append(prev,
             h('button', { class: 'btn primary', onclick: reveal }, card.kind === 'build' ? 'Show the build' : 'Show answer'),
-            h('button', { class: 'btn small', onclick: () => move(1) }, 'Skip ›'));
+            h('button', { class: 'btn nav', onclick: () => move(1), 'aria-label': 'Skip' }, '›'));
     } else {
         bar.append(prev,
             h('button', { class: 'btn bad', onclick: () => answer(false) }, '✗ Missed it'),
             h('button', { class: 'btn good', onclick: () => answer(true) }, '✓ Got it'),
-            h('button', { class: 'btn small', onclick: () => move(1), 'aria-label': 'Skip' }, '›'));
+            h('button', { class: 'btn nav', onclick: () => move(1), 'aria-label': 'Skip' }, '›'));
     }
 }
 
